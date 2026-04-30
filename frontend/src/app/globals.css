@@ -1,0 +1,292 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Theme color tokens – Light */
+    --background: #F5F5F5;
+    --surface-1: #EBEBEB;
+    --surface-2: #FFFFFF;
+    --surface-3: #FFFFFF;
+    --surface-4: #F0F0F0;
+    --foreground: #1a1a1a;
+    --foreground-muted: #666666;
+    --foreground-faint: #999999;
+    --border-color: rgba(0, 0, 0, 0.12);
+    --border-subtle: rgba(0, 0, 0, 0.06);
+    --hover-overlay: rgba(0, 0, 0, 0.04);
+    --glass-bg: rgba(255, 255, 255, 0.8);
+    --glass-strong-bg: rgba(255, 255, 255, 0.92);
+    --scrollbar-thumb: rgba(0, 0, 0, 0.15);
+    --scrollbar-thumb-hover: rgba(0, 0, 0, 0.25);
+    --selection-bg: rgba(12, 141, 230, 0.2);
+    --shadow-color: rgba(0, 0, 0, 0.08);
+    --dropdown-shadow: 0 10px 40px -5px rgba(0, 0, 0, 0.1), 0 4px 12px -2px rgba(0, 0, 0, 0.06);
+    --section-header-bg: rgba(0, 0, 0, 0.02);
+    --unread-bg: rgba(0, 0, 0, 0.015);
+    --separator-color: rgba(0, 0, 0, 0.06);
+  }
+
+  .dark {
+    color-scheme: dark;
+    --background: #0A0A0A;
+    --surface-1: #111111;
+    --surface-2: #141414;
+    --surface-3: #1A1A1A;
+    --surface-4: #222222;
+    --foreground: #ffffff;
+    --foreground-muted: #9ca3af;
+    --foreground-faint: #6b7280;
+    --border-color: rgba(255, 255, 255, 0.1);
+    --border-subtle: rgba(255, 255, 255, 0.06);
+    --hover-overlay: rgba(255, 255, 255, 0.05);
+    --glass-bg: rgba(26, 26, 26, 0.8);
+    --glass-strong-bg: rgba(26, 26, 26, 0.92);
+    --scrollbar-thumb: rgba(255, 255, 255, 0.1);
+    --scrollbar-thumb-hover: rgba(255, 255, 255, 0.2);
+    --selection-bg: rgba(12, 141, 230, 0.3);
+    --shadow-color: rgba(0, 0, 0, 0.4);
+    --dropdown-shadow: 0 10px 40px -5px rgba(0, 0, 0, 0.5), 0 4px 12px -2px rgba(0, 0, 0, 0.3);
+    --section-header-bg: rgba(255, 255, 255, 0.02);
+    --unread-bg: rgba(255, 255, 255, 0.02);
+    --separator-color: rgba(255, 255, 255, 0.06);
+  }
+
+  /* Smooth scrolling globally */
+  html {
+    scroll-behavior: smooth;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  body {
+    color: var(--foreground);
+    background: var(--background);
+    min-height: 100vh;
+  }
+
+  /* Text selection */
+  ::selection {
+    background: var(--selection-bg);
+    color: var(--foreground);
+  }
+
+  /* Custom scrollbar */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: var(--scrollbar-thumb);
+    border-radius: 3px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--scrollbar-thumb-hover);
+  }
+
+  /* Firefox scrollbar */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: var(--scrollbar-thumb) transparent;
+  }
+}
+
+@layer utilities {
+  .page-title {
+    @apply text-2xl sm:text-3xl font-bold tracking-tight text-foreground;
+  }
+
+  .page-title-compact {
+    @apply text-xl sm:text-2xl lg:text-3xl font-bold tracking-tight text-foreground;
+  }
+
+  .page-subtitle {
+    @apply mt-1 text-sm text-muted-foreground;
+  }
+
+  .app-select {
+    @apply w-full appearance-none rounded-xl border border-border bg-background px-3 py-2.5 pr-10 text-sm text-foreground shadow-sm focus:outline-none focus:ring-2 focus:ring-[#0c8de6]/20 focus:border-[#0c8de6]/50;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23999999' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+    background-position: right 0.9rem center;
+    background-repeat: no-repeat;
+    background-size: 14px;
+  }
+
+  /* Glass morphism utility */
+  .glass {
+    background: var(--glass-bg);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+  }
+
+  .glass-strong {
+    background: var(--glass-strong-bg);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+  }
+
+  /* Hide scrollbar utility */
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Animated glow for active elements */
+  .glow-blue {
+    box-shadow: 0 0 20px rgba(12, 141, 230, 0.15), 0 0 40px rgba(12, 141, 230, 0.05);
+  }
+  .glow-orange {
+    box-shadow: 0 0 20px rgba(240, 121, 21, 0.15), 0 0 40px rgba(240, 121, 21, 0.05);
+  }
+  .glow-green {
+    box-shadow: 0 0 20px rgba(40, 191, 104, 0.15), 0 0 40px rgba(40, 191, 104, 0.05);
+  }
+
+  /* Auth page animations */
+  .animate-float {
+    animation: float 6s ease-in-out infinite;
+  }
+  .animate-float-delayed {
+    animation: float 6s ease-in-out 2s infinite;
+  }
+  .animate-float-slow {
+    animation: float 8s ease-in-out 1s infinite;
+  }
+  .animate-pulse-glow {
+    animation: pulse-glow 3s ease-in-out infinite;
+  }
+  .animate-gradient-x {
+    animation: gradient-x 8s ease infinite;
+    background-size: 200% 200%;
+  }
+  .animate-shimmer {
+    animation: shimmer 3s linear infinite;
+  }
+  .animate-fade-in-up {
+    animation: fade-in-up 0.6s ease-out forwards;
+  }
+  .animate-fade-in-up-delay-1 {
+    animation: fade-in-up 0.6s ease-out 0.1s forwards;
+    opacity: 0;
+  }
+  .animate-fade-in-up-delay-2 {
+    animation: fade-in-up 0.6s ease-out 0.2s forwards;
+    opacity: 0;
+  }
+  .animate-fade-in-up-delay-3 {
+    animation: fade-in-up 0.6s ease-out 0.3s forwards;
+    opacity: 0;
+  }
+  .animate-fade-in-up-delay-4 {
+    animation: fade-in-up 0.6s ease-out 0.4s forwards;
+    opacity: 0;
+  }
+}
+
+/* Custom checkbox styles */
+input[type="checkbox"] {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  border: 2px solid rgba(255, 255, 255, 0.15);
+  border-radius: 5px;
+  background-color: rgba(255, 255, 255, 0.05);
+  cursor: pointer;
+  position: relative;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+input[type="checkbox"]:checked {
+  background-color: #D4A843;
+  border-color: #D4A843;
+}
+
+input[type="checkbox"]:checked::after {
+  content: '';
+  position: absolute;
+  left: 5px;
+  top: 2px;
+  width: 5px;
+  height: 9px;
+  border: solid white;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+
+input[type="checkbox"]:hover:not(:disabled) {
+  border-color: #D4A843;
+  background-color: rgba(212, 168, 67, 0.1);
+}
+
+input[type="checkbox"]:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(212, 168, 67, 0.2);
+}
+
+input[type="checkbox"]:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Smooth transitions for interactive elements */
+button, a, input, textarea, select {
+  transition-property: color, background-color, border-color, box-shadow, opacity, transform;
+  transition-duration: 200ms;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Fix native select/option colors in dark mode — must be outside @layer to override Tailwind utilities */
+.dark select {
+  background-color: #1a1a1a;
+  color: #ffffff;
+}
+
+.dark select option {
+  background-color: #1a1a1a;
+  color: #ffffff;
+}
+
+/* Auth page keyframes */
+@keyframes float {
+  0%, 100% { transform: translateY(0px) rotate(0deg); }
+  33% { transform: translateY(-12px) rotate(1deg); }
+  66% { transform: translateY(6px) rotate(-1deg); }
+}
+
+@keyframes pulse-glow {
+  0%, 100% { opacity: 0.4; transform: scale(1); }
+  50% { opacity: 0.8; transform: scale(1.05); }
+}
+
+@keyframes gradient-x {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+@keyframes shimmer {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+@keyframes fade-in-up {
+  0% { opacity: 0; transform: translateY(20px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes spin-slow {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
