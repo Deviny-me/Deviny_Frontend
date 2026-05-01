@@ -1,7 +1,5 @@
 /** @type {import('next').NextConfig} */
-const defaultBackendUrl = process.env.NODE_ENV === 'development'
-  ? 'http://localhost:5000'
-  : 'https://api.deviny.me'
+const defaultBackendUrl = 'https://api.deviny.me'
 const backendUrl = process.env.NEXT_PUBLIC_API_URL || defaultBackendUrl
 const parsedBackendUrl = new URL(backendUrl)
 
