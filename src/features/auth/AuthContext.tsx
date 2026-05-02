@@ -46,6 +46,21 @@ function mapUserDtoToUser(dto: UserDto): User {
   }
 }
 
+function sameAuthUser(a: User | null, b: User | null) {
+  if (a === b) return true
+  if (!a || !b) return false
+  return (
+    a.id === b.id &&
+    a.email === b.email &&
+    a.firstName === b.firstName &&
+    a.lastName === b.lastName &&
+    a.role === b.role &&
+    a.avatar === b.avatar &&
+    a.level === b.level &&
+    a.xp === b.xp
+  )
+}
+
 // Read cached user from storage synchronously so the very first render
 // already has the correct role/colors (no flash of default 'user' theme).
 function getStoredUser(): User | null {
@@ -73,7 +88,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           const refreshResult = await authService.refreshToken()
           if (refreshResult) {
             const mappedUser = mapUserDtoToUser(refreshResult.user)
-            setUser(mappedUser)
+            setUser(prev => sameAuthUser(prev, mappedUser) ? prev : mappedUser)
             // Persist to the same storage that held the previous token
             const store = localStorage.getItem('accessToken') ? localStorage : sessionStorage
             store.setItem('accessToken', refreshResult.accessToken)
@@ -133,7 +148,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       })
       
       const mappedUser = mapUserDtoToUser(response.user)
-      setUser(mappedUser)
+      setUser(prev => sameAuthUser(prev, mappedUser) ? prev : mappedUser)
 
       // Remember me → localStorage (persists across browser closes)
       // No remember me → sessionStorage (cleared on browser close)
@@ -172,7 +187,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       })
       
       const mappedUser = mapUserDtoToUser(response.user)
-      setUser(mappedUser)
+      setUser(prev => sameAuthUser(prev, mappedUser) ? prev : mappedUser)
       // Registration defaults to session-only (no remember me)
       sessionStorage.setItem('accessToken', response.accessToken)
       sessionStorage.setItem('user', JSON.stringify(mappedUser))
@@ -182,7 +197,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const setAuthUser = useCallback((newUser: User | null, storage: 'local' | 'session' = 'session') => {
-    setUser(newUser)
+    setUser(prev => sameAuthUser(prev, newUser) ? prev : newUser)
     const store = storage === 'local' ? localStorage : sessionStorage
     if (newUser) {
       store.setItem('user', JSON.stringify(newUser))

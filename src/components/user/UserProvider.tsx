@@ -42,6 +42,15 @@ interface UserContextType {
 
 const UserContext = createContext<UserContextType | undefined>(undefined)
 
+function shallowEqualUser(a: UserData | null, b: UserData | null) {
+  if (a === b) return true
+  if (!a || !b) return false
+  const aKeys = Object.keys(a) as (keyof UserData)[]
+  const bKeys = Object.keys(b) as (keyof UserData)[]
+  if (aKeys.length !== bKeys.length) return false
+  return aKeys.every(key => a[key] === b[key])
+}
+
 export function UserProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<UserData | null>(null)
   const [isLoading, setIsLoading] = useState(true)
@@ -85,7 +94,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
           console.log('Level data not available')
         }
 
-        setUser({
+        const nextUser: UserData = {
           id: data.id,
           fullName: data.fullName || `${data.firstName || ''} ${data.lastName || ''}`.trim() || 'User',
           name: data.name || data.fullName,
@@ -108,7 +117,8 @@ export function UserProvider({ children }: { children: ReactNode }) {
           followingCount: data.followingCount ?? 0,
           followersCount: data.followersCount ?? 0,
           postsCount: data.postsCount ?? 0,
-        })
+        }
+        setUser(prev => shallowEqualUser(prev, nextUser) ? prev : nextUser)
       } else if (response.status === 401) {
         const refreshResult = await authService.refreshToken()
         if (refreshResult) {
@@ -165,7 +175,8 @@ export function UserProvider({ children }: { children: ReactNode }) {
   const updateUser = useCallback((data: Partial<UserData>) => {
     setUser(prev => {
       if (!prev) return null
-      return { ...prev, ...data }
+      const next = { ...prev, ...data }
+      return shallowEqualUser(prev, next) ? prev : next
     })
   }, [])
 

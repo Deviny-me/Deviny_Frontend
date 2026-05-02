@@ -26,6 +26,7 @@ export interface ClientOrStudent {
   email: string
   phone?: string | null
   avatarUrl?: string | null
+  role?: string | number | null
   name: string
 }
 

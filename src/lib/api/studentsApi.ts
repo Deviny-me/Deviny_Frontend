@@ -8,6 +8,7 @@ export interface Student {
   email: string
   phone?: string | null
   avatarUrl?: string | null
+  role?: string | number | null
   name: string // Alias for fullName for compatibility
 }
 

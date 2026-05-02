@@ -347,7 +347,7 @@ export default function UserProfilePage() {
     }
   }, [isLoadingPosts, hasMore, page, postIds.length, loadPosts])
 
-  const handleDeletePost = async (postId: string) => {
+  const handleDeletePost = useCallback(async (postId: string) => {
     if (!confirm(tPosts('deleteConfirm'))) return
     try {
       setDeletingPostId(postId)
@@ -363,7 +363,15 @@ export default function UserProfilePage() {
     } finally {
       setDeletingPostId(null)
     }
-  }
+  }, [dispatch, tPosts])
+
+  const handleRepostSuccess = useCallback(() => {
+    loadPosts(1)
+  }, [loadPosts])
+
+  const handlePhotoClick = useCallback((url: string, caption?: string) => {
+    setViewingPhoto({ url, caption })
+  }, [])
 
   // Infinite scroll
   useEffect(() => {
@@ -561,7 +569,7 @@ export default function UserProfilePage() {
                 <div>
                   <div className="grid grid-cols-2 gap-2 p-2 sm:grid-cols-3">
                     {postIds.map((id) => (
-                      <GridCell key={id} postId={id} onSelect={setSelectedPostId} onDelete={handleDeletePost} deletingPostId={deletingPostId} />
+                      <GridCell key={id} postId={id} onSelect={setSelectedPostId} onDelete={handleDeletePost} deletingPostId={deletingPostId === id ? id : null} />
                     ))}
                   </div>
                   {!isRefreshingPosts && (isLoadingPosts || hasMore) && (
@@ -579,11 +587,11 @@ export default function UserProfilePage() {
                       isOwnProfile
                       showDeleteInHeader
                       onDelete={handleDeletePost}
-                      deletingPostId={deletingPostId}
-                      onRepostSuccess={() => loadPosts(1)}
-                      playingVideoId={playingVideoId}
+                      deletingPostId={deletingPostId === id ? id : null}
+                      onRepostSuccess={handleRepostSuccess}
+                      playingVideoId={playingVideoId === id ? id : null}
                       onVideoToggle={setPlayingVideoId}
-                      onPhotoClick={(url: string, caption?: string) => setViewingPhoto({ url, caption })}
+                      onPhotoClick={handlePhotoClick}
                     />
                   ))}
                   {!isRefreshingPosts && (isLoadingPosts || hasMore) && (

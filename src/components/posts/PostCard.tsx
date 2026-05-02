@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { memo, useCallback, useEffect, useMemo, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { useRouter, usePathname } from 'next/navigation'
 import { Video, Repeat2, Trash2, Loader2 } from 'lucide-react'
@@ -9,8 +9,7 @@ import { getMediaUrl } from '@/lib/config'
 import { PostActions } from './PostActions'
 import { PostCommentsPanel } from './PostCommentsPanel'
 import { usePost, usePostDispatch } from '@/contexts/PostStoreContext'
-import { useAccentColors, getAccentColorsByRole, getRoleRingClass } from '@/lib/theme/useAccentColors'
-import { useAuth } from '@/features/auth/AuthContext'
+import { getAccentColorsByRole, getRoleRingClass } from '@/lib/theme/useAccentColors'
 
 interface PostCardProps {
   postId: string
@@ -18,7 +17,7 @@ interface PostCardProps {
   variant?: 'feed' | 'modal'
   /** Home feed portrait media layout */
   mediaPreset?: 'default' | 'home-portrait'
-  /** @deprecated Use useAuth() internally. Kept for backward compat. */
+  /** Current viewer ID for ownership checks. */
   currentUserId?: string | null
   /** Show delete button in header */
   showDeleteInHeader?: boolean
@@ -43,9 +42,26 @@ interface PostCardProps {
  * Reads all post data from PostStore — keeps no local interaction state.
  * When comments are open, expands into a 2-column grid layout (inline, no overlay).
  */
-export function PostCard({
+function getUserIdFromToken(): string | undefined {
+  if (typeof window === 'undefined') return undefined
+  try {
+    const token = localStorage.getItem('accessToken') || sessionStorage.getItem('accessToken')
+    if (!token) return undefined
+    const payload = JSON.parse(atob(token.split('.')[1]))
+    return (
+      payload.sub ??
+      payload['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier']
+    ) as string | undefined
+  } catch {
+    return undefined
+  }
+}
+
+const normalizeId = (id: string | undefined | null): string | undefined =>
+  id?.toString().trim().toLowerCase() || undefined
+
+function PostCardComponent({
   postId,
-  variant = 'feed',
   mediaPreset = 'default',
   currentUserId,
   showDeleteInHeader = false,
@@ -57,13 +73,15 @@ export function PostCard({
   onVideoToggle,
   onPhotoClick,
 }: PostCardProps) {
-  const accent = useAccentColors()
-  const { user: authUser } = useAuth()
   const post = usePost(postId)
   const dispatch = usePostDispatch()
   const router = useRouter()
   const pathname = usePathname()
   const [commentsOpen, setCommentsOpen] = useState(false)
+  const resolvedUserId = useMemo(
+    () => currentUserId ?? (isOwnProfile ? undefined : getUserIdFromToken()),
+    [currentUserId, isOwnProfile],
+  )
 
   // Lock body scroll when comments modal is open
   // Must be called before any early return to satisfy Rules of Hooks
@@ -76,6 +94,38 @@ export function PostCard({
     return () => { document.body.style.overflow = '' }
   }, [commentsOpen])
 
+  const handleCommentCountChange = useCallback((delta: number) => {
+    if (!post) return
+    dispatch({
+      type: 'UPDATE_POST',
+      postId: post.id,
+      partial: { commentCount: post.commentCount + delta },
+    })
+  }, [dispatch, post])
+
+  const handleAuthorClick = useCallback(() => {
+    if (!post) return
+    const basePath = pathname?.startsWith('/trainer')
+      ? '/trainer'
+      : pathname?.startsWith('/nutritionist')
+        ? '/nutritionist'
+        : '/user'
+    const normResolved = normalizeId(resolvedUserId)
+    const owner = isOwnProfile || (!!normResolved && (
+      normalizeId(post.userId) === normResolved ||
+      normalizeId(post.author?.id) === normResolved
+    ))
+
+    if (owner) {
+      router.push(`${basePath}/profile`)
+    } else {
+      router.push(`${basePath}/profile/${post.userId}`)
+    }
+  }, [isOwnProfile, pathname, post, resolvedUserId, router])
+
+  const closeComments = useCallback(() => setCommentsOpen(false), [])
+  const toggleComments = useCallback(() => setCommentsOpen(prev => !prev), [])
+
   if (!post) return null
 
   const authorName = post.author?.fullName || `${post.author?.firstName ?? ''} ${post.author?.lastName ?? ''}`.trim() || 'User'
@@ -86,28 +136,6 @@ export function PostCard({
   const originalDeleted = isRepost && !post.originalPost
 
   // --- Robust ownership detection ---
-  // 1. Prefer explicit prop, then auth context
-  // 2. Fallback: decode JWT token from storage to cover race-condition / stale-state edge cases
-  const resolvedUserId = currentUserId ?? authUser?.id ?? (() => {
-    try {
-      const token = typeof window !== 'undefined'
-        ? (localStorage.getItem('accessToken') || sessionStorage.getItem('accessToken'))
-        : null
-      if (!token) return undefined
-      const payload = JSON.parse(atob(token.split('.')[1]))
-      return (
-        payload.sub ??
-        payload['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier']
-      ) as string | undefined
-    } catch {
-      return undefined
-    }
-  })()
-
-  // Normalise IDs (trim + lowercase) before comparison to avoid format mismatches
-  const normalizeId = (id: string | undefined | null): string | undefined =>
-    id?.toString().trim().toLowerCase() || undefined
-
   const normResolved = normalizeId(resolvedUserId)
   const isOwner = isOwnProfile || (!!normResolved && (
     normalizeId(post.userId) === normResolved ||
@@ -121,35 +149,10 @@ export function PostCard({
   const displayMedia = isRepost ? post.originalPost?.media : post.media
   const displayCaption = isRepost ? post.originalPost?.caption : post.caption
 
-  const handleCommentCountChange = (delta: number) => {
-    dispatch({
-      type: 'UPDATE_POST',
-      postId: post.id,
-      partial: { commentCount: post.commentCount + delta },
-    })
-  }
-
-  const handleAuthorClick = () => {
-    const basePath = pathname?.startsWith('/trainer')
-      ? '/trainer'
-      : pathname?.startsWith('/nutritionist')
-        ? '/nutritionist'
-        : '/user'
-    // Navigate directly to own profile page (not [userId] route) when clicking own name
-    if (isOwner) {
-      router.push(`${basePath}/profile`)
-    } else {
-      router.push(`${basePath}/profile/${post.userId}`)
-    }
-  }
-
-  const isModal = variant === 'modal'
   const isHomePortrait = mediaPreset === 'home-portrait'
   const portraitCardStyle = isHomePortrait
     ? { width: 'min(100%, calc(min(72vh, 54rem) * 3 / 4))' }
     : undefined
-
-  const closeComments = () => setCommentsOpen(false)
 
   // ===== Portal comments modal =====
   const commentsModal = commentsOpen && !originalDeleted && typeof window !== 'undefined' && createPortal(
@@ -384,7 +387,7 @@ export function PostCard({
             <div className="px-3 py-1.5 border-t border-border-subtle">
               <PostActions
                 postId={post.id}
-                onCommentClick={() => setCommentsOpen(prev => !prev)}
+                onCommentClick={toggleComments}
                 onRepostSuccess={onRepostSuccess}
               />
             </div>
@@ -397,3 +400,6 @@ export function PostCard({
     </>
   )
 }
+
+export const PostCard = memo(PostCardComponent)
+PostCard.displayName = 'PostCard'

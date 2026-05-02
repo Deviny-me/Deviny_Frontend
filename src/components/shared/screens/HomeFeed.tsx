@@ -119,7 +119,7 @@ export function HomeFeed({ currentUserId, onPostUploaded, accentColor = 'blue' }
     loadFeed(1)
   })
 
-  const handleDeletePost = async (postId: string) => {
+  const handleDeletePost = useCallback(async (postId: string) => {
     if (!confirm(tPosts('deleteConfirm'))) return
     try {
       setDeletingPostId(postId)
@@ -134,7 +134,15 @@ export function HomeFeed({ currentUserId, onPostUploaded, accentColor = 'blue' }
     } finally {
       setDeletingPostId(null)
     }
-  }
+  }, [dispatch, tPosts])
+
+  const handleRepostSuccess = useCallback(() => {
+    loadFeed(1)
+  }, [loadFeed])
+
+  const handlePhotoClick = useCallback((url: string, caption?: string) => {
+    setViewingPhoto({ url, caption })
+  }, [])
 
   const handleFileSelect = async (event: React.ChangeEvent<HTMLInputElement>, type: PostType) => {
     const file = event.target.files?.[0]
@@ -198,11 +206,11 @@ export function HomeFeed({ currentUserId, onPostUploaded, accentColor = 'blue' }
                 currentUserId={currentUserId}
                 showDeleteInHeader
                 onDelete={handleDeletePost}
-                deletingPostId={deletingPostId}
-                onRepostSuccess={() => loadFeed(1)}
-                playingVideoId={playingVideoId}
+                deletingPostId={deletingPostId === id ? id : null}
+                onRepostSuccess={handleRepostSuccess}
+                playingVideoId={playingVideoId === id ? id : null}
                 onVideoToggle={setPlayingVideoId}
-                onPhotoClick={(url, caption) => setViewingPhoto({ url, caption })}
+                onPhotoClick={handlePhotoClick}
               />
             ))}
             <div ref={infiniteScrollRef} className="flex min-h-12 justify-center items-center pt-2">

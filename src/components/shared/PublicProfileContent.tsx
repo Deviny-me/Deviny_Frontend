@@ -616,6 +616,10 @@ export function PublicProfileContent({
     }
   }, [isLoading, hasMore, page, postIds.length, loadPosts])
 
+  const handlePhotoClick = useCallback((url: string, caption?: string) => {
+    setViewingPhoto({ url, caption })
+  }, [])
+
   // Infinite scroll
   useEffect(() => {
     if (!hasMore || isLoading) return
@@ -974,9 +978,9 @@ export function PublicProfileContent({
                   <PostCard
                     key={id}
                     postId={id}
-                    playingVideoId={playingVideoId}
+                    playingVideoId={playingVideoId === id ? id : null}
                     onVideoToggle={setPlayingVideoId}
-                    onPhotoClick={(url: string, caption?: string) => setViewingPhoto({ url, caption })}
+                    onPhotoClick={handlePhotoClick}
                   />
                 ))}
                 {!isRefreshingPosts && (isLoading || hasMore) && (

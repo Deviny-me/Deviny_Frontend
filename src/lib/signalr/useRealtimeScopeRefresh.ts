@@ -20,7 +20,8 @@ export function useRealtimeScopeRefresh(
 
   refreshRef.current = onRefresh
 
-  const scopeSet = useMemo(() => new Set(scopes.map(s => s.toLowerCase())), [scopes])
+  const scopeKey = scopes.map(s => s.toLowerCase()).sort().join('|')
+  const scopeSet = useMemo(() => new Set(scopeKey.split('|').filter(Boolean)), [scopeKey])
 
   useEffect(() => {
     if (!enabled || scopeSet.size === 0) {

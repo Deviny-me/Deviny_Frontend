@@ -13,6 +13,17 @@ interface LevelContextType {
 
 const LevelContext = createContext<LevelContextType | undefined>(undefined)
 
+function shallowEqualLevel(a: UserLevelDto | null, b: UserLevelDto | null) {
+  if (a === b) return true
+  if (!a || !b) return false
+  const aRecord = a as unknown as Record<string, unknown>
+  const bRecord = b as unknown as Record<string, unknown>
+  const aKeys = Object.keys(aRecord)
+  const bKeys = Object.keys(bRecord)
+  if (aKeys.length !== bKeys.length) return false
+  return aKeys.every(key => aRecord[key] === bRecord[key])
+}
+
 export function LevelProvider({ children }: { children: ReactNode }) {
   const [level, setLevel] = useState<UserLevelDto | null>(null)
   const [loading, setLoading] = useState(true)
@@ -20,7 +31,7 @@ export function LevelProvider({ children }: { children: ReactNode }) {
   const refreshLevel = useCallback(async () => {
     try {
       const data = await getMyLevel()
-      setLevel(data)
+      setLevel(prev => shallowEqualLevel(prev, data) ? prev : data)
     } catch (error) {
       console.error('Failed to fetch level:', error)
     }
@@ -41,7 +52,7 @@ export function LevelProvider({ children }: { children: ReactNode }) {
     const handleXpUpdated = (data: { xpAdded: number; leveledUp: boolean; newLevel: number; currentState: UserLevelDto }) => {
       console.log('[LevelProvider] XpUpdated:', data.xpAdded, 'XP, leveledUp:', data.leveledUp)
       // Directly update from the payload — no extra API call needed
-      setLevel(data.currentState)
+      setLevel(prev => shallowEqualLevel(prev, data.currentState) ? prev : data.currentState)
     }
 
     chatConnection.onXpUpdated(handleXpUpdated)
