@@ -16,7 +16,7 @@ import {
   Loader2,
 } from 'lucide-react'
 import { getMediaUrl } from '@/lib/config'
-import { useAccentColors } from '@/lib/theme/useAccentColors'
+import { useAccentColors, getAccentColorsByRole } from '@/lib/theme/useAccentColors'
 
 export interface ClientOrStudent {
   id: string
@@ -182,7 +182,7 @@ export function StudentsClientsContent({ fetchData }: StudentsClientsContentProp
                       className="w-12 h-12 rounded-full object-cover"
                     />
                   ) : (
-                    <div className={`w-12 h-12 rounded-full bg-gradient-to-br ${accent.gradient} flex items-center justify-center text-white font-bold`}>
+                    <div className={`w-12 h-12 rounded-full bg-gradient-to-br ${getAccentColorsByRole(student.role || 'user').gradient} flex items-center justify-center text-white font-bold`}>
                       {getInitials(student.name)}
                     </div>
                   )}

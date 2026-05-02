@@ -79,7 +79,7 @@ export function RightSidebar() {
                     className="w-8 h-8 rounded-full object-cover"
                   />
                 ) : (
-                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#d4722a] to-[#b85e1e] flex items-center justify-center text-white text-xs font-bold">
+                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#0c8de6] to-[#0070c4] flex items-center justify-center text-white text-xs font-bold">
                     {getInitials(student.name)}
                   </div>
                 )}

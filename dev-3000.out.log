@@ -1,0 +1,33 @@
+
+> deviny-frontend@0.1.0 dev
+> next dev -p 3000
+
+  ▲ Next.js 14.2.35
+  - Local:        http://localhost:3000
+
+ ✓ Starting...
+ ✓ Ready in 3.3s
+ ○ Compiling /user ...
+ ✓ Compiled /user in 13.2s (1811 modules)
+ GET /user 200 in 14103ms
+ ✓ Compiled in 1042ms (908 modules)
+ ○ Compiling /trainer ...
+ ✓ Compiled /trainer in 2.3s (1836 modules)
+ GET /nutritionist 200 in 2759ms
+ GET /trainer 200 in 2713ms
+ GET /trainer 200 in 126ms
+ ○ Compiling /auth/login ...
+ ✓ Compiled /auth/login in 4s (1896 modules)
+ GET /auth/login 200 in 3127ms
+ ✓ Compiled /user in 322ms (961 modules)
+ GET /user 200 in 909ms
+ GET /auth/login 200 in 12ms
+ GET /auth/login 200 in 46ms
+ GET /user 200 in 63ms
+ ✓ Compiled in 3.1s (1909 modules)
+ ✓ Compiled in 1951ms (1909 modules)
+ GET /trainer 200 in 399ms
+ ○ Compiling /nutritionist ...
+ ✓ Compiled /nutritionist in 716ms (961 modules)
+ GET /user 200 in 1453ms
+ GET /nutritionist 200 in 1572ms
