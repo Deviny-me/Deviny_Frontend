@@ -13,7 +13,7 @@ import {
 import { friendsApi, followsApi } from '@/lib/api/friendsApi'
 import { FriendDto } from '@/types/friend'
 import { useTranslations } from 'next-intl'
-import { useAccentColors, getRoleRingClass } from '@/lib/theme/useAccentColors'
+import { useAccentColors, getRoleRingClass, getAccentColorsByRole } from '@/lib/theme/useAccentColors'
 import { Toast } from '@/components/ui/Toast'
 import { getMediaUrl } from '@/lib/config'
 import { useRealtimeScopeRefresh } from '@/lib/signalr/useRealtimeScopeRefresh'
@@ -201,13 +201,12 @@ export function FriendsContent({ basePath }: FriendsContentProps) {
                           className={`w-16 h-16 rounded-full object-cover ${getRoleRingClass(friend.role)}`}
                         />
                       ) : (
-                        <div className={`w-16 h-16 rounded-full bg-gradient-to-br ${accent.gradient} flex items-center justify-center text-white font-bold text-lg`}>
+                        <div className={`w-16 h-16 rounded-full bg-gradient-to-br ${getAccentColorsByRole(friend.role).gradient} flex items-center justify-center text-white font-bold text-lg`}>
                           {friend.fullName?.[0] || friend.email[0].toUpperCase()}
                         </div>
                       )}
                       <div className="min-w-0">
                         <h3 className="text-foreground font-semibold text-base sm:text-lg truncate">{friend.fullName || tc('user')}</h3>
-                        <p className="text-sm text-muted-foreground truncate">{friend.email}</p>
                         <p className="text-xs text-faint-foreground mt-1">
                           {t('friendsSince')} {new Date(friend.friendsSince).toLocaleDateString()}
                         </p>
@@ -268,13 +267,12 @@ export function FriendsContent({ basePath }: FriendsContentProps) {
                           className={`w-16 h-16 rounded-full object-cover ${getRoleRingClass(follower.role)}`}
                         />
                       ) : (
-                        <div className={`w-16 h-16 rounded-full bg-gradient-to-br ${accent.gradient} flex items-center justify-center text-white font-bold text-lg`}>
+                        <div className={`w-16 h-16 rounded-full bg-gradient-to-br ${getAccentColorsByRole(follower.role).gradient} flex items-center justify-center text-white font-bold text-lg`}>
                           {follower.fullName?.[0] || follower.email[0].toUpperCase()}
                         </div>
                       )}
                       <div className="min-w-0">
                         <h3 className="text-foreground font-semibold text-base sm:text-lg truncate">{follower.fullName || tc('user')}</h3>
-                        <p className="text-sm text-muted-foreground truncate">{follower.email}</p>
                         {follower.role && (
                           <span className="text-xs text-muted-foreground">{follower.role}</span>
                         )}
@@ -314,13 +312,12 @@ export function FriendsContent({ basePath }: FriendsContentProps) {
                           className={`w-16 h-16 rounded-full object-cover ${getRoleRingClass(trainer.role)}`}
                         />
                       ) : (
-                        <div className="w-16 h-16 rounded-full bg-gradient-to-br from-green-400 to-teal-500 flex items-center justify-center text-white font-bold text-lg">
+                        <div className={`w-16 h-16 rounded-full bg-gradient-to-br ${getAccentColorsByRole(trainer.role).gradient} flex items-center justify-center text-white font-bold text-lg`}>
                           {trainer.fullName?.[0] || trainer.email[0].toUpperCase()}
                         </div>
                       )}
                       <div className="min-w-0">
                         <h3 className="text-foreground font-semibold text-base sm:text-lg truncate">{trainer.fullName || tc('user')}</h3>
-                        <p className="text-sm text-muted-foreground truncate">{trainer.email}</p>
                         {trainer.role && (
                           <span className="text-xs text-green-500">{trainer.role}</span>
                         )}

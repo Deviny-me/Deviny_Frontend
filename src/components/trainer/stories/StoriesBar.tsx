@@ -143,7 +143,7 @@ export function StoriesBar() {
                   <div className={`p-[3px] rounded-full ${
                     story.isViewed
                       ? 'bg-gradient-to-br from-gray-500 to-gray-600'
-                      : 'bg-gradient-to-br from-[#f07915] to-[#d4600b]'
+                      : 'bg-gradient-to-br from-[#d4722a] to-[#b85e1e]'
                   }`}>
                     <div className="p-[2px] bg-surface-2 rounded-full">
                       <img
@@ -160,7 +160,7 @@ export function StoriesBar() {
                       alt={story.userName}
                       className="w-16 h-16 rounded-full object-cover border-2 border-[#141414]"
                     />
-                    <div className="absolute bottom-0 right-0 w-5 h-5 rounded-full bg-gradient-to-br from-[#f07915] to-[#d4600b] flex items-center justify-center border-2 border-[#141414]">
+                    <div className="absolute bottom-0 right-0 w-5 h-5 rounded-full bg-gradient-to-br from-[#d4722a] to-[#b85e1e] flex items-center justify-center border-2 border-[#141414]">
                       <Plus className="w-3 h-3 text-white" strokeWidth={3} />
                     </div>
                   </div>

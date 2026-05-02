@@ -109,7 +109,7 @@ export function ProgramsFilterModal({ isOpen, onClose, onApply, currentFilters }
                       ) : (
                         <>
                           <Star className="w-3.5 h-3.5 fill-current" />
-                          {r === 5 ? r : `${r}+`}
+                          {r}
                         </>
                       )}
                     </button>

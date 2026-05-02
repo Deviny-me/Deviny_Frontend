@@ -354,7 +354,7 @@ export default function ProgramsPage() {
                   {tc('all')}
                 </button>
                 {([
-                  { cat: 'Training' as FilterType, icon: Dumbbell, label: t('training'), count: allPrograms.filter(p => p.category === 'Training').length, activeColor: 'bg-[#f07915]' },
+                  { cat: 'Training' as FilterType, icon: Dumbbell, label: t('training'), count: allPrograms.filter(p => p.category === 'Training').length, activeColor: 'bg-[#d4722a]' },
                   { cat: 'Diet' as FilterType, icon: Apple, label: t('nutrition'), count: allPrograms.filter(p => p.category === 'Diet').length, activeColor: 'bg-[#28bf68]' },
                   { cat: 'Consultation' as FilterType, icon: MessageSquare, label: t('consultation'), count: allPrograms.filter(p => p.category === 'Consultation').length, activeColor: 'bg-[#0c8de6]' },
                 ]).map(({ cat, icon: Icon, label, count, activeColor }) => (

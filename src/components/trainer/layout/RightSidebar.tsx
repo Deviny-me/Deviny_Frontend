@@ -60,7 +60,7 @@ export function RightSidebar() {
             <h3 className="text-sm font-semibold text-foreground">{tFeed('recentStudents')}</h3>
             <button
               onClick={() => router.push('/trainer/students')}
-              className="text-xs text-[#f07915] hover:underline flex items-center gap-1"
+              className="text-xs text-[#d4722a] hover:underline flex items-center gap-1"
             >
               {tCommon('all')}
               <ArrowRight className="w-3 h-3" />
@@ -79,7 +79,7 @@ export function RightSidebar() {
                     className="w-8 h-8 rounded-full object-cover"
                   />
                 ) : (
-                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#f07915] to-[#d4600b] flex items-center justify-center text-white text-xs font-bold">
+                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#d4722a] to-[#b85e1e] flex items-center justify-center text-white text-xs font-bold">
                     {getInitials(student.name)}
                   </div>
                 )}
@@ -96,15 +96,15 @@ export function RightSidebar() {
       {/* Footer */}
       <div className="px-3 py-2">
         <div className="flex flex-wrap gap-x-2 gap-y-1 text-[10px] text-faint-foreground">
-          <a href="#" className="hover:text-[#f07915] hover:underline">About</a>
+          <a href="#" className="hover:text-[#d4722a] hover:underline">About</a>
           <span>•</span>
-          <a href="#" className="hover:text-[#f07915] hover:underline">Help Center</a>
+          <a href="#" className="hover:text-[#d4722a] hover:underline">Help Center</a>
           <span>•</span>
-          <a href="#" className="hover:text-[#f07915] hover:underline">Privacy</a>
+          <a href="#" className="hover:text-[#d4722a] hover:underline">Privacy</a>
           <span>•</span>
-          <a href="#" className="hover:text-[#f07915] hover:underline">Terms</a>
+          <a href="#" className="hover:text-[#d4722a] hover:underline">Terms</a>
           <span>•</span>
-          <a href="#" className="hover:text-[#f07915] hover:underline">Advertising</a>
+          <a href="#" className="hover:text-[#d4722a] hover:underline">Advertising</a>
         </div>
         <div className="mt-2 flex items-center gap-1.5">
           <Image src="/logo-icon.png" alt="Deviny" width={20} height={20} className="rounded" />

@@ -13,6 +13,8 @@ interface AchievementsContextValue {
   locked: AchievementDto[]
   unlockedCount: number
   totalCount: number
+  newCount: number
+  markSeen: () => void
   refresh: () => Promise<void>
   applyAwardedAchievement: (event: AchievementAwardedEvent) => void
 }
@@ -55,10 +57,16 @@ function normalize(response: MyAchievementsResponse): MyAchievementsResponse {
   }
 }
 
+const SEEN_KEY = 'achievements_seen_count'
+
 export function AchievementsProvider({ children }: { children: React.ReactNode }) {
   const [data, setData] = useState<MyAchievementsResponse | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [seenCount, setSeenCount] = useState<number>(() => {
+    if (typeof window === 'undefined') return 0
+    return parseInt(localStorage.getItem(SEEN_KEY) ?? '0', 10)
+  })
 
   const refresh = useCallback(async () => {
     try {
@@ -130,10 +138,18 @@ export function AchievementsProvider({ children }: { children: React.ReactNode }
     })
   }, [])
 
+  const markSeen = useCallback(() => {
+    const count = data?.unlockedCount ?? 0
+    localStorage.setItem(SEEN_KEY, String(count))
+    setSeenCount(count)
+  }, [data?.unlockedCount])
+
   const value = useMemo<AchievementsContextValue>(() => {
     const all = data?.all ?? []
     const unlocked = all.filter((a) => a.isUnlocked)
     const locked = all.filter((a) => !a.isUnlocked)
+    const unlockedCount = data?.unlockedCount ?? 0
+    const newCount = Math.max(0, unlockedCount - seenCount)
 
     return {
       data,
@@ -141,12 +157,14 @@ export function AchievementsProvider({ children }: { children: React.ReactNode }
       error,
       unlocked,
       locked,
-      unlockedCount: data?.unlockedCount ?? 0,
+      unlockedCount,
       totalCount: data?.totalCount ?? 0,
+      newCount,
+      markSeen,
       refresh,
       applyAwardedAchievement,
     }
-  }, [data, loading, error, refresh, applyAwardedAchievement])
+  }, [data, loading, error, seenCount, markSeen, refresh, applyAwardedAchievement])
 
   return <AchievementsContext.Provider value={value}>{children}</AchievementsContext.Provider>
 }

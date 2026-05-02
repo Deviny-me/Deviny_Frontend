@@ -187,7 +187,7 @@ export function StoriesViewer({ story, onClose }: StoriesViewerProps) {
                 >
                   <div className="flex items-center justify-between mb-3">
                     <div className="flex items-center gap-2">
-                      <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-[#f07915] to-[#d4600b] flex items-center justify-center">
+                      <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-[#d4722a] to-[#b85e1e] flex items-center justify-center">
                         <Flame className="w-5 h-5 text-white" />
                       </div>
                       <div>
@@ -196,7 +196,7 @@ export function StoriesViewer({ story, onClose }: StoriesViewerProps) {
                       </div>
                     </div>
                     <div className="text-right">
-                      <div className="flex items-center gap-1 text-[#f07915]">
+                      <div className="flex items-center gap-1 text-[#d4722a]">
                         <Zap className="w-4 h-4" fill="currentColor" />
                         <span className="text-lg font-bold">+{currentStory.workout.xpEarned}</span>
                       </div>
@@ -214,14 +214,14 @@ export function StoriesViewer({ story, onClose }: StoriesViewerProps) {
               <input
                 type="text"
                 placeholder={`Reply to ${story.userName}...`}
-                className="flex-1 px-4 py-3 bg-white/10 backdrop-blur-sm border border-white/20 rounded-full text-sm text-foreground placeholder:text-foreground/50 focus:outline-none focus:border-[#f07915]"
+                className="flex-1 px-4 py-3 bg-white/10 backdrop-blur-sm border border-white/20 rounded-full text-sm text-foreground placeholder:text-foreground/50 focus:outline-none focus:border-[#d4722a]"
                 onClick={() => setIsPaused(true)}
                 onBlur={() => setIsPaused(false)}
               />
               <button className="p-3 bg-white/10 backdrop-blur-sm border border-white/20 rounded-full hover:bg-white/20 transition-colors">
                 <Heart className="w-5 h-5 text-foreground" />
               </button>
-              <button className="p-3 bg-gradient-to-r from-[#f07915] to-[#d4600b] rounded-full hover:opacity-90 transition-opacity">
+              <button className="p-3 bg-gradient-to-r from-[#d4722a] to-[#b85e1e] rounded-full hover:opacity-90 transition-opacity">
                 <Send className="w-5 h-5 text-white" />
               </button>
             </div>

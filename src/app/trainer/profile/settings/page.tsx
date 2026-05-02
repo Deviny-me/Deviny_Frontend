@@ -61,7 +61,7 @@ export default function TrainerProfileSettingsPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-24">
-        <Loader2 className="w-8 h-8 text-[#f07915] animate-spin" />
+        <Loader2 className="w-8 h-8 text-[#d4722a] animate-spin" />
       </div>
     )
   }

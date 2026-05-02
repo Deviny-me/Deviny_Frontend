@@ -769,6 +769,7 @@
   "feed": {
     "title": "Feed",
     "shareProgress": "Share your progress...",
+    "addPost": "New post",
     "photo": "Photo",
     "video": "Video",
     "achievement": "Achievement",

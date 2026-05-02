@@ -34,15 +34,15 @@ import { getMediaUrl } from '@/lib/config'
 import { useRealtimeScopeRefresh } from '@/lib/signalr/useRealtimeScopeRefresh'
 
 interface DashboardContentProps {
-  accentColor: string // hex color like '#f07915' or '#28bf68'
-  accentGradient: string // tailwind gradient like 'from-[#f07915] to-[#d4600b]'
+  accentColor: string // hex color like '#d4722a' or '#28bf68'
+  accentGradient: string // tailwind gradient like 'from-[#d4722a] to-[#b85e1e]'
   role: 'trainer' | 'nutritionist'
 }
 
 const MONTH_LABELS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
 
 const TIER_COLORS = {
-  basic: '#f07915',
+  basic: '#d4722a',
   standard: '#F59E0B',
   pro: '#8B5CF6',
 }

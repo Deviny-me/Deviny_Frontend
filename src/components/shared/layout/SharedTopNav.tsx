@@ -10,7 +10,7 @@ import { useTheme } from '@/components/theme/ThemeProvider'
 
 const topNavColorMap = {
   green:  { logoBg: 'from-[#28bf68] to-[#1c9e52]', activeText: 'text-[#28bf68]', unreadText: 'text-[#1c9e52] hover:text-[#1c9e52]', indicator: 'bg-[#28bf68]', badge: 'bg-[#1c9e52]' },
-  orange: { logoBg: 'from-[#f07915] to-[#d4600b]', activeText: 'text-[#f07915]', unreadText: 'text-[#d4600b] hover:text-[#d4600b]', indicator: 'bg-[#f07915]', badge: 'bg-[#d4600b]' },
+  orange: { logoBg: 'from-[#d4722a] to-[#b85e1e]', activeText: 'text-[#d4722a]', unreadText: 'text-[#b85e1e] hover:text-[#b85e1e]', indicator: 'bg-[#d4722a]', badge: 'bg-[#b85e1e]' },
   blue:   { logoBg: 'from-[#0c8de6] to-[#0070c4]', activeText: 'text-[#0c8de6]', unreadText: 'text-[#0070c4] hover:text-[#0070c4]', indicator: 'bg-[#0c8de6]', badge: 'bg-[#0070c4]' },
 }
 

@@ -117,12 +117,12 @@ export default function ProgramsPage() {
 
   // Trainer accent colors
   const accent = {
-    gradient: 'from-[#f07915] to-[#d4600b]',
-    text: 'text-[#f07915]',
-    border: 'focus:border-[#f07915]',
-    hoverBorder: 'hover:border-[#f07915]/50',
-    bg: 'bg-[#f07915]',
-    hoverText: 'group-hover:text-[#f07915]',
+    gradient: 'from-[#d4722a] to-[#b85e1e]',
+    text: 'text-[#d4722a]',
+    border: 'focus:border-[#d4722a]',
+    hoverBorder: 'hover:border-[#d4722a]/50',
+    bg: 'bg-[#d4722a]',
+    hoverText: 'group-hover:text-[#d4722a]',
   }
 
   // Active tab — now based on category
@@ -463,7 +463,7 @@ export default function ProgramsPage() {
                       </span>
                     )}
                     <span className={`px-2 py-1 text-xs font-bold rounded text-foreground flex items-center gap-1 ${
-                      program.category === 'Training' ? 'bg-blue-600' : program.category === 'Diet' ? 'bg-green-600' : 'bg-violet-600'
+                      program.category === 'Training' ? 'bg-[#d4722a]' : program.category === 'Diet' ? 'bg-green-600' : 'bg-violet-600'
                     }`}>
                       {program.category === 'Training' ? (
                         <><Dumbbell className="w-3 h-3" />{t('tabTraining')}</>

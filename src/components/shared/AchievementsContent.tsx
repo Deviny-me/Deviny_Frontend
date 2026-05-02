@@ -2,19 +2,26 @@
 
 import { Trophy, Lock, Award, Loader2 } from 'lucide-react'
 import { useTranslations } from 'next-intl'
+import { useEffect } from 'react'
 import type { AchievementDto } from '@/types/achievement'
 import { getIcon, getRarityBorder, getRarityGlow, getRarityLabelColor } from '@/components/shared/achievementUtils'
 import { useAccentColors } from '@/lib/theme/useAccentColors'
 import { useAchievements } from '@/contexts/AchievementsContext'
 
 export default function AchievementsContent() {
-  const { data, loading, error, unlocked, locked, unlockedCount, totalCount } = useAchievements()
+  const { data, loading, error, unlocked, locked, unlockedCount, totalCount, markSeen } = useAchievements()
   const t = useTranslations('achievements')
   const accent = useAccentColors()
   const accentGradient = accent.gradient
   const accentText = accent.text
   const spinnerColor = accent.loader
   const accentCtaGradient = accent.ctaGradient
+
+  useEffect(() => {
+    if (!loading && data) {
+      markSeen()
+    }
+  }, [loading, data, markSeen])
 
   if (loading) {
     return (

@@ -5,8 +5,8 @@ import { DashboardContent } from '@/components/shared/DashboardContent'
 export default function TrainerDashboardStatsPage() {
   return (
     <DashboardContent
-      accentColor="#f07915"
-      accentGradient="from-[#f07915] to-[#d4600b]"
+      accentColor="#d4722a"
+      accentGradient="from-[#d4722a] to-[#b85e1e]"
       role="trainer"
     />
   )

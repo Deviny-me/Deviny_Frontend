@@ -144,9 +144,9 @@ export const nutritionistConfig: LayoutConfig = {
       title: 'nutritionSection',
       links: [
         { icon: BarChart3, label: 'dashboard', path: '/nutritionist/dashboard' },
-        { icon: Apple, label: 'mealPrograms', path: '/nutritionist/programs' },
+        { icon: Apple, label: 'myPrograms', path: '/nutritionist/programs' },
         { icon: Users, label: 'students', path: '/nutritionist/clients' },
-        { icon: Radio, label: 'live', path: '/nutritionist/live' },
+        { icon: Radio, label: 'liveWorkouts', path: '/nutritionist/live' },
         { icon: Calendar, label: 'schedule', path: '/nutritionist/schedule' },
       ]
     },

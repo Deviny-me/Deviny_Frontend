@@ -5,7 +5,8 @@ import {
   Video,
   Flame,
   Loader2,
-  Upload,
+  Plus,
+  X,
 } from 'lucide-react'
 import { useState, useRef, useEffect, useCallback } from 'react'
 import { useUser } from '@/components/user/UserProvider'
@@ -43,6 +44,7 @@ export function UserHomeFeed() {
   const [playingVideoId, setPlayingVideoId] = useState<string | null>(null)
   const [viewingPhoto, setViewingPhoto] = useState<{ url: string; caption?: string } | null>(null)
   const [deletingPostId, setDeletingPostId] = useState<string | null>(null)
+  const [showMediaModal, setShowMediaModal] = useState(false)
   const loadingMoreRef = useRef(false)
   const PAGE_SIZE = 20
 
@@ -146,39 +148,8 @@ export function UserHomeFeed() {
     }
   }
 
-  const controlButtons = (
-    <>
-      <button
-        onClick={() => photoInputRef.current?.click()}
-        disabled={isUploading}
-        className="group flex min-h-[48px] min-w-[150px] items-center justify-between gap-3 rounded-xl border border-dashed border-[rgba(148,163,184,0.22)] bg-background px-3.5 py-2.5 text-left shadow-[0_1px_0_rgba(255,255,255,0.03)] transition-all hover:border-[#0c8de6]/35 hover:bg-[#0c8de6]/[0.05] active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-40"
-      >
-        <span className="flex items-center gap-2.5">
-          <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#0c8de6]/12 transition-colors group-hover:bg-[#0c8de6]/18">
-            <ImageIcon className="h-4.5 w-4.5 text-[#0c8de6] transition-transform group-hover:scale-110" strokeWidth={1.9} />
-          </span>
-          <span className="text-[13px] font-semibold text-foreground">{tf('photo')}</span>
-        </span>
-        <Upload className="h-4 w-4 text-faint-foreground transition-transform group-hover:-translate-y-0.5 group-hover:text-[#0c8de6]" />
-      </button>
-      <button
-        onClick={() => videoInputRef.current?.click()}
-        disabled={isUploading}
-        className="group flex min-h-[48px] min-w-[150px] items-center justify-between gap-3 rounded-xl border border-dashed border-[rgba(148,163,184,0.22)] bg-background px-3.5 py-2.5 text-left shadow-[0_1px_0_rgba(255,255,255,0.03)] transition-all hover:border-[#0c8de6]/35 hover:bg-[#0c8de6]/[0.05] active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-40"
-      >
-        <span className="flex items-center gap-2.5">
-          <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#0c8de6]/12 transition-colors group-hover:bg-[#0c8de6]/18">
-            <Video className="h-4.5 w-4.5 text-[#0c8de6] transition-transform group-hover:scale-110" strokeWidth={1.9} />
-          </span>
-          <span className="text-[13px] font-semibold text-foreground">{tf('video')}</span>
-        </span>
-        <Upload className="h-4 w-4 text-faint-foreground transition-transform group-hover:-translate-y-0.5 group-hover:text-[#0c8de6]" />
-      </button>
-    </>
-  )
-
   return (
-    <div className="pb-8 lg:flex lg:items-start lg:gap-5">
+    <div className="pb-8">
       {/* Hidden file inputs */}
       <input
         ref={photoInputRef}
@@ -197,47 +168,31 @@ export function UserHomeFeed() {
         disabled={isUploading}
       />
 
-      <aside className="mb-4 lg:sticky lg:top-4 lg:order-2 lg:mb-0 lg:w-[176px] lg:flex-shrink-0">
-        {isUploading && uploadProgress && (
-          <div className="mb-3 flex items-center gap-2.5 rounded-lg border border-[#0c8de6]/10 bg-[#0c8de6]/[0.06] px-3 py-2.5">
-            <Loader2 className="h-4 w-4 animate-spin text-[#0c8de6]" />
-            <span className="text-sm text-muted-foreground">{uploadProgress}</span>
-          </div>
-        )}
-        <div className="flex flex-wrap gap-2 lg:flex-col">
-          {controlButtons}
-        </div>
-      </aside>
-
-      <div className="lg:order-1 lg:min-w-0 lg:flex-1">
+      <div className="w-full max-w-[620px] mx-auto">
         {feedLoading ? (
           <div className="flex min-h-[72vh] items-center justify-center">
             <Loader2 className="w-7 h-7 text-[#0c8de6] animate-spin" />
           </div>
         ) : feedPostIds.length > 0 ? (
-          <div className="space-y-5">
+          <div className="space-y-4">
             {feedPostIds.map((id) => (
-              <div key={id} className="flex justify-center">
-                <PostCard
-                  postId={id}
-                  mediaPreset="home-portrait"
-                  currentUserId={user?.id}
-                  showDeleteInHeader
-                  onDelete={handleDeletePost}
-                  deletingPostId={deletingPostId}
-                  onRepostSuccess={() => loadFeed(1)}
-                  playingVideoId={playingVideoId}
-                  onVideoToggle={setPlayingVideoId}
-                  onPhotoClick={(url, caption) => setViewingPhoto({ url, caption })}
-                />
-              </div>
+              <PostCard
+                key={id}
+                postId={id}
+                mediaPreset="home-portrait"
+                currentUserId={user?.id}
+                showDeleteInHeader
+                onDelete={handleDeletePost}
+                deletingPostId={deletingPostId}
+                onRepostSuccess={() => loadFeed(1)}
+                playingVideoId={playingVideoId}
+                onVideoToggle={setPlayingVideoId}
+                onPhotoClick={(url, caption) => setViewingPhoto({ url, caption })}
+              />
             ))}
-            <div ref={infiniteScrollRef} className="flex min-h-12 justify-center pt-2">
+            <div ref={infiniteScrollRef} className="flex min-h-12 justify-center items-center pt-2">
               {loadingMore ? (
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <Loader2 className="h-4 w-4 animate-spin text-[#0c8de6]" />
-                  {tc('loading')}
-                </div>
+                <Loader2 className="h-5 w-5 animate-spin text-[#0c8de6]" />
               ) : !hasMore ? (
                 <p className="text-sm text-faint-foreground">{tc('allItemsLoaded')}</p>
               ) : null}
@@ -270,6 +225,69 @@ export function UserHomeFeed() {
           type={toast.type}
           onClose={() => setToast(null)}
         />
+      )}
+
+      {/* FAB — create post */}
+      <button
+        onClick={() => setShowMediaModal(true)}
+        disabled={isUploading}
+        aria-label={tf('addPost')}
+        className="fixed bottom-[calc(5.5rem+env(safe-area-inset-bottom))] right-4 lg:bottom-8 lg:right-8 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-[#0c8de6] shadow-lg shadow-[#0c8de6]/40 transition-all hover:bg-[#0a7dd4] hover:scale-105 active:scale-95 disabled:opacity-60 disabled:cursor-not-allowed"
+      >
+        {isUploading ? (
+          <Loader2 className="h-6 w-6 text-white animate-spin" />
+        ) : (
+          <Plus className="h-6 w-6 text-white" strokeWidth={2.2} />
+        )}
+      </button>
+
+      {/* Media picker modal */}
+      {showMediaModal && (
+        <div
+          className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-sm"
+          onClick={() => setShowMediaModal(false)}
+        >
+          <div
+            className="w-full sm:w-80 bg-[#111827] rounded-t-3xl sm:rounded-2xl overflow-hidden shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div className="flex items-center justify-between px-5 pt-5 pb-4 border-b border-white/[0.06]">
+              <span className="text-[15px] font-semibold text-white">{tf('addPost')}</span>
+              <button
+                onClick={() => setShowMediaModal(false)}
+                className="flex h-7 w-7 items-center justify-center rounded-full bg-white/[0.08] hover:bg-white/[0.14] transition-colors"
+              >
+                <X className="h-4 w-4 text-white/70" />
+              </button>
+            </div>
+            {/* Options */}
+            <div className="flex flex-col gap-2 p-4 pb-[calc(1rem+env(safe-area-inset-bottom))] sm:pb-4">
+              <button
+                onClick={() => { photoInputRef.current?.click(); setShowMediaModal(false) }}
+                className="group flex items-center gap-4 rounded-2xl bg-white/[0.05] px-4 py-4 hover:bg-[#0c8de6]/15 transition-colors active:scale-[0.98]"
+              >
+                <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-[#0c8de6]/15 group-hover:bg-[#0c8de6]/25 transition-colors flex-shrink-0">
+                  <ImageIcon className="h-5 w-5 text-[#0c8de6]" strokeWidth={1.8} />
+                </span>
+                <div className="text-left">
+                  <p className="text-[14px] font-semibold text-white">{tf('photo')}</p>
+                </div>
+              </button>
+              <button
+                onClick={() => { videoInputRef.current?.click(); setShowMediaModal(false) }}
+                className="group flex items-center gap-4 rounded-2xl bg-white/[0.05] px-4 py-4 hover:bg-[#0c8de6]/15 transition-colors active:scale-[0.98]"
+              >
+                <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-[#0c8de6]/15 group-hover:bg-[#0c8de6]/25 transition-colors flex-shrink-0">
+                  <Video className="h-5 w-5 text-[#0c8de6]" strokeWidth={1.8} />
+                </span>
+                <div className="text-left">
+                  <p className="text-[14px] font-semibold text-white">{tf('video')}</p>
+                </div>
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   )

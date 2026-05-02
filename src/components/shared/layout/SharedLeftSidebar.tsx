@@ -14,7 +14,7 @@ interface SharedLeftSidebarProps {
 
 const colorMap = {
   green:  { activeBg: 'from-[#28bf68]/10 to-[#1c9e52]/10', activeBorder: 'border-[#28bf68]', activeIcon: 'text-[#28bf68]', hoverIcon: 'group-hover:text-[#28bf68]', badge: 'bg-[#1c9e52]' },
-  orange: { activeBg: 'from-[#f07915]/10 to-[#d4600b]/10', activeBorder: 'border-[#f07915]', activeIcon: 'text-[#f07915]', hoverIcon: 'group-hover:text-[#f07915]', badge: 'bg-[#d4600b]' },
+  orange: { activeBg: 'from-[#d4722a]/10 to-[#b85e1e]/10', activeBorder: 'border-[#d4722a]', activeIcon: 'text-[#d4722a]', hoverIcon: 'group-hover:text-[#d4722a]', badge: 'bg-[#b85e1e]' },
   blue:   { activeBg: 'from-[#0c8de6]/10 to-[#0070c4]/10', activeBorder: 'border-[#0c8de6]', activeIcon: 'text-[#0c8de6]', hoverIcon: 'group-hover:text-[#0c8de6]', badge: 'bg-[#0070c4]' },
 }
 
@@ -52,7 +52,7 @@ export function SharedLeftSidebar({ sections, className, accentColor = 'orange' 
                 const LinkIcon = link.icon
                 const dynamicBadge =
                   link.label === 'achievements' && achievements
-                    ? achievements.unlockedCount
+                    ? achievements.newCount
                     : link.badge
                 return (
                   <button

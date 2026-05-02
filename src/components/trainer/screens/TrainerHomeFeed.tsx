@@ -184,28 +184,28 @@ export function TrainerHomeFeed() {
       <button
         onClick={() => photoInputRef.current?.click()}
         disabled={isUploading}
-        className="group flex min-h-[48px] min-w-[150px] items-center justify-between gap-3 rounded-xl border border-dashed border-[rgba(148,163,184,0.22)] bg-background px-3.5 py-2.5 text-left shadow-[0_1px_0_rgba(255,255,255,0.03)] transition-all hover:border-[#f07915]/35 hover:bg-[#f07915]/[0.05] active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-40"
+        className="group flex min-h-[48px] min-w-[150px] items-center justify-between gap-3 rounded-xl border border-dashed border-[rgba(148,163,184,0.22)] bg-background px-3.5 py-2.5 text-left shadow-[0_1px_0_rgba(255,255,255,0.03)] transition-all hover:border-[#d4722a]/35 hover:bg-[#d4722a]/[0.05] active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-40"
       >
         <span className="flex items-center gap-2.5">
-          <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#f07915]/12 transition-colors group-hover:bg-[#f07915]/18">
-            <ImageIcon className="h-4.5 w-4.5 text-[#f07915] transition-transform group-hover:scale-110" strokeWidth={1.9} />
+          <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#d4722a]/12 transition-colors group-hover:bg-[#d4722a]/18">
+            <ImageIcon className="h-4.5 w-4.5 text-[#d4722a] transition-transform group-hover:scale-110" strokeWidth={1.9} />
           </span>
           <span className="text-[13px] font-semibold text-foreground">{t('photo')}</span>
         </span>
-        <Upload className="h-4 w-4 text-faint-foreground transition-transform group-hover:-translate-y-0.5 group-hover:text-[#f07915]" />
+        <Upload className="h-4 w-4 text-faint-foreground transition-transform group-hover:-translate-y-0.5 group-hover:text-[#d4722a]" />
       </button>
       <button
         onClick={() => videoInputRef.current?.click()}
         disabled={isUploading}
-        className="group flex min-h-[48px] min-w-[150px] items-center justify-between gap-3 rounded-xl border border-dashed border-[rgba(148,163,184,0.22)] bg-background px-3.5 py-2.5 text-left shadow-[0_1px_0_rgba(255,255,255,0.03)] transition-all hover:border-[#f07915]/35 hover:bg-[#f07915]/[0.05] active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-40"
+        className="group flex min-h-[48px] min-w-[150px] items-center justify-between gap-3 rounded-xl border border-dashed border-[rgba(148,163,184,0.22)] bg-background px-3.5 py-2.5 text-left shadow-[0_1px_0_rgba(255,255,255,0.03)] transition-all hover:border-[#d4722a]/35 hover:bg-[#d4722a]/[0.05] active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-40"
       >
         <span className="flex items-center gap-2.5">
-          <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#f07915]/12 transition-colors group-hover:bg-[#f07915]/18">
-            <Video className="h-4.5 w-4.5 text-[#f07915] transition-transform group-hover:scale-110" strokeWidth={1.9} />
+          <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#d4722a]/12 transition-colors group-hover:bg-[#d4722a]/18">
+            <Video className="h-4.5 w-4.5 text-[#d4722a] transition-transform group-hover:scale-110" strokeWidth={1.9} />
           </span>
           <span className="text-[13px] font-semibold text-foreground">{t('video')}</span>
         </span>
-        <Upload className="h-4 w-4 text-faint-foreground transition-transform group-hover:-translate-y-0.5 group-hover:text-[#f07915]" />
+        <Upload className="h-4 w-4 text-faint-foreground transition-transform group-hover:-translate-y-0.5 group-hover:text-[#d4722a]" />
       </button>
     </>
   )
@@ -232,8 +232,8 @@ export function TrainerHomeFeed() {
 
       <aside className="mb-4 lg:sticky lg:top-4 lg:order-2 lg:mb-0 lg:w-[176px] lg:flex-shrink-0">
         {isUploading && uploadProgress && (
-          <div className="mb-3 flex items-center gap-2.5 rounded-lg border border-[#f07915]/10 bg-[#f07915]/[0.06] px-3 py-2.5">
-            <Loader2 className="h-4 w-4 animate-spin text-[#f07915]" />
+          <div className="mb-3 flex items-center gap-2.5 rounded-lg border border-[#d4722a]/10 bg-[#d4722a]/[0.06] px-3 py-2.5">
+            <Loader2 className="h-4 w-4 animate-spin text-[#d4722a]" />
             <span className="text-sm text-muted-foreground">{uploadProgress}</span>
           </div>
         )}
@@ -245,7 +245,7 @@ export function TrainerHomeFeed() {
       <div className="lg:order-1 lg:min-w-0 lg:flex-1">
         {feedLoading ? (
           <div className="flex min-h-[72vh] items-center justify-center">
-            <Loader2 className="w-7 h-7 text-[#f07915] animate-spin" />
+            <Loader2 className="w-7 h-7 text-[#d4722a] animate-spin" />
           </div>
         ) : feedPostIds.length > 0 ? (
           <div className="space-y-5">
@@ -268,7 +268,7 @@ export function TrainerHomeFeed() {
             <div ref={infiniteScrollRef} className="flex min-h-12 justify-center pt-2">
               {loadingMore ? (
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <Loader2 className="h-4 w-4 animate-spin text-[#f07915]" />
+                  <Loader2 className="h-4 w-4 animate-spin text-[#d4722a]" />
                   {tc('loading')}
                 </div>
               ) : !hasMore ? (

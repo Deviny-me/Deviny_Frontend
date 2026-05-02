@@ -203,7 +203,7 @@ function TrainerGridCell({
         <button
           type="button"
           onClick={(e) => { e.stopPropagation(); onSelect(postId) }}
-          className="flex items-center gap-1 text-foreground transition-all hover:scale-110 hover:text-[#f07915]"
+          className="flex items-center gap-1 text-foreground transition-all hover:scale-110 hover:text-[#d4722a]"
         >
           <MessageCircle className="w-5 h-5" fill="white" />
           <span className="font-semibold">{commentCount}</span>
@@ -505,7 +505,7 @@ export default function ProfilePage() {
     return (
       <>
         <div className="flex items-center justify-center py-24">
-          <Loader2 className="w-8 h-8 text-[#f07915] animate-spin" />
+          <Loader2 className="w-8 h-8 text-[#d4722a] animate-spin" />
         </div>
       </>
     )
@@ -531,7 +531,7 @@ export default function ProfilePage() {
         {/* Profile Header */}
         <div className="-mx-3 -mt-2 overflow-hidden bg-surface-2/35 sm:-mx-4 md:mx-0 md:mt-0 md:rounded-xl md:border md:border-border md:bg-surface-3">
           {/* Cover */}
-          <div className="relative h-32 overflow-hidden bg-gradient-to-r from-[#f07915] to-[#d4600b] sm:h-40">
+          <div className="relative h-32 overflow-hidden bg-gradient-to-r from-[#d4722a] to-[#b85e1e] sm:h-40">
             {trainer.bannerUrl && (
               <img
                 src={getMediaUrl(trainer.bannerUrl) || ''}
@@ -553,7 +553,7 @@ export default function ProfilePage() {
                     className="h-20 w-20 rounded-full border-4 border-white object-cover shadow-xl ring-2 ring-white/10 dark:border-[#1A1A1A] sm:h-24 sm:w-24"
                   />
                 ) : (
-                  <div className="flex h-20 w-20 items-center justify-center rounded-full border-4 border-white bg-gradient-to-br from-[#f07915] to-[#d4600b] shadow-xl dark:border-[#1A1A1A] sm:h-24 sm:w-24">
+                  <div className="flex h-20 w-20 items-center justify-center rounded-full border-4 border-white bg-gradient-to-br from-[#d4722a] to-[#b85e1e] shadow-xl dark:border-[#1A1A1A] sm:h-24 sm:w-24">
                     <span className="text-xl font-bold text-white sm:text-2xl">
                       {trainer.initials}
                     </span>
@@ -584,19 +584,19 @@ export default function ProfilePage() {
                 {/* Stats */}
                 <div className="hidden sm:grid sm:grid-cols-4 sm:gap-2 md:gap-3">
                   <div className="group rounded-xl border border-border-subtle bg-surface-1 px-2 py-2 text-center">
-                    <p className="text-sm font-bold text-foreground transition-colors group-hover:text-[#f07915] md:text-base">{trainer.programsCount}</p>
+                    <p className="text-sm font-bold text-foreground transition-colors group-hover:text-[#d4722a] md:text-base">{trainer.programsCount}</p>
                     <p className="text-[10px] text-muted-foreground">{t('programs')}</p>
                   </div>
                   <div className="group rounded-xl border border-border-subtle bg-surface-1 px-2 py-2 text-center">
-                    <p className="text-sm font-bold text-foreground transition-colors group-hover:text-[#f07915] md:text-base">{trainer.studentsCount}</p>
+                    <p className="text-sm font-bold text-foreground transition-colors group-hover:text-[#d4722a] md:text-base">{trainer.studentsCount}</p>
                     <p className="text-[10px] text-muted-foreground">{t('students')}</p>
                   </div>
                   <div className="group rounded-xl border border-border-subtle bg-surface-1 px-2 py-2 text-center">
-                    <p className="text-sm font-bold text-foreground transition-colors group-hover:text-[#f07915] md:text-base">{trainer.ratingValue.toFixed(1)}</p>
+                    <p className="text-sm font-bold text-foreground transition-colors group-hover:text-[#d4722a] md:text-base">{trainer.ratingValue.toFixed(1)}</p>
                     <p className="text-[10px] text-muted-foreground">{trainer.reviewsCount} {t('reviews')}</p>
                   </div>
                   <div className="group rounded-xl border border-border-subtle bg-surface-1 px-2 py-2 text-center">
-                    <p className="text-sm font-bold text-foreground transition-colors group-hover:text-[#f07915] md:text-base">{trainer.achievementsCount}</p>
+                    <p className="text-sm font-bold text-foreground transition-colors group-hover:text-[#d4722a] md:text-base">{trainer.achievementsCount}</p>
                     <p className="text-[10px] text-muted-foreground">{t('achievements')}</p>
                   </div>
                 </div>
@@ -625,7 +625,7 @@ export default function ProfilePage() {
 
             {/* Bio Section */}
             <div className="mt-4 bg-surface-1/45 p-3 dark:bg-white/[0.02] sm:rounded-xl sm:border sm:border-border-subtle sm:bg-surface-1 sm:p-4">
-              <p className="text-sm text-[#f07915] font-medium mb-3">{trainer.primaryTitle || (isNutritionist ? t('personalNutritionist') : t('personalTrainer'))}</p>
+              <p className="text-sm text-[#d4722a] font-medium mb-3">{trainer.primaryTitle || (isNutritionist ? t('personalNutritionist') : t('personalTrainer'))}</p>
               {about?.text ? (
                 <div>
                   <h3 className="text-sm font-semibold text-muted-foreground mb-3">{t('aboutMe')}</h3>
@@ -639,7 +639,7 @@ export default function ProfilePage() {
             {/* Profile Settings Button */}
             <Link
               href="/trainer/profile/settings"
-              className="mt-4 flex items-center justify-center gap-2 w-full py-2.5 rounded-xl bg-gradient-to-r from-[#f07915] to-[#d4600b] text-white text-sm font-semibold hover:opacity-90 transition-opacity"
+              className="mt-4 flex items-center justify-center gap-2 w-full py-2.5 rounded-xl bg-gradient-to-r from-[#d4722a] to-[#b85e1e] text-white text-sm font-semibold hover:opacity-90 transition-opacity"
             >
               <Settings className="w-4 h-4" />
               {t('profileSettings')}
@@ -666,7 +666,7 @@ export default function ProfilePage() {
               {specializations.map((spec) => (
                 <span
                   key={spec.id}
-                  className="rounded-lg border border-[#f07915]/20 bg-gradient-to-r from-[#f07915]/10 to-[#d4600b]/10 px-3 py-1.5 text-sm text-muted-foreground"
+                  className="rounded-lg border border-[#d4722a]/20 bg-gradient-to-r from-[#d4722a]/10 to-[#b85e1e]/10 px-3 py-1.5 text-sm text-muted-foreground"
                 >
                   {spec.name}
                 </span>
@@ -723,7 +723,7 @@ export default function ProfilePage() {
               onClick={() => setActiveTab(tab)}
               className={`relative shrink-0 whitespace-nowrap rounded-lg px-3 py-2.5 text-sm font-medium capitalize transition-all ${
                 activeTab === tab
-                  ? 'bg-[#f07915]/10 text-[#f07915]'
+                  ? 'bg-[#d4722a]/10 text-[#d4722a]'
                   : 'text-muted-foreground hover:bg-surface-1 hover:text-foreground'
               }`}
             >
@@ -731,7 +731,7 @@ export default function ProfilePage() {
               {activeTab === tab && (
                 <motion.div
                   layoutId="profileTab"
-                  className="absolute bottom-0 left-2 right-2 h-0.5 bg-gradient-to-r from-[#f07915] to-[#d4600b]"
+                  className="absolute bottom-0 left-2 right-2 h-0.5 bg-gradient-to-r from-[#d4722a] to-[#b85e1e]"
                 />
               )}
             </button>
@@ -743,20 +743,20 @@ export default function ProfilePage() {
           <div className="overflow-hidden bg-surface-2/35 sm:rounded-xl sm:border sm:border-border sm:bg-surface-3">
             <div className="flex flex-col gap-3 border-b border-border px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
               <div className="flex items-center gap-2">
-                <Grid className="w-5 h-5 text-[#f07915]" />
+                <Grid className="w-5 h-5 text-[#d4722a]" />
                 <h3 className="font-semibold text-foreground">{t('publications')}</h3>
                 {totalPosts > 0 && <span className="text-xs text-faint-foreground">({totalPosts})</span>}
               </div>
               <div className="flex items-center gap-1 bg-background rounded-lg p-0.5">
                 <button
                   onClick={() => setViewMode('grid')}
-                  className={`p-1.5 rounded-md transition-colors ${viewMode === 'grid' ? 'bg-white/10 text-[#f07915]' : 'text-faint-foreground hover:text-muted-foreground'}`}
+                  className={`p-1.5 rounded-md transition-colors ${viewMode === 'grid' ? 'bg-white/10 text-[#d4722a]' : 'text-faint-foreground hover:text-muted-foreground'}`}
                 >
                   <Grid className="w-4 h-4" />
                 </button>
                 <button
                   onClick={() => setViewMode('list')}
-                  className={`p-1.5 rounded-md transition-colors ${viewMode === 'list' ? 'bg-white/10 text-[#f07915]' : 'text-faint-foreground hover:text-muted-foreground'}`}
+                  className={`p-1.5 rounded-md transition-colors ${viewMode === 'list' ? 'bg-white/10 text-[#d4722a]' : 'text-faint-foreground hover:text-muted-foreground'}`}
                 >
                   <List className="w-4 h-4" />
                 </button>
@@ -781,7 +781,7 @@ export default function ProfilePage() {
                   </div>
                   {!isRefreshingPosts && (isLoadingPosts || postsHasMore) && (
                     <div ref={postsObserverRef} className="py-8 flex justify-center">
-                      {isLoadingPosts && <Loader2 className="w-6 h-6 text-[#f07915] animate-spin" />}
+                      {isLoadingPosts && <Loader2 className="w-6 h-6 text-[#d4722a] animate-spin" />}
                     </div>
                   )}
                 </div>
@@ -803,7 +803,7 @@ export default function ProfilePage() {
                   ))}
                   {!isRefreshingPosts && (isLoadingPosts || postsHasMore) && (
                     <div ref={postsObserverRef} className="py-8 flex justify-center">
-                      {isLoadingPosts && <Loader2 className="w-6 h-6 text-[#f07915] animate-spin" />}
+                      {isLoadingPosts && <Loader2 className="w-6 h-6 text-[#d4722a] animate-spin" />}
                     </div>
                   )}
                 </div>
@@ -811,7 +811,7 @@ export default function ProfilePage() {
 
               {isRefreshingPosts && (
                 <div className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center bg-surface-3/72 backdrop-blur-[1px]">
-                  <Loader2 className="w-7 h-7 text-[#f07915] animate-spin" />
+                  <Loader2 className="w-7 h-7 text-[#d4722a] animate-spin" />
                 </div>
               )}
             </div>
@@ -822,7 +822,7 @@ export default function ProfilePage() {
           <div className="space-y-4">
             <button
               onClick={() => setShowCertificateModal(true)}
-              className="w-full py-4 border-2 border-dashed border-white/20 rounded-xl text-muted-foreground hover:text-foreground hover:border-[#f07915]/50 transition-colors flex items-center justify-center gap-2"
+              className="w-full py-4 border-2 border-dashed border-white/20 rounded-xl text-muted-foreground hover:text-foreground hover:border-[#d4722a]/50 transition-colors flex items-center justify-center gap-2"
             >
               <Upload className="w-5 h-5" />
               {t('addCertificate')}
@@ -853,7 +853,7 @@ export default function ProfilePage() {
                     {cert.fileUrl && (
                       <button 
                         onClick={() => setViewingCertificate(getMediaUrl(cert.fileUrl) || '')}
-                        className="text-xs text-[#f07915] hover:underline"
+                        className="text-xs text-[#d4722a] hover:underline"
                       >
                         {t('viewFile')}
                       </button>
@@ -874,7 +874,7 @@ export default function ProfilePage() {
           <div className="space-y-4">
             <button
               onClick={() => setShowSpecializationModal(true)}
-              className="w-full py-4 border-2 border-dashed border-white/20 rounded-xl text-muted-foreground hover:text-foreground hover:border-[#f07915]/50 transition-colors flex items-center justify-center gap-2"
+              className="w-full py-4 border-2 border-dashed border-white/20 rounded-xl text-muted-foreground hover:text-foreground hover:border-[#d4722a]/50 transition-colors flex items-center justify-center gap-2"
             >
               <Plus className="w-5 h-5" />
               {t('addSpecialization')}
@@ -967,8 +967,8 @@ export default function ProfilePage() {
         {activeTab === 'reviews' && (
           <ProfileReviewsTab
             expertId={trainer.userId}
-            accentText="text-[#f07915]"
-            accentGradient="from-[#f07915]/10 to-[#d4600b]/10"
+            accentText="text-[#d4722a]"
+            accentGradient="from-[#d4722a]/10 to-[#b85e1e]/10"
           />
         )}
 
@@ -994,7 +994,7 @@ export default function ProfilePage() {
                       type="text"
                       value={certTitle}
                       onChange={(e) => setCertTitle(e.target.value)}
-                      className="w-full px-4 py-2.5 bg-background border border-border rounded-lg text-foreground focus:outline-none focus:border-[#f07915]"
+                      className="w-full px-4 py-2.5 bg-background border border-border rounded-lg text-foreground focus:outline-none focus:border-[#d4722a]"
                       placeholder={t('certificateNamePlaceholder')}
                     />
                   </div>
@@ -1004,7 +1004,7 @@ export default function ProfilePage() {
                       type="text"
                       value={certIssuer}
                       onChange={(e) => setCertIssuer(e.target.value)}
-                      className="w-full px-4 py-2.5 bg-background border border-border rounded-lg text-foreground focus:outline-none focus:border-[#f07915]"
+                      className="w-full px-4 py-2.5 bg-background border border-border rounded-lg text-foreground focus:outline-none focus:border-[#d4722a]"
                       placeholder={t('organizationPlaceholder')}
                     />
                   </div>
@@ -1014,12 +1014,12 @@ export default function ProfilePage() {
                       type="number"
                       value={certYear}
                       onChange={(e) => setCertYear(e.target.value)}
-                      className="w-full px-4 py-2.5 bg-background border border-border rounded-lg text-foreground focus:outline-none focus:border-[#f07915]"
+                      className="w-full px-4 py-2.5 bg-background border border-border rounded-lg text-foreground focus:outline-none focus:border-[#d4722a]"
                     />
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-muted-foreground mb-2">{t('file')}</label>
-                    <label className="flex items-center justify-center w-full py-4 border-2 border-dashed border-white/20 rounded-lg cursor-pointer hover:border-[#f07915]/50 transition-colors">
+                    <label className="flex items-center justify-center w-full py-4 border-2 border-dashed border-white/20 rounded-lg cursor-pointer hover:border-[#d4722a]/50 transition-colors">
                       <Upload className="w-5 h-5 text-muted-foreground mr-2" />
                       <span className="text-sm text-muted-foreground">
                         {certFile ? certFile.name : t('selectFile')}
@@ -1035,7 +1035,7 @@ export default function ProfilePage() {
                   <button
                     type="submit"
                     disabled={saving}
-                    className="w-full py-3 bg-gradient-to-r from-[#f07915] to-[#d4600b] text-white font-semibold rounded-lg hover:opacity-90 disabled:opacity-50 flex items-center justify-center gap-2"
+                    className="w-full py-3 bg-gradient-to-r from-[#d4722a] to-[#b85e1e] text-white font-semibold rounded-lg hover:opacity-90 disabled:opacity-50 flex items-center justify-center gap-2"
                   >
                     {saving && <Loader2 className="w-5 h-5 animate-spin" />}
                     {tc('add')}
@@ -1067,7 +1067,7 @@ export default function ProfilePage() {
                     <select
                       value={specName}
                       onChange={(e) => setSpecName(e.target.value)}
-                      className="w-full px-4 py-2.5 bg-background border border-border rounded-lg text-foreground focus:outline-none focus:border-[#f07915]"
+                      className="w-full px-4 py-2.5 bg-background border border-border rounded-lg text-foreground focus:outline-none focus:border-[#d4722a]"
                     >
                       <option value="">{t('selectSpecialization')}</option>
                       <option value={t('specializationOptions.strength')}>{t('specializationOptions.strength')}</option>
@@ -1100,7 +1100,7 @@ export default function ProfilePage() {
                   <button
                     type="submit"
                     disabled={saving || !specName}
-                    className="w-full py-3 bg-gradient-to-r from-[#f07915] to-[#d4600b] text-white font-semibold rounded-lg hover:opacity-90 disabled:opacity-50 flex items-center justify-center gap-2"
+                    className="w-full py-3 bg-gradient-to-r from-[#d4722a] to-[#b85e1e] text-white font-semibold rounded-lg hover:opacity-90 disabled:opacity-50 flex items-center justify-center gap-2"
                   >
                     {saving && <Loader2 className="w-5 h-5 animate-spin" />}
                     {tc('add')}

@@ -29,7 +29,7 @@ export function getAccentColors(roleOrIsNutritionist: RoleType | boolean) {
 
   const colors = {
     nutritionist: { primary: '#28bf68', secondary: '#1c9e52' },
-    trainer:      { primary: '#f07915', secondary: '#d4600b' },
+    trainer:      { primary: '#d4722a', secondary: '#b85e1e' },
     user:         { primary: '#0c8de6', secondary: '#0070c4' },
   }[role]
 
@@ -125,7 +125,7 @@ export function getRoleRingClass(role: string | number | undefined | null): stri
   if (!role) return ''
   const r = String(role).toLowerCase()
   if (r === 'nutritionist' || r === '3') return 'ring-2 ring-[#28bf68]'
-  if (r === 'trainer' || r === '1') return 'ring-2 ring-[#f07915]'
+  if (r === 'trainer' || r === '1') return 'ring-2 ring-[#d4722a]'
   if (r === 'user' || r === '0') return 'ring-2 ring-[#0c8de6]'
   return ''
 }

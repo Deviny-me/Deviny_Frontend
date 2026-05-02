@@ -11,10 +11,10 @@ export function TrainerFooter() {
         <p className="text-xs text-gray-600">{ts('copyright')}</p>
       </div>
       <div className="flex flex-wrap justify-center md:justify-end items-center gap-x-4 gap-y-1 text-xs text-gray-600">
-        <a href="#" className="hover:text-[#f07915] transition-colors">{ts('about')}</a>
-        <a href="#" className="hover:text-[#f07915] transition-colors">{ts('helpCenter')}</a>
-        <a href="#" className="hover:text-[#f07915] transition-colors">{ts('privacy')}</a>
-        <a href="#" className="hover:text-[#f07915] transition-colors">{ts('terms')}</a>
+        <a href="#" className="hover:text-[#d4722a] transition-colors">{ts('about')}</a>
+        <a href="#" className="hover:text-[#d4722a] transition-colors">{ts('helpCenter')}</a>
+        <a href="#" className="hover:text-[#d4722a] transition-colors">{ts('privacy')}</a>
+        <a href="#" className="hover:text-[#d4722a] transition-colors">{ts('terms')}</a>
       </div>
     </div>
   )

@@ -29,7 +29,7 @@ export function DailyChallenges() {
   return (
     <div className="bg-surface-2 rounded-xl border border-border-subtle overflow-hidden">
       {/* Header with Streak */}
-      <div className="relative bg-gradient-to-br from-[#f07915] to-[#d4600b] p-6">
+      <div className="relative bg-gradient-to-br from-[#d4722a] to-[#b85e1e] p-6">
         <div className="flex items-center justify-between mb-4">
           <div>
             <h2 className="text-xl font-bold text-foreground mb-1">Daily Challenges</h2>
@@ -70,14 +70,14 @@ export function DailyChallenges() {
           className={`p-4 rounded-lg border transition-all ${
             featuredChallenge.completed
               ? 'bg-green-500/10 border-green-500/30'
-              : 'bg-background border-border-subtle hover:border-[#f07915]/50'
+              : 'bg-background border-border-subtle hover:border-[#d4722a]/50'
           }`}
         >
           <div className="flex items-start gap-3">
             <div className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 ${
               featuredChallenge.completed
                 ? 'bg-green-500'
-                : 'bg-gradient-to-br from-[#f07915] to-[#d4600b]'
+                : 'bg-gradient-to-br from-[#d4722a] to-[#b85e1e]'
             }`}>
               {featuredChallenge.completed ? (
                 <CheckCircle2 className="w-5 h-5 text-foreground" />
@@ -93,7 +93,7 @@ export function DailyChallenges() {
                 }`}>
                   {featuredChallenge.title}
                 </h3>
-                <span className="text-xs font-semibold text-[#f07915] flex items-center gap-1">
+                <span className="text-xs font-semibold text-[#d4722a] flex items-center gap-1">
                   <Zap className="w-3 h-3" fill="currentColor" />
                   +{featuredChallenge.xp} XP
                 </span>
@@ -111,7 +111,7 @@ export function DailyChallenges() {
                     <motion.div
                       initial={{ width: 0 }}
                       animate={{ width: `${(featuredChallenge.progress / featuredChallenge.total) * 100}%` }}
-                      className="h-full bg-gradient-to-r from-[#f07915] to-[#d4600b]"
+                      className="h-full bg-gradient-to-r from-[#d4722a] to-[#b85e1e]"
                     />
                   </div>
                 </div>

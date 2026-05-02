@@ -128,9 +128,9 @@ export function TopNav() {
                   onClick={() => { if (!isActive(item.path)) startNavigation(); router.push(item.path) }}
                   className={`relative flex flex-col items-center justify-center px-5 py-2 rounded-lg transition-all ${
                     isActive(item.path)
-                      ? 'text-[#f07915] bg-[#f07915]/[0.12] dark:bg-[#f07915]/[0.08]'
+                      ? 'text-[#d4722a] bg-[#d4722a]/[0.12] dark:bg-[#d4722a]/[0.08]'
                       : hasUnread
-                      ? 'text-[#d4600b] hover:text-[#d4600b]'
+                      ? 'text-[#b85e1e] hover:text-[#b85e1e]'
                       : 'text-faint-foreground hover:text-muted-foreground hover:bg-hover-overlay'
                   }`}
                   title={item.label}
@@ -138,10 +138,10 @@ export function TopNav() {
                   <item.icon className="w-5 h-5" strokeWidth={1.5} />
                   <span className="mt-0.5 text-[10px] font-medium whitespace-nowrap">{item.label}</span>
                   {isActive(item.path) && (
-                    <div className="absolute bottom-0 left-2 right-2 h-0.5 bg-[#f07915] rounded-full" />
+                    <div className="absolute bottom-0 left-2 right-2 h-0.5 bg-[#d4722a] rounded-full" />
                   )}
                   {item.badge !== undefined && item.badge > 0 && (
-                    <div className="absolute -top-0.5 right-2 min-w-[18px] h-[18px] bg-[#f07915] rounded-full flex items-center justify-center px-1">
+                    <div className="absolute -top-0.5 right-2 min-w-[18px] h-[18px] bg-[#d4722a] rounded-full flex items-center justify-center px-1">
                       <span className="text-[10px] font-bold text-white">{item.badge}</span>
                     </div>
                   )}
@@ -177,10 +177,10 @@ export function TopNav() {
                   <img
                     src={getMediaUrl(trainerProfile.trainer.avatarUrl) || ''}
                     alt={trainerProfile.trainer.fullName}
-                    className="w-8 h-8 rounded-full object-cover ring-2 ring-[#f07915]/30"
+                    className="w-8 h-8 rounded-full object-cover ring-2 ring-[#d4722a]/30"
                   />
                 ) : (
-                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#f07915] to-[#d4600b] flex items-center justify-center ring-2 ring-[#f07915]/30">
+                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#d4722a] to-[#b85e1e] flex items-center justify-center ring-2 ring-[#d4722a]/30">
                     <span className="text-white text-sm font-bold">
                       {trainerProfile?.trainer?.initials || avatarFallbackInitial}
                     </span>
@@ -205,10 +205,10 @@ export function TopNav() {
                           <img
                             src={getMediaUrl(trainerProfile.trainer.avatarUrl) || ''}
                             alt={trainerProfile.trainer.fullName}
-                            className="w-12 h-12 rounded-full object-cover ring-2 ring-[#f07915]/30"
+                            className="w-12 h-12 rounded-full object-cover ring-2 ring-[#d4722a]/30"
                           />
                         ) : (
-                          <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[#f07915] to-[#d4600b] flex items-center justify-center ring-2 ring-[#f07915]/30">
+                          <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[#d4722a] to-[#b85e1e] flex items-center justify-center ring-2 ring-[#d4722a]/30">
                             <span className="text-white text-lg font-bold">
                               {trainerProfile?.trainer?.initials || avatarFallbackInitial}
                             </span>
@@ -221,19 +221,19 @@ export function TopNav() {
                       </div>
                       {/* Level Display */}
                       {level && (
-                        <div className="mt-3 p-3 bg-gradient-to-r from-[#f07915]/[0.1] to-[#d4600b]/[0.1] dark:from-[#f07915]/[0.06] dark:to-[#d4600b]/[0.06] border border-[#f07915]/15 dark:border-[#f07915]/10 rounded-lg">
+                        <div className="mt-3 p-3 bg-gradient-to-r from-[#d4722a]/[0.1] to-[#b85e1e]/[0.1] dark:from-[#d4722a]/[0.06] dark:to-[#b85e1e]/[0.06] border border-[#d4722a]/15 dark:border-[#d4722a]/10 rounded-lg">
                           <div className="flex items-center justify-between mb-2">
                             <span className="text-xs font-semibold text-foreground">Level {level.currentLevel}</span>
                             <span className="text-[11px] text-faint-foreground">{level.currentXp} / {level.requiredXpForNextLevel} XP</span>
                           </div>
                           <div className="w-full h-1.5 bg-border-subtle rounded-full overflow-hidden">
                             <div 
-                              className="h-full bg-gradient-to-r from-[#f07915] to-[#d4600b] rounded-full transition-all duration-500 ease-out"
+                              className="h-full bg-gradient-to-r from-[#d4722a] to-[#b85e1e] rounded-full transition-all duration-500 ease-out"
                               style={{ width: `${(level.currentXp / level.requiredXpForNextLevel) * 100}%` }}
                             />
                           </div>
                           {level.levelTitle && (
-                            <p className="text-[10px] text-[#f07915]/80 font-medium mt-1.5">{level.levelTitle}</p>
+                            <p className="text-[10px] text-[#d4722a]/80 font-medium mt-1.5">{level.levelTitle}</p>
                           )}
                         </div>
                       )}
@@ -242,7 +242,7 @@ export function TopNav() {
                           router.push('/trainer/profile')
                           setShowProfileMenu(false)
                         }}
-                        className="mt-3 w-full py-2 border border-[#f07915]/30 text-[#f07915] rounded-lg text-sm font-medium hover:bg-[#f07915]/10 hover:border-[#f07915]/50 transition-all"
+                        className="mt-3 w-full py-2 border border-[#d4722a]/30 text-[#d4722a] rounded-lg text-sm font-medium hover:bg-[#d4722a]/10 hover:border-[#d4722a]/50 transition-all"
                       >
                         {t('viewProfile')}
                       </button>

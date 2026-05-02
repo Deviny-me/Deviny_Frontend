@@ -5,6 +5,8 @@ import { useTranslations } from 'next-intl'
 import { useRouter } from 'next/navigation'
 import {
   ArrowLeft,
+  Users,
+  Star,
   Edit,
   Trash2,
   BookOpen,
@@ -116,87 +118,103 @@ export default function NutritionistProgramDetailPage({
   }
 
   return (
-    <div className="space-y-4 pb-6">
+    <div className="pb-8">
       {/* Back button */}
       <button
         onClick={() => router.back()}
-        className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors"
+        className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors mb-4"
       >
-        <ArrowLeft className="w-5 h-5" />
+        <ArrowLeft className="w-4 h-4" />
         <span className="text-sm font-medium">{tc('back')}</span>
       </button>
 
-      <div className="bg-surface-3 rounded-xl border border-border overflow-hidden">
-        {/* Cover Image */}
-        <div className="relative">
-          {program.coverImageUrl ? (
-            <img
-              src={getMediaUrl(program.coverImageUrl) || ''}
-              alt={program.title}
-              className="w-full h-56 sm:h-72 object-cover"
-            />
-          ) : (
-            <div className="w-full h-56 sm:h-72 bg-background flex items-center justify-center">
-              <BookOpen className="w-16 h-16 text-gray-600" />
-            </div>
-          )}
-          <div className="absolute top-3 left-3 flex gap-2 flex-wrap">
-            <span className={`px-2 py-1 text-xs font-bold rounded ${accent.bg} text-foreground`}>
-              ${program.price}
-            </span>
-            {program.standardPrice != null && (
-              <span className="px-2 py-1 text-xs font-bold rounded bg-blue-600 text-foreground">
-                STD ${program.standardPrice}
-              </span>
-            )}
-            {program.proPrice != null && (
-              <span className="px-2 py-1 text-xs font-bold rounded bg-purple-600 text-foreground">
-                PRO ${program.proPrice}
-              </span>
-            )}
-            <span
-              className={`px-2 py-1 text-xs font-bold rounded text-foreground ${
-                category === 'Diet' ? 'bg-green-600' : 'bg-violet-600'
-              }`}
-            >
-              {category === 'Diet' ? t('typeMeal') : t('typeConsultation')}
-            </span>
-            {!program.isPublic && (
-              <span className="px-2 py-1 text-xs font-bold rounded bg-yellow-600 text-foreground flex items-center gap-1">
-                <EyeOff className="w-3 h-3" />
-                {t('private')}
-              </span>
-            )}
+      {/* Hero */}
+      <div className="relative rounded-2xl overflow-hidden">
+        {program.coverImageUrl ? (
+          <img
+            src={getMediaUrl(program.coverImageUrl) || ''}
+            alt={program.title}
+            className="w-full h-80 sm:h-[26rem] object-cover"
+          />
+        ) : (
+          <div className="w-full h-80 sm:h-[26rem] bg-gradient-to-br from-neutral-900 to-neutral-800 flex items-center justify-center">
+            <BookOpen className="w-24 h-24 text-neutral-700" />
           </div>
+        )}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent" />
+
+        {/* Top: category + visibility */}
+        <div className="absolute top-4 left-4 flex gap-2 flex-wrap">
+          <span
+            className={`px-3 py-1 text-xs font-medium rounded-full backdrop-blur-sm border text-white flex items-center gap-1.5 ${
+              category === 'Diet' ? 'bg-green-600/70 border-green-500/40' : 'bg-violet-600/70 border-violet-500/40'
+            }`}
+          >
+            {category === 'Diet' ? (
+              <Apple className="w-3 h-3" />
+            ) : (
+              <MessageSquare className="w-3 h-3" />
+            )}
+            {category === 'Diet' ? t('typeMeal') : t('typeConsultation')}
+          </span>
+          {!program.isPublic && (
+            <span className="px-3 py-1 text-xs font-medium rounded-full backdrop-blur-sm bg-black/50 border border-white/20 text-white flex items-center gap-1.5">
+              <EyeOff className="w-3 h-3" />
+              {t('private')}
+            </span>
+          )}
         </div>
 
-        {/* Content */}
-        <div className="p-5 space-y-4">
-          <h1 className="page-title">{program.title}</h1>
-
-          {/* Videos count */}
-          {program.videoUrls && program.videoUrls.length > 0 && (
-            <div className="flex items-center gap-2 text-muted-foreground">
-              <Video className="w-5 h-5" />
-              <span>
-                {program.videoUrls.length} {tc('videos')}
+        {/* Bottom: title + stats + price */}
+        <div className="absolute bottom-0 left-0 right-0 px-5 pb-5 sm:px-6 sm:pb-6">
+          <h1 className="text-2xl sm:text-3xl font-bold text-white leading-tight mb-3 drop-shadow-sm">
+            {program.title}
+          </h1>
+          <div className="flex items-center justify-between gap-4">
+            <div className="flex items-center gap-2 flex-wrap min-w-0">
+              <span className="flex items-center gap-1.5 text-white/90 text-sm shrink-0">
+                <Star className="w-4 h-4 text-amber-400 fill-amber-400" />
+                <span className="font-semibold">{tp('noRating')}</span>
+                <span className="text-white/50 text-xs">(0)</span>
               </span>
+              <span className="text-white/30 text-sm">·</span>
+              <span className="flex items-center gap-1.5 text-white/70 text-sm shrink-0">
+                <Users className="w-4 h-4" />
+                <span>0</span>
+              </span>
+              {program.videoUrls && program.videoUrls.length > 0 && (
+                <>
+                  <span className="text-white/30 text-sm">·</span>
+                  <span className="flex items-center gap-1.5 text-white/70 text-sm shrink-0">
+                    <Video className="w-4 h-4" />
+                    <span>{program.videoUrls.length}</span>
+                  </span>
+                </>
+              )}
             </div>
-          )}
+            <span className={`shrink-0 px-4 py-1.5 rounded-full ${accent.bg} text-white font-bold text-base shadow-lg`}>
+              ${program.price}
+            </span>
+          </div>
+        </div>
+      </div>
 
-          {/* Package Tiers Info */}
-          {(program.standardPrice != null || program.proPrice != null) && (
+      {/* Body */}
+      <div className="mt-4 space-y-3">
+        {/* Tier pricing */}
+        {(program.standardPrice != null || program.proPrice != null) && (
+          <div className="bg-surface-3 rounded-2xl border border-border p-4">
             <div className="grid grid-cols-3 gap-2">
-              <div className="p-3 bg-background rounded-lg border border-border text-center">
-                <p className="text-xs text-muted-foreground mb-1">{t('basicTier')}</p>
-                <p className="text-lg font-bold text-foreground">${program.price}</p>
-                <p className="text-xs text-faint-foreground">{t('noLimit')}</p>
+              <div className="p-3.5 bg-background rounded-xl border border-border text-center">
+                <p className="text-xs text-muted-foreground mb-1.5">{t('basicTier')}</p>
+                <p className="text-xl font-bold text-foreground">${program.price}</p>
+                <p className="text-xs text-faint-foreground mt-1">{t('noLimit')}</p>
               </div>
               {program.standardPrice != null && (
-                <div className="p-3 bg-background rounded-lg border border-blue-500/30 text-center">
-                  <p className="text-xs text-blue-400 mb-1">{t('standardTier')}</p>
-                  <p className="text-lg font-bold text-foreground">${program.standardPrice}</p>
-                  <p className="text-xs text-faint-foreground">
+                <div className="p-3.5 bg-background rounded-xl border border-blue-500/30 text-center">
+                  <p className="text-xs text-blue-400 mb-1.5">{t('standardTier')}</p>
+                  <p className="text-xl font-bold text-foreground">${program.standardPrice}</p>
+                  <p className="text-xs text-faint-foreground mt-1">
                     {program.maxStandardSpots
                       ? `${program.maxStandardSpots} ${t('spots')}`
                       : t('noLimit')}
@@ -204,10 +222,10 @@ export default function NutritionistProgramDetailPage({
                 </div>
               )}
               {program.proPrice != null && (
-                <div className="p-3 bg-background rounded-lg border border-purple-500/30 text-center">
-                  <p className="text-xs text-purple-400 mb-1">{t('proTier')}</p>
-                  <p className="text-lg font-bold text-foreground">${program.proPrice}</p>
-                  <p className="text-xs text-faint-foreground">
+                <div className="p-3.5 bg-background rounded-xl border border-purple-500/30 text-center">
+                  <p className="text-xs text-purple-400 mb-1.5">{t('proTier')}</p>
+                  <p className="text-xl font-bold text-foreground">${program.proPrice}</p>
+                  <p className="text-xs text-faint-foreground mt-1">
                     {program.maxProSpots
                       ? `${program.maxProSpots} ${t('spots')}`
                       : t('noLimit')}
@@ -215,72 +233,78 @@ export default function NutritionistProgramDetailPage({
                 </div>
               )}
             </div>
-          )}
-
-          {/* Description */}
-          <div>
-            <h3 className="text-sm font-medium text-muted-foreground mb-2">{tp('description')}</h3>
-            <p className="text-foreground leading-relaxed">{program.description}</p>
           </div>
+        )}
 
+        {/* Description */}
+        <div className="bg-surface-3 rounded-2xl border border-border p-5">
+          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3">
+            {tp('description')}
+          </p>
+          <p className="text-sm text-foreground leading-relaxed">{program.description}</p>
           {program.detailedDescription && (
-            <div>
-              <h3 className="text-sm font-medium text-muted-foreground mb-2">
+            <>
+              <div className="h-px bg-border my-4" />
+              <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3">
                 {t('detailedDescriptionLabel')}
-              </h3>
-              <p className="text-foreground leading-relaxed whitespace-pre-wrap">
+              </p>
+              <p className="text-sm text-foreground leading-relaxed whitespace-pre-wrap">
                 {program.detailedDescription}
               </p>
-            </div>
+            </>
           )}
+        </div>
 
-          {/* Videos */}
-          {program.videoUrls && program.videoUrls.length > 0 && (
-            <div>
-              <h3 className="text-sm font-medium text-muted-foreground mb-2">{t('trainingVideos')}</h3>
-              <div className="space-y-2">
-                {program.videoUrls.map((url, i) => (
-                  <video
-                    key={i}
-                    src={getMediaUrl(url) || ''}
-                    controls
-                    className="w-full rounded-lg"
-                  />
-                ))}
-              </div>
+        {/* Videos */}
+        {program.videoUrls && program.videoUrls.length > 0 && (
+          <div className="bg-surface-3 rounded-2xl border border-border p-5">
+            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3">
+              {t('trainingVideos')}
+            </p>
+            <div className="space-y-3">
+              {program.videoUrls.map((url, i) => (
+                <div key={i} className="rounded-xl overflow-hidden border border-border bg-black">
+                  <div className="aspect-video w-full bg-black flex items-center justify-center">
+                    <video src={getMediaUrl(url) || ''} controls className="w-full h-full object-contain" />
+                  </div>
+                </div>
+              ))}
+
             </div>
-          )}
-
-          {/* Actions */}
-          <div className="flex gap-3 pt-2">
-            <button
-              onClick={() =>
-                router.push(
-                  `/nutritionist/programs/new?edit=${program.id}&category=${category}`
-                )
-              }
-              className={`flex-1 py-3 bg-gradient-to-r ${accent.gradient} text-white font-semibold rounded-lg hover:opacity-90 transition-opacity flex items-center justify-center gap-2`}
-            >
-              <Edit className="w-5 h-5" />
-              {tc('edit')}
-            </button>
-            <button
-              onClick={handleDelete}
-              disabled={deleting}
-              className="py-3 px-4 border border-red-500/30 text-red-400 font-semibold rounded-lg hover:bg-red-500/10 transition-colors flex items-center justify-center disabled:opacity-50"
-            >
-              {deleting ? (
-                <Loader2 className="w-5 h-5 animate-spin" />
-              ) : (
-                <Trash2 className="w-5 h-5" />
-              )}
-            </button>
           </div>
+        )}
 
-          <p className="text-center text-xs text-faint-foreground">
-            {t('programCode')}:{' '}
-            <span className="text-muted-foreground font-mono">{program.code}</span>
-          </p>
+        {/* Actions */}
+        <div className="flex gap-3 pt-1">
+          <button
+            onClick={() =>
+              router.push(
+                `/nutritionist/programs/new?edit=${program.id}&category=${category}`
+              )
+            }
+            className={`flex-1 py-3.5 bg-gradient-to-r ${accent.gradient} text-white font-semibold rounded-xl hover:opacity-90 transition-opacity flex items-center justify-center gap-2`}
+          >
+            <Edit className="w-5 h-5" />
+            {tc('edit')}
+          </button>
+          <button
+            onClick={handleDelete}
+            disabled={deleting}
+            className="py-3.5 px-4 border border-red-500/30 text-red-400 font-semibold rounded-xl hover:bg-red-500/10 transition-colors flex items-center justify-center disabled:opacity-50"
+          >
+            {deleting ? (
+              <Loader2 className="w-5 h-5 animate-spin" />
+            ) : (
+              <Trash2 className="w-5 h-5" />
+            )}
+          </button>
+        </div>
+
+        <div className="flex items-center justify-center gap-2">
+          <span className="text-xs text-faint-foreground">{t('programCode')}:</span>
+          <span className="text-xs font-mono text-muted-foreground bg-background border border-border rounded-md px-2 py-0.5">
+            {program.code}
+          </span>
         </div>
       </div>
     </div>

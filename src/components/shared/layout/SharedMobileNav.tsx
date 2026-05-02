@@ -23,11 +23,11 @@ const colorMap = {
     ring: 'ring-[#28bf68]/15',
   },
   orange: {
-    activeText: 'text-[#f07915]',
-    activeBg: 'bg-[#f07915]/12',
-    activeBorder: 'border-[#f07915]/20',
-    badge: 'bg-[#d4600b]',
-    ring: 'ring-[#f07915]/15',
+    activeText: 'text-[#d4722a]',
+    activeBg: 'bg-[#d4722a]/12',
+    activeBorder: 'border-[#d4722a]/20',
+    badge: 'bg-[#b85e1e]',
+    ring: 'ring-[#d4722a]/15',
   },
   blue: {
     activeText: 'text-[#0c8de6]',
