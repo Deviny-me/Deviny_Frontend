@@ -261,6 +261,7 @@ export default function ChatInbox() {
   const callStatusRef = useRef<'idle' | 'calling' | 'ringing' | 'connecting' | 'connected'>('idle')
   const pendingIceCandidatesRef = useRef<RTCIceCandidateInit[]>([])
   const subscribedPresenceIdsRef = useRef<Set<string>>(new Set())
+  const ringtoneRef = useRef<HTMLAudioElement | null>(null)
 
   // Keep refs in sync with state
   useEffect(() => { selectedConvIdRef.current = selectedConvId }, [selectedConvId])
@@ -268,6 +269,33 @@ export default function ChatInbox() {
   useEffect(() => { activeCallConversationIdRef.current = activeCallConversationId }, [activeCallConversationId])
   useEffect(() => { incomingCallRef.current = incomingCall }, [incomingCall])
   useEffect(() => { callStatusRef.current = callStatus }, [callStatus])
+
+  // ─── ringtone playback ───
+  useEffect(() => {
+    if (ringtoneRef.current) {
+      ringtoneRef.current.pause()
+      ringtoneRef.current.currentTime = 0
+      ringtoneRef.current = null
+    }
+    if (callStatus === 'calling') {
+      const audio = new Audio('/sounds/universfield-ringtone-082-496370.mp3')
+      audio.loop = true
+      audio.play().catch(() => {})
+      ringtoneRef.current = audio
+    } else if (callStatus === 'ringing') {
+      const audio = new Audio('/sounds/universfield-modern-phone-ring-494555.mp3')
+      audio.loop = true
+      audio.play().catch(() => {})
+      ringtoneRef.current = audio
+    }
+    return () => {
+      if (ringtoneRef.current) {
+        ringtoneRef.current.pause()
+        ringtoneRef.current.currentTime = 0
+        ringtoneRef.current = null
+      }
+    }
+  }, [callStatus])
 
   const callTypeText = useCallback(
     (type: CallType | null | undefined) =>
