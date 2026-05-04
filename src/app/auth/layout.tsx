@@ -6,14 +6,6 @@ import { LanguageProvider } from '@/components/language/LanguageProvider'
 import { LanguageSwitcher } from '@/components/language/LanguageSwitcher'
 import { Sun, Moon } from 'lucide-react'
 
-function FloatingShape({ className }: { className?: string }) {
-  return (
-    <div
-      className={`absolute pointer-events-none rounded-full opacity-20 dark:opacity-10 ${className}`}
-    />
-  )
-}
-
 function AuthLayoutInner({ children }: { children: React.ReactNode }) {
   const [isDark, setIsDark] = useState(false)
   const [authChecked, setAuthChecked] = useState(false)
@@ -68,44 +60,68 @@ function AuthLayoutInner({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <div className="min-h-screen flex flex-col relative overflow-hidden bg-gradient-to-br from-white via-[#fefcf6] to-[#faf3e0] dark:from-[#0A0A0A] dark:via-[#111111] dark:to-[#0A0A0A]">
-
-      {/* Animated background shapes */}
-      <FloatingShape className="w-72 h-72 bg-primary-300 dark:bg-primary-600 blur-3xl animate-float top-[10%] right-[5%]" />
-      <FloatingShape className="w-96 h-96 bg-user-300 dark:bg-user-700 blur-3xl animate-float-delayed bottom-[10%] left-[10%]" />
-      <FloatingShape className="w-64 h-64 bg-trainer-300 dark:bg-trainer-700 blur-3xl animate-float-slow top-[50%] right-[30%]" />
+    <div className="relative isolate min-h-screen flex flex-col overflow-hidden bg-background text-foreground">
+      {/* ─── Backdrop ─── */}
+      {/* Layer 1: rich multi-stop aurora */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0 -z-30
+          [background:radial-gradient(48rem_36rem_at_88%_-10%,rgba(212,168,67,0.20),transparent_55%),radial-gradient(42rem_32rem_at_-10%_8%,rgba(12,141,230,0.16),transparent_60%),radial-gradient(44rem_34rem_at_115%_92%,rgba(240,121,21,0.13),transparent_60%),radial-gradient(50rem_38rem_at_-12%_108%,rgba(40,191,104,0.11),transparent_60%)]
+          dark:[background:radial-gradient(52rem_38rem_at_88%_-10%,rgba(212,168,67,0.18),transparent_55%),radial-gradient(44rem_34rem_at_-10%_8%,rgba(12,141,230,0.16),transparent_60%),radial-gradient(46rem_36rem_at_115%_92%,rgba(240,121,21,0.12),transparent_60%),radial-gradient(52rem_40rem_at_-12%_108%,rgba(40,191,104,0.12),transparent_60%)]"
+      />
+      {/* Layer 2: subtle dot grid */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0 -z-20 opacity-[0.5] dark:opacity-[0.35]
+          [background-image:radial-gradient(circle_at_1px_1px,rgba(9,9,11,0.07)_1px,transparent_0)]
+          dark:[background-image:radial-gradient(circle_at_1px_1px,rgba(255,255,255,0.05)_1px,transparent_0)]
+          [background-size:22px_22px]
+          [mask-image:radial-gradient(ellipse_at_center,black_40%,transparent_85%)]"
+      />
+      {/* Layer 3: top hairline */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-x-0 top-0 h-px -z-10 bg-gradient-to-r from-transparent via-primary-500/40 to-transparent"
+      />
 
       {/* Top bar */}
-      <div className="relative z-10 flex items-center justify-between px-4 sm:px-8 py-4 sm:py-5">
-        <Image src={isDark ? '/logo-white.png' : '/logo.png'} alt="Deviny" width={110} height={36} className="w-[90px] sm:w-[110px] h-auto" priority />
+      <header className="relative z-10 flex items-center justify-between px-4 sm:px-8 py-4 sm:py-5">
+        <Image
+          src={isDark ? '/logo-white.png' : '/logo.png'}
+          alt="Deviny"
+          width={110}
+          height={36}
+          className="w-[90px] sm:w-[110px] h-auto"
+          priority
+        />
         <div className="flex items-center gap-2">
           <button
             onClick={toggleTheme}
-            className="p-2.5 rounded-xl hover:bg-black/5 dark:hover:bg-white/5 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition-all"
-            title={isDark ? 'Light mode' : 'Dark mode'}
+            className="inline-flex h-10 w-10 items-center justify-center rounded-full text-muted-foreground hover:text-foreground hover:bg-hover-overlay transition-[background-color,color] duration-200 ease-out-expo focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring-color)] focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+            aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
           >
-            {isDark ? <Sun className="w-[18px] h-[18px]" /> : <Moon className="w-[18px] h-[18px]" />}
+            {isDark ? <Sun className="h-[17px] w-[17px]" /> : <Moon className="h-[17px] w-[17px]" />}
           </button>
           <LanguageSwitcher />
         </div>
-      </div>
+      </header>
 
       {/* Form area */}
-      <div className="relative z-10 flex-1 flex items-center justify-center px-4 sm:px-8 pb-8">
+      <main className="relative z-10 flex-1 flex items-center justify-center px-4 sm:px-8 pb-8">
         {authChecked ? children : null}
-      </div>
+      </main>
 
       {/* Footer */}
-      <div className="relative z-10 px-4 sm:px-8 py-4 sm:py-5">
+      <footer className="relative z-10 px-4 sm:px-8 py-4 sm:py-5">
         <div className="flex items-center justify-between flex-wrap gap-4">
-          <p className="text-xs text-gray-500 dark:text-gray-600">© {new Date().getFullYear()} Deviny</p>
-          <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-gray-500 dark:text-gray-600">
-            <a href="#" className="hover:text-gray-800 dark:hover:text-gray-300 transition-colors">About</a>
-            <a href="#" className="hover:text-gray-800 dark:hover:text-gray-300 transition-colors">Privacy</a>
-            <a href="#" className="hover:text-gray-800 dark:hover:text-gray-300 transition-colors">Terms</a>
-          </div>
+          <p className="text-[11px] sm:text-xs text-faint-foreground tabular-nums">© {new Date().getFullYear()} Deviny</p>
+          <nav className="flex flex-wrap items-center gap-x-5 gap-y-1 text-[11px] sm:text-xs text-faint-foreground">
+            <a href="#" className="hover:text-foreground transition-colors">About</a>
+            <a href="#" className="hover:text-foreground transition-colors">Privacy</a>
+            <a href="#" className="hover:text-foreground transition-colors">Terms</a>
+          </nav>
         </div>
-      </div>
+      </footer>
     </div>
   )
 }

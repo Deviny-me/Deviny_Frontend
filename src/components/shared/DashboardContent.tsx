@@ -32,20 +32,19 @@ import {
 import { dashboardApi, DashboardStats } from '@/lib/api/dashboardApi'
 import { getMediaUrl } from '@/lib/config'
 import { useRealtimeScopeRefresh } from '@/lib/signalr/useRealtimeScopeRefresh'
+import { getAccentColorsByRole } from '@/lib/theme/useAccentColors'
 
 interface DashboardContentProps {
-  accentColor: string // hex color like '#d4722a' or '#28bf68'
-  accentGradient: string // tailwind gradient like 'from-[#d4722a] to-[#b85e1e]'
+  /** kept for backwards-compat — values are derived from role */
+  accentColor?: string
+  accentGradient?: string
   role: 'trainer' | 'nutritionist'
 }
 
 const MONTH_LABELS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
 
-const TIER_COLORS = {
-  basic: '#d4722a',
-  standard: '#F59E0B',
-  pro: '#8B5CF6',
-}
+const TIER_STANDARD_COLOR = '#F59E0B'
+const TIER_PRO_COLOR = '#8B5CF6'
 
 const CATEGORY_ICONS: Record<string, typeof Dumbbell> = {
   Training: Dumbbell,
@@ -53,8 +52,12 @@ const CATEGORY_ICONS: Record<string, typeof Dumbbell> = {
   Consultation: MessageSquare,
 }
 
-export function DashboardContent({ accentColor, accentGradient, role }: DashboardContentProps) {
+export function DashboardContent({ role }: DashboardContentProps) {
   const t = useTranslations('dashboard')
+  const accent = getAccentColorsByRole(role)
+  const accentColor = accent.primary
+  const accentSecondary = accent.secondary
+
   const [stats, setStats] = useState<DashboardStats | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -90,12 +93,12 @@ export function DashboardContent({ accentColor, accentGradient, role }: Dashboar
 
   if (error) {
     return (
-      <div className="text-center py-12 bg-surface-2 rounded-xl border border-border-subtle">
-        <p className="text-red-400 mb-4">{error}</p>
+      <div className="rounded-2xl bg-surface-1 ring-1 ring-inset ring-border-subtle p-6 text-center">
+        <p className="text-red-400 mb-4 text-sm">{error}</p>
         <button
           onClick={() => loadStats(true)}
-          className="px-4 py-2 text-foreground rounded-lg hover:opacity-90 transition-colors"
-          style={{ backgroundColor: accentColor }}
+          className="inline-flex items-center justify-center h-10 px-5 rounded-xl text-sm font-semibold text-white shadow-md hover:shadow-lg active:scale-95 transition-all"
+          style={{ background: `linear-gradient(135deg, ${accentColor}, ${accentSecondary})` }}
         >
           {t('retry')}
         </button>
@@ -112,67 +115,71 @@ export function DashboardContent({ accentColor, accentGradient, role }: Dashboar
   }))
 
   const tierData = [
-    { name: 'Basic', value: stats.tierDistribution.basic, color: TIER_COLORS.basic },
-    { name: 'Standard', value: stats.tierDistribution.standard, color: TIER_COLORS.standard },
-    { name: 'Pro', value: stats.tierDistribution.pro, color: TIER_COLORS.pro },
+    { name: 'Basic', value: stats.tierDistribution.basic, color: accentColor },
+    { name: 'Standard', value: stats.tierDistribution.standard, color: TIER_STANDARD_COLOR },
+    { name: 'Pro', value: stats.tierDistribution.pro, color: TIER_PRO_COLOR },
   ].filter(d => d.value > 0)
 
   const totalTierSales = tierData.reduce((sum, d) => sum + d.value, 0)
 
   return (
-    <div className="space-y-6 pb-6">
+    <div className="space-y-4 sm:space-y-5 pb-8">
       {/* Header */}
       <div>
         <h1 className="page-title">{t('title')}</h1>
-        <p className="text-muted-foreground text-sm">{t('subtitle')}</p>
+        <p className="text-muted-foreground text-sm mt-1">{t('subtitle')}</p>
       </div>
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
         <StatCard
           icon={Users}
           value={stats.totalStudents}
           label={t('totalStudents')}
           accentColor={accentColor}
+          accentSecondary={accentSecondary}
         />
         <StatCard
           icon={ShoppingBag}
           value={stats.totalProgramsSold}
           label={t('programsSold')}
           accentColor={accentColor}
+          accentSecondary={accentSecondary}
         />
         <StatCard
           icon={Layers}
           value={stats.totalPrograms}
           label={t('totalPrograms')}
           accentColor={accentColor}
+          accentSecondary={accentSecondary}
         />
       </div>
 
       {/* Monthly Sales Chart */}
-      <div className="bg-surface-2 rounded-xl border border-border-subtle p-4 sm:p-5">
-        <div className="flex items-center gap-2 mb-4">
-          <BarChart3 className="w-5 h-5" style={{ color: accentColor }} />
-          <h2 className="text-base sm:text-lg font-semibold text-foreground">{t('monthlySales')}</h2>
-        </div>
+      <SectionCard
+        icon={BarChart3}
+        title={t('monthlySales')}
+        accentColor={accentColor}
+        accentSecondary={accentSecondary}
+      >
         {stats.totalProgramsSold === 0 ? (
           <EmptyChartState message={t('noSalesYet')} />
         ) : (
-          <ResponsiveContainer width="100%" height={280}>
-            <AreaChart data={monthlyChartData} margin={{ top: 5, right: 5, left: -20, bottom: 5 }}>
+          <ResponsiveContainer width="100%" height={260}>
+            <AreaChart data={monthlyChartData} margin={{ top: 8, right: 8, left: -16, bottom: 0 }}>
               <defs>
                 <linearGradient id="salesGradient" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor={accentColor} stopOpacity={0.3} />
+                  <stop offset="5%" stopColor={accentColor} stopOpacity={0.35} />
                   <stop offset="95%" stopColor={accentColor} stopOpacity={0} />
                 </linearGradient>
               </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke="#333" />
-              <XAxis dataKey="name" tick={{ fill: '#9CA3AF', fontSize: 12 }} axisLine={{ stroke: '#333' }} />
-              <YAxis tick={{ fill: '#9CA3AF', fontSize: 12 }} axisLine={{ stroke: '#333' }} allowDecimals={false} />
+              <CartesianGrid strokeDasharray="3 3" stroke="rgba(127,127,127,0.18)" />
+              <XAxis dataKey="name" tick={{ fill: '#9CA3AF', fontSize: 11 }} axisLine={{ stroke: 'rgba(127,127,127,0.18)' }} tickLine={false} />
+              <YAxis tick={{ fill: '#9CA3AF', fontSize: 11 }} axisLine={{ stroke: 'rgba(127,127,127,0.18)' }} tickLine={false} allowDecimals={false} />
               <Tooltip
-                contentStyle={{ backgroundColor: '#141414', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px' }}
-                labelStyle={{ color: '#fff' }}
-                itemStyle={{ color: '#9CA3AF' }}
+                contentStyle={{ backgroundColor: 'var(--surface-1)', border: '1px solid var(--border-subtle)', borderRadius: '12px', fontSize: '12px' }}
+                labelStyle={{ color: 'var(--foreground)' }}
+                itemStyle={{ color: 'var(--muted-foreground)' }}
               />
               <Area
                 type="monotone"
@@ -185,16 +192,16 @@ export function DashboardContent({ accentColor, accentGradient, role }: Dashboar
             </AreaChart>
           </ResponsiveContainer>
         )}
-      </div>
+      </SectionCard>
 
       {/* Two-column Layout: Tier Distribution + Students Chart */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        {/* Tier Distribution Pie Chart */}
-        <div className="bg-surface-2 rounded-xl border border-border-subtle p-4 sm:p-5">
-          <div className="flex items-center gap-2 mb-4">
-            <PieChartIcon className="w-5 h-5" style={{ color: accentColor }} />
-            <h2 className="text-base sm:text-lg font-semibold text-foreground">{t('tierDistribution')}</h2>
-          </div>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-5">
+        <SectionCard
+          icon={PieChartIcon}
+          title={t('tierDistribution')}
+          accentColor={accentColor}
+          accentSecondary={accentSecondary}
+        >
           {totalTierSales === 0 ? (
             <EmptyChartState message={t('noSalesYet')} />
           ) : (
@@ -215,100 +222,84 @@ export function DashboardContent({ accentColor, accentGradient, role }: Dashboar
                   ))}
                 </Pie>
                 <Tooltip
-                  contentStyle={{ backgroundColor: '#141414', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px' }}
-                  labelStyle={{ color: '#fff' }}
+                  contentStyle={{ backgroundColor: 'var(--surface-1)', border: '1px solid var(--border-subtle)', borderRadius: '12px', fontSize: '12px' }}
+                  labelStyle={{ color: 'var(--foreground)' }}
                 />
-                <Legend
-                  formatter={(value) => <span className="text-muted-foreground text-sm">{value}</span>}
-                />
+                <Legend formatter={(value) => <span className="text-muted-foreground text-xs">{value}</span>} />
               </PieChart>
             </ResponsiveContainer>
           )}
-        </div>
+        </SectionCard>
 
-        {/* Monthly Students Chart */}
-        <div className="bg-surface-2 rounded-xl border border-border-subtle p-4 sm:p-5">
-          <div className="flex items-center gap-2 mb-4">
-            <TrendingUp className="w-5 h-5" style={{ color: accentColor }} />
-            <h2 className="text-base sm:text-lg font-semibold text-foreground">{t('monthlyStudents')}</h2>
-          </div>
+        <SectionCard
+          icon={TrendingUp}
+          title={t('monthlyStudents')}
+          accentColor={accentColor}
+          accentSecondary={accentSecondary}
+        >
           {stats.totalStudents === 0 ? (
             <EmptyChartState message={t('noStudentsYet')} />
           ) : (
             <ResponsiveContainer width="100%" height={240}>
-              <BarChart data={monthlyChartData} margin={{ top: 5, right: 5, left: -20, bottom: 5 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#333" />
-                <XAxis dataKey="name" tick={{ fill: '#9CA3AF', fontSize: 12 }} axisLine={{ stroke: '#333' }} />
-                <YAxis tick={{ fill: '#9CA3AF', fontSize: 12 }} axisLine={{ stroke: '#333' }} allowDecimals={false} />
+              <BarChart data={monthlyChartData} margin={{ top: 8, right: 8, left: -16, bottom: 0 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="rgba(127,127,127,0.18)" />
+                <XAxis dataKey="name" tick={{ fill: '#9CA3AF', fontSize: 11 }} axisLine={{ stroke: 'rgba(127,127,127,0.18)' }} tickLine={false} />
+                <YAxis tick={{ fill: '#9CA3AF', fontSize: 11 }} axisLine={{ stroke: 'rgba(127,127,127,0.18)' }} tickLine={false} allowDecimals={false} />
                 <Tooltip
-                  contentStyle={{ backgroundColor: '#141414', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px' }}
-                  labelStyle={{ color: '#fff' }}
-                  itemStyle={{ color: '#9CA3AF' }}
+                  contentStyle={{ backgroundColor: 'var(--surface-1)', border: '1px solid var(--border-subtle)', borderRadius: '12px', fontSize: '12px' }}
+                  labelStyle={{ color: 'var(--foreground)' }}
+                  itemStyle={{ color: 'var(--muted-foreground)' }}
                 />
                 <Bar
                   dataKey="students"
                   fill={accentColor}
-                  radius={[4, 4, 0, 0]}
+                  radius={[6, 6, 0, 0]}
                   name={t('newStudents')}
                 />
               </BarChart>
             </ResponsiveContainer>
           )}
-        </div>
+        </SectionCard>
       </div>
 
       {/* Program Performance Table */}
-      <div className="bg-surface-2 rounded-xl border border-border-subtle p-4 sm:p-5">
-        <div className="flex items-center gap-2 mb-4">
-          <Layers className="w-5 h-5" style={{ color: accentColor }} />
-          <h2 className="text-base sm:text-lg font-semibold text-foreground">{t('programPerformance')}</h2>
-        </div>
+      <SectionCard
+        icon={Layers}
+        title={t('programPerformance')}
+        accentColor={accentColor}
+        accentSecondary={accentSecondary}
+      >
         {stats.programStats.length === 0 ? (
-          <div className="text-center py-8">
-            <Layers className="w-10 h-10 text-gray-600 mx-auto mb-3" />
-            <p className="text-muted-foreground text-sm">{t('noProgramsYet')}</p>
-          </div>
+          <EmptyState icon={Layers} message={t('noProgramsYet')} />
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
+          <div className="-mx-4 sm:-mx-5 overflow-x-auto">
+            <table className="w-full text-sm min-w-[600px]">
               <thead>
                 <tr className="border-b border-border-subtle">
-                  <th className="text-left text-muted-foreground font-medium py-3 px-2">{t('program')}</th>
-                  <th className="text-center text-muted-foreground font-medium py-3 px-2">{t('type')}</th>
-                  <th className="text-center text-muted-foreground font-medium py-3 px-2">{t('students')}</th>
-                  <th className="text-center text-muted-foreground font-medium py-3 px-2">{t('sales')}</th>
-                  <th className="text-center text-muted-foreground font-medium py-3 px-2">Basic</th>
-                  <th className="text-center text-muted-foreground font-medium py-3 px-2">Standard</th>
-                  <th className="text-center text-muted-foreground font-medium py-3 px-2">Pro</th>
+                  <th className="text-left text-[11px] uppercase tracking-wider text-muted-foreground font-semibold py-2.5 px-4 sm:px-5">{t('program')}</th>
+                  <th className="w-24 text-center text-[11px] uppercase tracking-wider text-muted-foreground font-semibold py-2.5 px-3">{t('students')}</th>
+                  <th className="w-24 text-center text-[11px] uppercase tracking-wider text-muted-foreground font-semibold py-2.5 px-3">{t('sales')}</th>
+                  <th className="w-24 text-center text-[11px] uppercase tracking-wider font-semibold py-2.5 px-3" style={{ color: accentColor }}>Basic</th>
+                  <th className="w-24 text-center text-[11px] uppercase tracking-wider text-amber-400 font-semibold py-2.5 px-3">Std</th>
+                  <th className="w-24 text-center text-[11px] uppercase tracking-wider text-purple-400 font-semibold py-2.5 px-4 sm:px-5">Pro</th>
                 </tr>
               </thead>
               <tbody>
                 {stats.programStats.map((program) => {
                   const Icon = CATEGORY_ICONS[program.category] || Layers
                   return (
-                    <tr key={program.programId} className="border-b border-border-subtle hover:bg-hover-overlay">
-                      <td className="py-3 px-2">
-                        <span className="text-foreground font-medium">{program.title}</span>
-                      </td>
-                      <td className="text-center py-3 px-2">
-                        <div className="flex items-center justify-center gap-1">
-                          <Icon className="w-4 h-4 text-muted-foreground" />
-                          <span className="text-muted-foreground">{program.category}</span>
+                    <tr key={program.programId} className="border-b border-border-subtle last:border-0 hover:bg-hover-overlay transition-colors">
+                      <td className="py-3 px-4 sm:px-5">
+                        <div className="flex items-center gap-2">
+                          <Icon className="w-3.5 h-3.5 shrink-0 text-muted-foreground" />
+                          <span className="font-medium text-foreground">{program.title}</span>
                         </div>
                       </td>
-                      <td className="text-center py-3 px-2 text-foreground">{program.uniqueStudents}</td>
-                      <td className="text-center py-3 px-2 font-semibold" style={{ color: accentColor }}>
-                        {program.totalSales}
-                      </td>
-                      <td className="text-center py-3 px-2">
-                        <span className="px-2 py-0.5 bg-blue-500/10 text-blue-400 rounded text-xs">{program.basicSales}</span>
-                      </td>
-                      <td className="text-center py-3 px-2">
-                        <span className="px-2 py-0.5 bg-amber-500/10 text-amber-400 rounded text-xs">{program.standardSales}</span>
-                      </td>
-                      <td className="text-center py-3 px-2">
-                        <span className="px-2 py-0.5 bg-purple-500/10 text-purple-400 rounded text-xs">{program.proSales}</span>
-                      </td>
+                      <td className="text-center py-3 px-3 text-foreground tabular-nums">{program.uniqueStudents}</td>
+                      <td className="text-center py-3 px-3 font-semibold tabular-nums" style={{ color: accentColor }}>{program.totalSales}</td>
+                      <td className="text-center py-3 px-3 tabular-nums font-medium" style={{ color: accentColor }}>{program.basicSales}</td>
+                      <td className="text-center py-3 px-3 tabular-nums font-medium text-amber-400">{program.standardSales}</td>
+                      <td className="text-center py-3 px-4 sm:px-5 tabular-nums font-medium text-purple-400">{program.proSales}</td>
                     </tr>
                   )
                 })}
@@ -316,78 +307,107 @@ export function DashboardContent({ accentColor, accentGradient, role }: Dashboar
             </table>
           </div>
         )}
-      </div>
+      </SectionCard>
 
       {/* Recent Students */}
-      <div className="bg-surface-2 rounded-xl border border-border-subtle p-4 sm:p-5">
-        <div className="flex items-center gap-2 mb-4">
-          <Users className="w-5 h-5" style={{ color: accentColor }} />
-          <h2 className="text-base sm:text-lg font-semibold text-foreground">{t('recentStudents')}</h2>
-        </div>
+      <SectionCard
+        icon={Users}
+        title={t('recentStudents')}
+        accentColor={accentColor}
+        accentSecondary={accentSecondary}
+      >
         {stats.recentStudents.length === 0 ? (
-          <div className="text-center py-8">
-            <Users className="w-10 h-10 text-gray-600 mx-auto mb-3" />
-            <p className="text-muted-foreground text-sm">{t('noStudentsYet')}</p>
-          </div>
+          <EmptyState icon={Users} message={t('noStudentsYet')} />
         ) : (
-          <div className="space-y-3">
+          <div className="space-y-1.5">
             {stats.recentStudents.map((student) => (
               <div
                 key={student.id}
-                className="flex items-center gap-3 p-3 rounded-lg hover:bg-hover-overlay transition-colors"
+                className="flex items-center gap-3 p-2.5 rounded-xl hover:bg-hover-overlay transition-colors"
               >
                 {student.avatarUrl ? (
                   <img
                     src={getMediaUrl(student.avatarUrl) || ''}
                     alt={student.fullName}
-                    className="w-10 h-10 rounded-full object-cover"
+                    className="w-10 h-10 rounded-full object-cover ring-2 ring-background"
                   />
                 ) : (
                   <div
-                    className="w-10 h-10 rounded-full flex items-center justify-center text-foreground font-bold text-sm"
-                    style={{ backgroundColor: accentColor + '33' }}
+                    className="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-sm ring-2 ring-background"
+                    style={{ background: `linear-gradient(135deg, ${accentColor}, ${accentSecondary})` }}
                   >
                     {student.fullName.charAt(0).toUpperCase()}
                   </div>
                 )}
                 <div className="flex-1 min-w-0">
-                  <p className="text-foreground font-medium truncate">{student.fullName}</p>
-                  <p className="text-muted-foreground text-sm truncate">{student.email}</p>
+                  <p className="text-foreground font-medium truncate text-sm">{student.fullName}</p>
+                  <p className="text-muted-foreground text-xs truncate">{student.email}</p>
                 </div>
               </div>
             ))}
           </div>
         )}
-      </div>
+      </SectionCard>
     </div>
   )
 }
 
 // --- Helper Components ---
 
+function SectionCard({
+  icon: Icon,
+  title,
+  accentColor,
+  accentSecondary,
+  children,
+}: {
+  icon: typeof Users
+  title: string
+  accentColor: string
+  accentSecondary: string
+  children: React.ReactNode
+}) {
+  return (
+    <section className="rounded-2xl bg-surface-1 ring-1 ring-inset ring-border-subtle p-4 sm:p-5">
+      <div className="flex items-center gap-2.5 mb-4">
+        <div
+          className="flex h-8 w-8 items-center justify-center rounded-xl ring-1 ring-inset ring-border-subtle"
+          style={{ background: `linear-gradient(135deg, ${accentColor}1f, ${accentSecondary}10)` }}
+        >
+          <Icon className="w-4 h-4" style={{ color: accentColor }} />
+        </div>
+        <h2 className="text-sm sm:text-base font-semibold text-foreground tracking-tight">{title}</h2>
+      </div>
+      {children}
+    </section>
+  )
+}
+
 function StatCard({
   icon: Icon,
   value,
   label,
   accentColor,
+  accentSecondary,
 }: {
   icon: typeof Users
   value: number
   label: string
   accentColor: string
+  accentSecondary: string
 }) {
   return (
-    <div className="bg-surface-2 rounded-xl border border-border-subtle p-4 sm:p-5">
+    <div className="rounded-2xl bg-surface-1 ring-1 ring-inset ring-border-subtle p-4 sm:p-5 transition-shadow hover:shadow-md">
       <div className="flex items-center gap-3">
         <div
-          className="w-10 h-10 sm:w-11 sm:h-11 rounded-lg flex items-center justify-center shrink-0"
-          style={{ backgroundColor: accentColor + '20' }}
+          className="w-11 h-11 rounded-xl flex items-center justify-center shrink-0 ring-1 ring-inset ring-border-subtle"
+          style={{ background: `linear-gradient(135deg, ${accentColor}1f, ${accentSecondary}10)` }}
         >
           <Icon className="w-5 h-5" style={{ color: accentColor }} />
         </div>
         <div className="min-w-0">
-          <p className="text-xl sm:text-2xl font-bold text-foreground">{value}</p>
-          <p className="text-sm text-muted-foreground leading-tight">{label}</p>
+          <p className="text-xl sm:text-2xl font-bold text-foreground tabular-nums leading-none">{value}</p>
+          <p className="text-xs text-muted-foreground mt-1 leading-tight">{label}</p>
         </div>
       </div>
     </div>
@@ -398,6 +418,17 @@ function EmptyChartState({ message }: { message: string }) {
   return (
     <div className="flex items-center justify-center h-[200px]">
       <p className="text-faint-foreground text-sm">{message}</p>
+    </div>
+  )
+}
+
+function EmptyState({ icon: Icon, message }: { icon: typeof Users; message: string }) {
+  return (
+    <div className="text-center py-10">
+      <div className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-surface-2 ring-1 ring-inset ring-border-subtle mb-3">
+        <Icon className="w-5 h-5 text-muted-foreground" />
+      </div>
+      <p className="text-muted-foreground text-sm">{message}</p>
     </div>
   )
 }

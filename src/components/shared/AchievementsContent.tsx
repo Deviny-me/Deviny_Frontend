@@ -4,7 +4,7 @@ import { Trophy, Lock, Award, Loader2 } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { useEffect } from 'react'
 import type { AchievementDto } from '@/types/achievement'
-import { getIcon, getRarityBorder, getRarityGlow, getRarityLabelColor } from '@/components/shared/achievementUtils'
+import { getIcon, getRarityLabelColor } from '@/components/shared/achievementUtils'
 import { useAccentColors } from '@/lib/theme/useAccentColors'
 import { useAchievements } from '@/contexts/AchievementsContext'
 
@@ -12,10 +12,6 @@ export default function AchievementsContent() {
   const { data, loading, error, unlocked, locked, unlockedCount, totalCount, markSeen } = useAchievements()
   const t = useTranslations('achievements')
   const accent = useAccentColors()
-  const accentGradient = accent.gradient
-  const accentText = accent.text
-  const spinnerColor = accent.loader
-  const accentCtaGradient = accent.ctaGradient
 
   useEffect(() => {
     if (!loading && data) {
@@ -26,17 +22,20 @@ export default function AchievementsContent() {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
-        <Loader2 className={`w-8 h-8 ${spinnerColor} animate-spin`} />
+        <Loader2 className={`w-6 h-6 ${accent.loader} animate-spin`} />
       </div>
     )
   }
 
   if (error) {
     return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="text-center">
-          <p className="text-red-400 mb-2">Failed to load achievements</p>
-          <p className="text-sm text-faint-foreground">{error}</p>
+      <div className="flex min-h-[60vh] items-center justify-center">
+        <div className="rounded-2xl bg-surface-1 ring-1 ring-inset ring-border-subtle p-8 text-center">
+          <div className="mx-auto mb-3 inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-surface-2 ring-1 ring-border-subtle">
+            <Trophy className="h-5 w-5 text-muted-foreground" />
+          </div>
+          <p className="text-sm font-medium text-foreground">Failed to load achievements</p>
+          <p className="mt-1 text-xs text-muted-foreground">{error}</p>
         </div>
       </div>
     )
@@ -44,23 +43,46 @@ export default function AchievementsContent() {
 
   if (!data) return null
 
+  const progress = totalCount > 0 ? (unlockedCount / totalCount) * 100 : 0
+
   return (
-    <div className="space-y-6 pb-6">
+    <div className="space-y-5 pb-6">
       <div>
-        <h1 className="page-title">{t('title')}</h1>
-        <p className="page-subtitle">{t('subtitle')}</p>
+        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground">{t('title')}</h1>
+        <p className="mt-1 text-sm text-muted-foreground">{t('subtitle')}</p>
       </div>
 
-      <div className="bg-gradient-to-br from-gray-100 to-gray-50 dark:from-[#1A1A1A] dark:to-[#0A0A0A] rounded-xl border border-border-subtle p-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="text-sm font-medium text-muted-foreground">{t('unlocked')}</p>
-          </div>
-          <div className="text-right">
-            <div className={`text-4xl font-bold bg-gradient-to-r ${accentGradient} bg-clip-text text-transparent`}>
-              {unlockedCount}/{totalCount}
+      {/* Progress card */}
+      <div className="rounded-2xl bg-surface-1 ring-1 ring-inset ring-border-subtle p-5 sm:p-6">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-center gap-3">
+            <div
+              className="inline-flex h-12 w-12 items-center justify-center rounded-2xl text-white shadow-md"
+              style={{ background: `linear-gradient(135deg, ${accent.primary}, ${accent.secondary})` }}
+            >
+              <Trophy className="h-5 w-5" />
             </div>
-            <p className="text-sm text-muted-foreground">{t('unlocked')}</p>
+            <div className="min-w-0">
+              <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">{t('unlocked')}</p>
+              <p className="text-2xl font-bold tracking-tight text-foreground">
+                {unlockedCount} <span className="text-base font-medium text-muted-foreground">/ {totalCount}</span>
+              </p>
+            </div>
+          </div>
+          <div className="min-w-0 flex-1 sm:max-w-xs">
+            <div className="mb-1.5 flex items-center justify-between text-xs text-muted-foreground">
+              <span>{t('unlocked')}</span>
+              <span className="tabular-nums">{Math.round(progress)}%</span>
+            </div>
+            <div className="h-2 overflow-hidden rounded-full bg-surface-2 ring-1 ring-inset ring-border-subtle">
+              <div
+                className="h-full rounded-full transition-[width] duration-500 ease-out"
+                style={{
+                  width: `${progress}%`,
+                  background: `linear-gradient(90deg, ${accent.primary}, ${accent.secondary})`,
+                }}
+              />
+            </div>
           </div>
         </div>
       </div>
@@ -69,42 +91,30 @@ export default function AchievementsContent() {
       <Section
         title={t('unlocked')}
         count={unlocked.length}
-        icon={<Trophy className="w-5 h-5 text-yellow-400" />}
-        emptyIcon={<Trophy className="w-8 h-8 text-muted-foreground" />}
+        icon={<Trophy className="h-4 w-4 text-foreground" />}
+        emptyIcon={<Trophy className="h-5 w-5 text-muted-foreground" />}
         emptyTitle={t('noAchievements')}
         emptyText={t('completeToUnlock')}
         items={unlocked}
-        accentText={accentText}
-        accentCardGradient={accentCtaGradient}
+        accent={accent}
       />
 
       {/* Locked */}
       <Section
         title={t('locked')}
         count={locked.length}
-        icon={<Lock className="w-5 h-5 text-faint-foreground" />}
-        emptyIcon={<Award className="w-8 h-8 text-yellow-400" />}
+        icon={<Lock className="h-4 w-4 text-muted-foreground" />}
+        emptyIcon={<Award className="h-5 w-5 text-muted-foreground" />}
         emptyTitle={t('allUnlocked')}
         emptyText=""
         items={locked}
-        accentText={accentText}
-        accentCardGradient={accentCtaGradient}
+        accent={accent}
       />
     </div>
   )
 }
 
-function Section({
-  title,
-  count,
-  icon,
-  emptyIcon,
-  emptyTitle,
-  emptyText,
-  items,
-  accentText,
-  accentCardGradient,
-}: {
+interface SectionProps {
   title: string
   count: number
   icon: React.ReactNode
@@ -112,21 +122,26 @@ function Section({
   emptyTitle: string
   emptyText: string
   items: AchievementDto[]
-  accentText: string
-  accentCardGradient: string
-}) {
+  accent: ReturnType<typeof useAccentColors>
+}
+
+function Section({ title, count, icon, emptyIcon, emptyTitle, emptyText, items, accent }: SectionProps) {
   if (count === 0) {
     return (
       <div>
-        <h3 className="text-lg font-bold text-foreground mb-4 flex items-center gap-2">
-          {icon} {title} (0)
+        <h3 className="mb-3 flex items-center gap-2 text-base font-semibold tracking-tight text-foreground sm:text-lg">
+          <span className="inline-flex h-6 w-6 items-center justify-center rounded-lg bg-surface-2 ring-1 ring-border-subtle">
+            {icon}
+          </span>
+          {title}
+          <span className="text-sm font-normal text-muted-foreground">({count})</span>
         </h3>
-        <div className="bg-surface-2 rounded-xl border border-border-subtle p-12 text-center">
-          <div className="w-16 h-16 rounded-full bg-border-subtle flex items-center justify-center mx-auto mb-4">
+        <div className="flex flex-col items-center justify-center rounded-2xl bg-surface-1 ring-1 ring-inset ring-border-subtle p-10 text-center">
+          <div className="mb-3 inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-surface-2 ring-1 ring-border-subtle">
             {emptyIcon}
           </div>
-          <h3 className="text-lg font-semibold text-foreground mb-2">{emptyTitle}</h3>
-          <p className="text-sm text-muted-foreground">{emptyText}</p>
+          <p className="text-sm font-medium text-foreground">{emptyTitle}</p>
+          {emptyText && <p className="mt-1 text-xs text-muted-foreground">{emptyText}</p>}
         </div>
       </div>
     )
@@ -134,75 +149,93 @@ function Section({
 
   return (
     <div>
-      <h3 className="text-lg font-bold text-foreground mb-4 flex items-center gap-2">
-        {icon} {title} ({count})
+      <h3 className="mb-3 flex items-center gap-2 text-base font-semibold tracking-tight text-foreground sm:text-lg">
+        <span className="inline-flex h-6 w-6 items-center justify-center rounded-lg bg-surface-2 ring-1 ring-border-subtle">
+          {icon}
+        </span>
+        {title}
+        <span className="text-sm font-normal text-muted-foreground">({count})</span>
       </h3>
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 gap-2.5 sm:gap-3 md:grid-cols-3 xl:grid-cols-4">
         {items.map(a => (
-          <AchievementCard key={a.id} achievement={a} accentText={accentText} accentCardGradient={accentCardGradient} />
+          <AchievementCard key={a.id} achievement={a} accent={accent} />
         ))}
       </div>
     </div>
   )
 }
 
-function AchievementCard({ achievement, accentText, accentCardGradient }: { achievement: AchievementDto; accentText: string; accentCardGradient: string }) {
+function AchievementCard({
+  achievement,
+  accent,
+}: {
+  achievement: AchievementDto
+  accent: ReturnType<typeof useAccentColors>
+}) {
   const Icon = getIcon(achievement.iconKey)
-  const gradient = accentCardGradient
-  const borderCls = achievement.isUnlocked
-    ? getRarityBorder(achievement.rarity)
-    : 'border-border-subtle'
-  const glowCls = achievement.isUnlocked ? getRarityGlow(achievement.rarity) : ''
   const rarityColor = getRarityLabelColor(achievement.rarity)
+  const isUnlocked = achievement.isUnlocked
 
   return (
     <div
-      className={`bg-surface-2 rounded-xl border ${borderCls} p-4 hover:scale-105 transition-all cursor-pointer group ${glowCls}`}
+      className={`group relative flex flex-col items-center rounded-2xl bg-surface-1 ring-1 ring-inset p-4 text-center transition-[box-shadow,transform] duration-200 hover:-translate-y-0.5 ${
+        isUnlocked ? 'ring-border-subtle hover:ring-border-strong' : 'ring-border-subtle/60'
+      }`}
     >
-      <div className="flex flex-col items-center text-center">
-        {/* Icon */}
-        <div className="relative mb-3">
-          {achievement.isUnlocked ? (
-            <>
-              <div className={`absolute inset-0 bg-gradient-to-br ${gradient} rounded-2xl blur-xl opacity-50 group-hover:opacity-75 transition-opacity`} />
-              <div className={`relative w-16 h-16 rounded-2xl bg-gradient-to-br ${gradient} flex items-center justify-center shadow-lg`}>
-                <Icon className="w-8 h-8 text-white" />
-              </div>
-            </>
-          ) : (
-            <>
-              <div className="w-16 h-16 rounded-2xl bg-background flex items-center justify-center opacity-30 group-hover:opacity-40 transition-opacity">
-                <Icon className="w-8 h-8 text-muted-foreground" />
-              </div>
-              <div className="absolute inset-0 flex items-center justify-center">
-                <Lock className="w-6 h-6 text-gray-600" />
-              </div>
-            </>
-          )}
-        </div>
-
-        <h4 className={`font-semibold text-sm mb-1 ${achievement.isUnlocked ? 'text-foreground' : 'text-muted-foreground'}`}>
-          {achievement.title}
-        </h4>
-        <p className={`text-xs mb-2 ${achievement.isUnlocked ? 'text-muted-foreground' : 'text-faint-foreground'}`}>
-          {achievement.description}
-        </p>
-
-        {/* Rarity + XP */}
-        <div className="flex items-center gap-2 mt-auto">
-          <span className={`text-[10px] font-medium ${rarityColor}`}>{achievement.rarity}</span>
-          {achievement.xpReward > 0 && (
-            <span className={`text-[10px] ${accentText}`}>+{achievement.xpReward} XP</span>
-          )}
-        </div>
-
-        {/* Date unlocked */}
-        {achievement.isUnlocked && achievement.awardedAt && (
-          <p className="text-[10px] text-faint-foreground mt-1">
-            {new Date(achievement.awardedAt).toLocaleDateString()}
-          </p>
+      {/* Icon tile */}
+      <div className="relative mb-3">
+        {isUnlocked ? (
+          <div
+            className="inline-flex h-14 w-14 items-center justify-center rounded-2xl text-white shadow-md"
+            style={{ background: `linear-gradient(135deg, ${accent.primary}, ${accent.secondary})` }}
+          >
+            <Icon className="h-6 w-6" />
+          </div>
+        ) : (
+          <div className="relative inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-surface-2 ring-1 ring-inset ring-border-subtle">
+            <Icon className="h-6 w-6 text-faint-foreground" />
+            <div className="absolute -bottom-1 -right-1 inline-flex h-5 w-5 items-center justify-center rounded-full bg-surface-1 ring-1 ring-border-subtle">
+              <Lock className="h-3 w-3 text-muted-foreground" />
+            </div>
+          </div>
         )}
       </div>
+
+      <h4
+        className={`mb-1 line-clamp-2 text-sm font-semibold ${
+          isUnlocked ? 'text-foreground' : 'text-muted-foreground'
+        }`}
+      >
+        {achievement.title}
+      </h4>
+      <p
+        className={`mb-3 line-clamp-2 text-[11px] leading-snug ${
+          isUnlocked ? 'text-muted-foreground' : 'text-faint-foreground'
+        }`}
+      >
+        {achievement.description}
+      </p>
+
+      <div className="mt-auto flex flex-wrap items-center justify-center gap-1.5">
+        <span
+          className={`inline-flex items-center rounded-full bg-surface-2 ring-1 ring-inset ring-border-subtle px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${rarityColor}`}
+        >
+          {achievement.rarity}
+        </span>
+        {achievement.xpReward > 0 && (
+          <span
+            className={`inline-flex items-center rounded-full bg-surface-2 ring-1 ring-inset ring-border-subtle px-2 py-0.5 text-[10px] font-semibold ${accent.text}`}
+          >
+            +{achievement.xpReward} XP
+          </span>
+        )}
+      </div>
+
+      {isUnlocked && achievement.awardedAt && (
+        <p className="mt-2 text-[10px] text-faint-foreground tabular-nums">
+          {new Date(achievement.awardedAt).toLocaleDateString()}
+        </p>
+      )}
     </div>
   )
 }

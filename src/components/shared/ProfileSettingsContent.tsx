@@ -320,32 +320,55 @@ export function ProfileSettingsContent({
     }
   }
 
-  const inputClass = 'w-full px-4 py-3 bg-background border border-border rounded-xl text-foreground placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:border-transparent transition-all'
-  const selectClass = 'w-full px-4 py-3 bg-background border border-border rounded-xl text-foreground focus:outline-none focus:ring-2 focus:border-transparent transition-all appearance-none'
+  const inputClass = 'w-full h-10 px-3 bg-surface-2 rounded-xl text-sm text-foreground placeholder:text-faint-foreground focus:outline-none transition-colors'
+  const selectClass = 'w-full h-10 px-3 bg-surface-2 rounded-xl text-sm text-foreground focus:outline-none transition-colors appearance-none'
+  const sectionClass = 'rounded-2xl bg-surface-1 ring-1 ring-inset ring-border-subtle p-4 sm:p-5 space-y-4'
+  const sectionHeaderClass = 'text-[11px] font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-2'
+  const labelClass = 'block text-xs font-medium text-muted-foreground mb-1.5'
 
   const avatarUrl = user?.avatarUrl
   const bannerUrl = user?.bannerUrl
 
+  const renderToggle = (checked: boolean, onChange: (v: boolean) => void, disabled?: boolean) => (
+    <button
+      type="button"
+      role="switch"
+      aria-checked={checked}
+      disabled={disabled}
+      onClick={() => onChange(!checked)}
+      className="relative inline-flex h-6 w-11 shrink-0 items-center rounded-full ring-1 ring-inset ring-border-subtle transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+      style={checked && !disabled
+        ? { background: `linear-gradient(135deg, ${accent.primary}, ${accent.secondary})` }
+        : undefined}
+    >
+      <span
+        className={`inline-block h-4 w-4 rounded-full bg-white shadow-sm transition-transform ${checked ? 'translate-x-6' : 'translate-x-1'}`}
+      />
+      {!checked && <span className="absolute inset-0 rounded-full bg-surface-2" style={{ zIndex: -1 }} />}
+    </button>
+  )
+
   return (
-    <div className="pb-6 space-y-5">
+    <div className="pb-8 space-y-4 sm:space-y-5">
       {/* Header */}
       <div className="flex items-center gap-3">
         <button
           onClick={() => router.push(`${basePath}/profile`)}
-          className="p-2 rounded-xl hover:bg-surface-1 transition-colors"
+          aria-label="Back"
+          className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-surface-1 ring-1 ring-inset ring-border-subtle text-muted-foreground hover:text-foreground hover:bg-surface-2 active:scale-95 transition-all"
         >
-          <ArrowLeft className="w-5 h-5 text-muted-foreground" />
+          <ArrowLeft className="w-4 h-4" />
         </button>
-        <div>
-          <h1 className="text-xl font-bold text-foreground">{t('title')}</h1>
-          <p className="text-sm text-muted-foreground">{t('subtitle')}</p>
+        <div className="min-w-0">
+          <h1 className="text-2xl sm:text-3xl font-bold text-foreground tracking-tight truncate">{t('title')}</h1>
+          <p className="text-sm text-muted-foreground truncate">{t('subtitle')}</p>
         </div>
       </div>
 
       {/* Avatar & Banner Section */}
-      <div className="bg-surface-3 rounded-xl border border-border overflow-hidden">
+      <div className="rounded-2xl bg-surface-1 ring-1 ring-inset ring-border-subtle overflow-hidden">
         {/* Banner */}
-        <div className="relative h-28 sm:h-36" style={{ background: `linear-gradient(to right, ${accent.primary}, ${accent.secondary})` }}>
+        <div className="relative h-28 sm:h-36" style={{ background: `linear-gradient(135deg, ${accent.primary}, ${accent.secondary})` }}>
           {bannerUrl && (
             <img
               src={getMediaUrl(bannerUrl) || ''}
@@ -353,239 +376,250 @@ export function ProfileSettingsContent({
               className="absolute inset-0 w-full h-full object-cover"
             />
           )}
-          <div className="absolute top-2 right-2 flex gap-1.5">
+          <div className="absolute bottom-2 right-2 flex items-center gap-1.5">
             <input type="file" id="ps-banner-upload" accept="image/*" onChange={handleBannerUpload} className="hidden" />
             <label
               htmlFor="ps-banner-upload"
-              className="p-1.5 bg-black/45 rounded-full border border-white/20 hover:bg-black/60 transition-colors cursor-pointer"
+              aria-label="Upload banner"
+              className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-black/45 backdrop-blur-md ring-1 ring-inset ring-white/15 text-white hover:bg-black/60 active:scale-95 transition-all cursor-pointer"
             >
-              {uploadingBanner ? <Loader2 className="w-3.5 h-3.5 text-white animate-spin" /> : <Camera className="w-3.5 h-3.5 text-white" />}
+              {uploadingBanner ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Camera className="w-3.5 h-3.5" />}
             </label>
             {bannerUrl && (
               <button
                 onClick={handleBannerDelete}
-                className="p-1.5 bg-black/45 rounded-full border border-white/20 hover:bg-red-500/40 transition-colors"
+                aria-label="Delete banner"
+                className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-black/45 backdrop-blur-md ring-1 ring-inset ring-white/15 text-white/85 hover:text-red-300 hover:ring-red-300/40 active:scale-95 transition-all"
               >
-                <Trash2 className="w-3.5 h-3.5 text-red-400" />
+                <Trash2 className="w-3.5 h-3.5" />
               </button>
             )}
           </div>
         </div>
 
         {/* Avatar */}
-        <div className="relative px-4 pb-4 sm:px-6 -mt-10">
+        <div className="relative px-4 pb-4 sm:px-6 -mt-10 sm:-mt-12">
           <div className="relative inline-block">
             {avatarUrl ? (
               <img
                 src={getMediaUrl(avatarUrl) || ''}
                 alt="Avatar"
-                className="w-20 h-20 rounded-full object-cover border-4 border-white dark:border-[#1A1A1A] shadow-xl"
+                className="w-20 h-20 sm:w-24 sm:h-24 rounded-full object-cover ring-4 ring-background shadow-xl"
               />
             ) : (
               <div
-                className="w-20 h-20 rounded-full border-4 border-white dark:border-[#1A1A1A] shadow-xl flex items-center justify-center"
+                className="w-20 h-20 sm:w-24 sm:h-24 rounded-full ring-4 ring-background shadow-xl flex items-center justify-center"
                 style={{ background: `linear-gradient(135deg, ${accent.primary}, ${accent.secondary})` }}
               >
-                <span className="text-xl font-bold text-white">{user?.fullName?.charAt(0) || 'U'}</span>
+                <span className="text-2xl font-bold text-white">{user?.fullName?.charAt(0) || 'U'}</span>
               </div>
             )}
             <input type="file" id="ps-avatar-upload" accept="image/*" onChange={handleAvatarUpload} className="hidden" />
             <label
               htmlFor="ps-avatar-upload"
-              className="absolute bottom-0 right-0 p-1.5 rounded-full border-2 border-white dark:border-[#1A1A1A] shadow-lg cursor-pointer z-10"
-              style={{ background: accent.primary }}
+              aria-label="Upload avatar"
+              className="absolute -bottom-1 -right-1 inline-flex h-7 w-7 items-center justify-center rounded-full ring-2 ring-background shadow-lg cursor-pointer text-white active:scale-95 transition-transform z-10"
+              style={{ background: `linear-gradient(135deg, ${accent.primary}, ${accent.secondary})` }}
             >
-              {uploadingAvatar ? <Loader2 className="w-3 h-3 text-white animate-spin" /> : <Pencil className="w-3 h-3 text-white" />}
+              {uploadingAvatar ? <Loader2 className="w-3 h-3 animate-spin" /> : <Pencil className="w-3 h-3" />}
             </label>
             {avatarUrl && (
               <button
                 onClick={handleAvatarDelete}
-                className="absolute bottom-0 left-0 p-1.5 bg-red-500 hover:bg-red-600 rounded-full border-2 border-white dark:border-[#1A1A1A] shadow-lg z-10"
+                aria-label="Delete avatar"
+                className="absolute -bottom-1 -left-1 inline-flex h-7 w-7 items-center justify-center rounded-full bg-surface-1 ring-2 ring-background shadow-lg text-muted-foreground hover:text-red-500 active:scale-95 transition-all z-10"
               >
-                <Trash2 className="w-3 h-3 text-white" />
+                <Trash2 className="w-3 h-3" />
               </button>
             )}
           </div>
-          <div className="mt-2">
-            <p className="text-lg font-semibold text-foreground">{user?.fullName || 'User'}</p>
-            <p className="text-sm text-muted-foreground">{user?.email}</p>
+          <div className="mt-3">
+            <p className="text-lg font-semibold text-foreground tracking-tight truncate">{user?.fullName || 'User'}</p>
+            <p className="text-sm text-muted-foreground truncate">{user?.email}</p>
           </div>
         </div>
       </div>
 
       {/* Personal Information */}
-      <div className="bg-surface-3 rounded-xl border border-border p-4 sm:p-5 space-y-4">
-        <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-2">
-          <User className="w-4 h-4" />
+      <div className={sectionClass}>
+        <h3 className={sectionHeaderClass}>
+          <User className="w-3.5 h-3.5" />
           {t('personalInfo')}
         </h3>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
           <div>
-            <label className="block text-sm font-medium text-muted-foreground mb-1.5">{t('firstName')}</label>
+            <label className={labelClass}>{t('firstName')}</label>
             <input
               type="text"
               value={firstName}
               onChange={(e) => setFirstName(e.target.value)}
               className={inputClass}
-              style={{ '--tw-ring-color': accent.primary } as React.CSSProperties}
+
               placeholder={t('firstNamePlaceholder')}
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-muted-foreground mb-1.5">{t('lastName')}</label>
+            <label className={labelClass}>{t('lastName')}</label>
             <input
               type="text"
               value={lastName}
               onChange={(e) => setLastName(e.target.value)}
               className={inputClass}
-              style={{ '--tw-ring-color': accent.primary } as React.CSSProperties}
+
               placeholder={t('lastNamePlaceholder')}
             />
           </div>
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-muted-foreground mb-1.5">{t('emailLabel')}</label>
+          <label className={labelClass}>{t('emailLabel')}</label>
           <div className="relative">
-            <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
             <input
               type="email"
               value={email}
               readOnly
-              className={`${inputClass} pl-10 opacity-60 cursor-not-allowed`}
+              className={`${inputClass} pl-9 opacity-60 cursor-not-allowed`}
             />
           </div>
-          <p className="text-xs text-faint-foreground mt-1">{t('emailCantChange')}</p>
+          <p className="text-xs text-faint-foreground mt-1.5">{t('emailCantChange')}</p>
         </div>
 
-        <div>
-          <label className="block text-sm font-medium text-muted-foreground mb-1.5">{t('gender')}</label>
-          <select
-            value={gender}
-            onChange={(e) => setGender(e.target.value)}
-            className={selectClass}
-            style={{ '--tw-ring-color': accent.primary } as React.CSSProperties}
-          >
-            <option value="">{t('selectGender')}</option>
-            <option value="Male">{t('male')}</option>
-            <option value="Female">{t('female')}</option>
-            <option value="Other">{t('other')}</option>
-          </select>
-        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+          <div>
+            <label className={labelClass}>{t('gender')}</label>
+            <div className="relative">
+              <select
+                value={gender}
+                onChange={(e) => setGender(e.target.value)}
+                className={`${selectClass} pr-9`}
 
-        <div>
-          <label className="block text-sm font-medium text-muted-foreground mb-1.5">{t('phoneLabel')}</label>
-          <div className="relative">
-            <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-            <input
-              type="tel"
-              value={phone}
-              onChange={(e) => setPhone(e.target.value.replace(/\D/g, ''))}
-              inputMode="numeric"
-              className={`${inputClass} pl-10`}
-              style={{ '--tw-ring-color': accent.primary } as React.CSSProperties}
-              placeholder={t('phonePlaceholder')}
-            />
+              >
+                <option value="">{t('selectGender')}</option>
+                <option value="Male">{t('male')}</option>
+                <option value="Female">{t('female')}</option>
+                <option value="Other">{t('other')}</option>
+              </select>
+              <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
+            </div>
+          </div>
+          <div>
+            <label className={labelClass}>{t('phoneLabel')}</label>
+            <div className="relative">
+              <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
+              <input
+                type="tel"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value.replace(/\D/g, ''))}
+                inputMode="numeric"
+                className={`${inputClass} pl-9`}
+
+                placeholder={t('phonePlaceholder')}
+              />
+            </div>
           </div>
         </div>
-
       </div>
 
       {/* Location */}
-      <div className="bg-surface-3 rounded-xl border border-border p-4 sm:p-5 space-y-4">
-        <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-2">
-          <MapPin className="w-4 h-4" />
+      <div className={sectionClass}>
+        <h3 className={sectionHeaderClass}>
+          <MapPin className="w-3.5 h-3.5" />
           {t('locationTitle')}
         </h3>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
           <div>
-            <label className="block text-sm font-medium text-muted-foreground mb-1.5">{t('country')}</label>
-            <CountrySelect
-              value={countryCode}
-              onChange={(value) => { setCountryCode(value); setCity('') }}
-              options={countryOptions}
-              placeholder={tr('selectCountry')}
-              searchPlaceholder={tr('searchCountry')}
-              emptyText={tr('noCountryFound')}
-              className="w-full h-[50px] rounded-xl border-border bg-background text-foreground hover:border-border focus:ring-primary-500/80 dark:bg-background"
-              showSelectedMeta={false}
-              renderValue={(option) => option ? option.label : ''}
-            />
+            <label className={labelClass}>{t('country')}</label>
+            <div className="rounded-xl overflow-hidden">
+              <CountrySelect
+                value={countryCode}
+                onChange={(value) => { setCountryCode(value); setCity('') }}
+                options={countryOptions}
+                placeholder={tr('selectCountry')}
+                searchPlaceholder={tr('searchCountry')}
+                emptyText={tr('noCountryFound')}
+                className="!h-11 !rounded-xl !border-0 !shadow-none !bg-surface-2 !ring-0 dark:!bg-surface-2"
+                showSelectedMeta={false}
+                renderValue={(option) => option ? option.label : ''}
+              />
+            </div>
           </div>
           <div>
-            <label className="block text-sm font-medium text-muted-foreground mb-1.5">{t('city')}</label>
-            <select
-              value={city}
-              onChange={(e) => setCity(e.target.value)}
-              disabled={!countryCode}
-              className={`${selectClass} disabled:opacity-50`}
-              style={{ '--tw-ring-color': accent.primary } as React.CSSProperties}
-            >
-              <option value="">{countryCode ? tr('selectCity') : tr('selectCountry')}</option>
-              {availableCities.map((c) => (
-                <option key={c.value} value={c.value}>{c.label}</option>
-              ))}
-            </select>
+            <label className={labelClass}>{t('city')}</label>
+            <div className="relative">
+              <select
+                value={city}
+                onChange={(e) => setCity(e.target.value)}
+                disabled={!countryCode}
+                className="w-full h-11 px-3 pr-9 bg-surface-2 rounded-xl text-sm text-foreground focus:outline-none transition-colors appearance-none disabled:opacity-50 disabled:cursor-not-allowed"
+
+              >
+                <option value="">{countryCode ? tr('selectCity') : tr('selectCountry')}</option>
+                {availableCities.map((c) => (
+                  <option key={c.value} value={c.value}>{c.label}</option>
+                ))}
+              </select>
+              <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
+            </div>
           </div>
         </div>
       </div>
 
       {/* Professional Info (trainer/nutritionist only) */}
       {isExpert && onSaveProfessional && (
-        <div className="bg-surface-3 rounded-xl border border-border p-4 sm:p-5 space-y-4">
-          <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-2">
-            <User className="w-4 h-4" />
+        <div className={sectionClass}>
+          <h3 className={sectionHeaderClass}>
+            <User className="w-3.5 h-3.5" />
             {t('professionalInfo')}
           </h3>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
             <div>
-              <label className="block text-sm font-medium text-muted-foreground mb-1.5">{t('primaryTitle')}</label>
+              <label className={labelClass}>{t('primaryTitle')}</label>
               <input
                 type="text"
                 value={primaryTitle}
                 onChange={(e) => setPrimaryTitle(e.target.value)}
                 className={inputClass}
-                style={{ '--tw-ring-color': accent.primary } as React.CSSProperties}
+
                 placeholder={t('primaryTitlePlaceholder')}
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-muted-foreground mb-1.5">{t('secondaryTitle')}</label>
+              <label className={labelClass}>{t('secondaryTitle')}</label>
               <input
                 type="text"
                 value={secondaryTitle}
                 onChange={(e) => setSecondaryTitle(e.target.value)}
                 className={inputClass}
-                style={{ '--tw-ring-color': accent.primary } as React.CSSProperties}
+
                 placeholder={t('secondaryTitlePlaceholder')}
               />
             </div>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-muted-foreground mb-1.5">{t('experienceYears')}</label>
+            <label className={labelClass}>{t('experienceYears')}</label>
             <input
               type="number"
               value={experienceYears}
               onChange={(e) => setExperienceYears(e.target.value)}
               className={inputClass}
-              style={{ '--tw-ring-color': accent.primary } as React.CSSProperties}
+
               placeholder="5"
               min="0"
               max="50"
             />
           </div>
-
         </div>
       )}
 
       {/* Notification Preferences */}
-      <div className="bg-surface-3 rounded-xl border border-border p-4 sm:p-5 space-y-4">
-        <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-2">
-          <Bell className="w-4 h-4" />
+      <div className={sectionClass}>
+        <h3 className={sectionHeaderClass}>
+          <Bell className="w-3.5 h-3.5" />
           {t('notificationSettingsTitle')}
         </h3>
 
@@ -595,76 +629,26 @@ export function ProfileSettingsContent({
             {t('notificationSettingsLoading')}
           </div>
         ) : (
-          <div className="space-y-3">
-            <label className="flex items-center justify-between gap-3">
-              <div>
-                <p className="text-sm font-medium text-foreground">{t('notificationsGlobal')}</p>
-                <p className="text-xs text-muted-foreground">{t('notificationsGlobalDesc')}</p>
-              </div>
-              <input
-                type="checkbox"
-                checked={notificationSettings.notificationsEnabled}
-                onChange={(e) => updateNotificationSettings({ notificationsEnabled: e.target.checked })}
-                disabled={savingNotificationSettings}
-                className="h-5 w-5 rounded border-border"
-              />
-            </label>
-
-            <label className="flex items-center justify-between gap-3">
-              <div>
-                <p className="text-sm font-medium text-foreground">{t('notificationsWorkoutReminders')}</p>
-                <p className="text-xs text-muted-foreground">{t('notificationsWorkoutRemindersDesc')}</p>
-              </div>
-              <input
-                type="checkbox"
-                checked={notificationSettings.workoutRemindersEnabled}
-                onChange={(e) => updateNotificationSettings({ workoutRemindersEnabled: e.target.checked })}
-                disabled={savingNotificationSettings || !notificationSettings.notificationsEnabled}
-                className="h-5 w-5 rounded border-border"
-              />
-            </label>
-
-            <label className="flex items-center justify-between gap-3">
-              <div>
-                <p className="text-sm font-medium text-foreground">{t('notificationsAchievementFeed')}</p>
-                <p className="text-xs text-muted-foreground">{t('notificationsAchievementFeedDesc')}</p>
-              </div>
-              <input
-                type="checkbox"
-                checked={notificationSettings.achievementFeedEnabled}
-                onChange={(e) => updateNotificationSettings({ achievementFeedEnabled: e.target.checked })}
-                disabled={savingNotificationSettings || !notificationSettings.notificationsEnabled}
-                className="h-5 w-5 rounded border-border"
-              />
-            </label>
-
-            <label className="flex items-center justify-between gap-3">
-              <div>
-                <p className="text-sm font-medium text-foreground">{t('notificationsContentUpdates')}</p>
-                <p className="text-xs text-muted-foreground">{t('notificationsContentUpdatesDesc')}</p>
-              </div>
-              <input
-                type="checkbox"
-                checked={notificationSettings.contentUpdatesEnabled}
-                onChange={(e) => updateNotificationSettings({ contentUpdatesEnabled: e.target.checked })}
-                disabled={savingNotificationSettings || !notificationSettings.notificationsEnabled}
-                className="h-5 w-5 rounded border-border"
-              />
-            </label>
-
-            <label className="flex items-center justify-between gap-3">
-              <div>
-                <p className="text-sm font-medium text-foreground">{t('notificationsMessaging')}</p>
-                <p className="text-xs text-muted-foreground">{t('notificationsMessagingDesc')}</p>
-              </div>
-              <input
-                type="checkbox"
-                checked={notificationSettings.messagingEnabled}
-                onChange={(e) => updateNotificationSettings({ messagingEnabled: e.target.checked })}
-                disabled={savingNotificationSettings || !notificationSettings.notificationsEnabled}
-                className="h-5 w-5 rounded border-border"
-              />
-            </label>
+          <div className="divide-y divide-border-subtle -mx-1">
+            {[
+              { key: 'notificationsEnabled' as const, label: t('notificationsGlobal'), desc: t('notificationsGlobalDesc'), gated: false },
+              { key: 'workoutRemindersEnabled' as const, label: t('notificationsWorkoutReminders'), desc: t('notificationsWorkoutRemindersDesc'), gated: true },
+              { key: 'achievementFeedEnabled' as const, label: t('notificationsAchievementFeed'), desc: t('notificationsAchievementFeedDesc'), gated: true },
+              { key: 'contentUpdatesEnabled' as const, label: t('notificationsContentUpdates'), desc: t('notificationsContentUpdatesDesc'), gated: true },
+              { key: 'messagingEnabled' as const, label: t('notificationsMessaging'), desc: t('notificationsMessagingDesc'), gated: true },
+            ].map((item) => {
+              const disabled = savingNotificationSettings || (item.gated && !notificationSettings.notificationsEnabled)
+              const checked = notificationSettings[item.key]
+              return (
+                <div key={item.key} className="flex items-center justify-between gap-3 px-1 py-3 first:pt-1 last:pb-1">
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-medium text-foreground">{item.label}</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">{item.desc}</p>
+                  </div>
+                  {renderToggle(checked, (v) => updateNotificationSettings({ [item.key]: v } as Partial<NotificationSettings>), disabled)}
+                </div>
+              )
+            })}
           </div>
         )}
       </div>
@@ -673,78 +657,78 @@ export function ProfileSettingsContent({
       <button
         onClick={handleSaveProfile}
         disabled={saving}
-        className="w-full py-3 text-white font-semibold rounded-xl hover:opacity-90 disabled:opacity-50 flex items-center justify-center gap-2 transition-all"
-        style={{ background: `linear-gradient(to right, ${accent.primary}, ${accent.secondary})` }}
+        className="w-full h-11 text-white text-sm font-semibold rounded-xl shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 active:scale-[0.99] transition-all"
+        style={{ background: `linear-gradient(135deg, ${accent.primary}, ${accent.secondary})` }}
       >
-        {saving ? <Loader2 className="w-5 h-5 animate-spin" /> : <Save className="w-5 h-5" />}
+        {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
         {t('saveProfile')}
       </button>
 
       {/* Password Section */}
-      <div className="bg-surface-3 rounded-xl border border-border overflow-hidden">
+      <div className="rounded-2xl bg-surface-1 ring-1 ring-inset ring-border-subtle overflow-hidden">
         <button
           onClick={() => setShowPasswordSection(!showPasswordSection)}
-          className="w-full flex items-center justify-between px-4 py-3 sm:px-5 hover:bg-hover-overlay transition-colors"
+          className="w-full flex items-center justify-between gap-3 px-4 sm:px-5 py-4 hover:bg-hover-overlay transition-colors"
         >
           <div className="flex items-center gap-2">
-            <Lock className="w-4 h-4 text-muted-foreground" />
-            <span className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">{t('changePassword')}</span>
+            <Lock className="w-3.5 h-3.5 text-muted-foreground" />
+            <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">{t('changePassword')}</span>
           </div>
           <ChevronDown className={`w-4 h-4 text-muted-foreground transition-transform ${showPasswordSection ? 'rotate-180' : ''}`} />
         </button>
 
         {showPasswordSection && (
-          <div className="px-4 pb-4 sm:px-5 space-y-4 border-t border-border pt-4">
+          <div className="px-4 pb-4 sm:px-5 sm:pb-5 space-y-3 border-t border-border-subtle pt-4">
             <div>
-              <label className="block text-sm font-medium text-muted-foreground mb-1.5">{t('currentPassword')}</label>
+              <label className={labelClass}>{t('currentPassword')}</label>
               <div className="relative">
                 <input
                   type={showCurrentPassword ? 'text' : 'password'}
                   value={currentPassword}
                   onChange={(e) => setCurrentPassword(e.target.value)}
                   className={`${inputClass} pr-10`}
-                  style={{ '--tw-ring-color': accent.primary } as React.CSSProperties}
+
                   placeholder="••••••"
                 />
                 <button
                   type="button"
                   onClick={() => setShowCurrentPassword(!showCurrentPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                  className="absolute right-2 top-1/2 -translate-y-1/2 inline-flex h-7 w-7 items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-hover-overlay transition-colors"
                 >
-                  {showCurrentPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                  {showCurrentPassword ? <EyeOff size={15} /> : <Eye size={15} />}
                 </button>
               </div>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-muted-foreground mb-1.5">{t('newPassword')}</label>
+              <label className={labelClass}>{t('newPassword')}</label>
               <div className="relative">
                 <input
                   type={showNewPassword ? 'text' : 'password'}
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
                   className={`${inputClass} pr-10`}
-                  style={{ '--tw-ring-color': accent.primary } as React.CSSProperties}
+
                   placeholder={t('newPasswordPlaceholder')}
                 />
                 <button
                   type="button"
                   onClick={() => setShowNewPassword(!showNewPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                  className="absolute right-2 top-1/2 -translate-y-1/2 inline-flex h-7 w-7 items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-hover-overlay transition-colors"
                 >
-                  {showNewPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                  {showNewPassword ? <EyeOff size={15} /> : <Eye size={15} />}
                 </button>
               </div>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-muted-foreground mb-1.5">{t('confirmNewPassword')}</label>
+              <label className={labelClass}>{t('confirmNewPassword')}</label>
               <input
                 type="password"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 className={inputClass}
-                style={{ '--tw-ring-color': accent.primary } as React.CSSProperties}
+
                 placeholder={t('confirmNewPasswordPlaceholder')}
               />
             </div>
@@ -752,10 +736,10 @@ export function ProfileSettingsContent({
             <button
               onClick={handleChangePassword}
               disabled={savingPassword || !currentPassword || !newPassword || !confirmPassword}
-              className="w-full py-3 text-white font-semibold rounded-xl hover:opacity-90 disabled:opacity-50 flex items-center justify-center gap-2 transition-all"
-              style={{ background: `linear-gradient(to right, ${accent.primary}, ${accent.secondary})` }}
+              className="w-full h-11 text-white text-sm font-semibold rounded-xl shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 active:scale-[0.99] transition-all"
+              style={{ background: `linear-gradient(135deg, ${accent.primary}, ${accent.secondary})` }}
             >
-              {savingPassword ? <Loader2 className="w-5 h-5 animate-spin" /> : <Lock className="w-5 h-5" />}
+              {savingPassword ? <Loader2 className="w-4 h-4 animate-spin" /> : <Lock className="w-4 h-4" />}
               {t('updatePassword')}
             </button>
           </div>
@@ -764,11 +748,13 @@ export function ProfileSettingsContent({
 
       {/* Toast */}
       {toast && (
-        <div className={`fixed bottom-6 left-1/2 -translate-x-1/2 z-50 px-5 py-3 rounded-xl shadow-lg text-sm font-medium ${
-          toast.type === 'success'
-            ? 'bg-green-500/90 text-white'
-            : 'bg-red-500/90 text-white'
-        }`}>
+        <div
+          className={`fixed bottom-6 left-1/2 -translate-x-1/2 z-50 px-4 py-2.5 rounded-xl ring-1 ring-inset shadow-xl text-sm font-medium backdrop-blur-md ${
+            toast.type === 'success'
+              ? 'bg-emerald-500/95 ring-emerald-400/30 text-white'
+              : 'bg-red-500/95 ring-red-400/30 text-white'
+          }`}
+        >
           {toast.message}
         </div>
       )}

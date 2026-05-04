@@ -28,6 +28,7 @@ import { useAccentColors, getRoleRingClass, getAccentColorsByRole } from '@/lib/
 import { useAuth } from '@/features/auth/AuthContext'
 import { useRealtimeScopeRefresh } from '@/lib/signalr/useRealtimeScopeRefresh'
 import { useInfiniteScroll } from '@/lib/hooks/useInfiniteScroll'
+import { cn } from '@/lib/utils/cn'
 
 interface ExpertsContentProps {
   basePath: string
@@ -160,219 +161,260 @@ export function ExpertsContent({ basePath }: ExpertsContentProps) {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
-        <Loader2 className={`w-8 h-8 ${accent.text} animate-spin`} />
+        <Loader2 className={`w-6 h-6 ${accent.text} animate-spin`} />
       </div>
     )
   }
 
   return (
     <>
-    <div className="space-y-6 pb-6">
-      {/* Header */}
-      <div>
-        <h1 className="page-title mb-2">{t('title')}</h1>
-        <p className="text-muted-foreground">{t('description')}</p>
-      </div>
-
-      {/* Search + Filter */}
-      <div className="flex gap-2">
-        <div className="relative flex-1">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-          <input
-            type="text"
-            placeholder={t('searchPlaceholder')}
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className={`w-full bg-surface-2 border border-border-subtle rounded-xl pl-12 pr-4 py-3 text-foreground placeholder:text-faint-foreground focus:outline-none ${accent.focusBorder}`}
-          />
+      <div className="space-y-4 pb-10">
+        {/* ─── Header ─── */}
+        <div className="flex flex-col gap-1">
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground">{t('title')}</h1>
+          <p className="text-sm text-muted-foreground">{t('description')}</p>
         </div>
-        <button
-          onClick={() => setShowFilterModal(true)}
-          className="relative flex items-center justify-center w-12 h-12 bg-surface-2 border border-border-subtle rounded-xl hover:border-border transition-colors shrink-0"
-        >
-          <SlidersHorizontal className="w-5 h-5 text-muted-foreground" />
-          {activeFilterCount > 0 && (
-            <span
-              className="absolute -top-1 -right-1 w-5 h-5 rounded-full text-white text-[10px] font-bold flex items-center justify-center"
-              style={{ background: accent.primary }}
-            >
-              {activeFilterCount}
-            </span>
-          )}
-        </button>
-      </div>
 
-      {/* Role Filter */}
-      <div className="flex gap-2">
-        {(['all', 'Trainer', 'Nutritionist'] as const).map((role) => {
-          const isActive = roleFilter === role
-          const roleAccent = role === 'all' ? null : getAccentColorsByRole(role)
-          return (
-            <button
-              key={role}
-              onClick={() => setRoleFilter(role)}
-              className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-                isActive
-                  ? role === 'all'
-                    ? 'bg-white text-black'
-                    : `bg-gradient-to-r ${roleAccent!.gradient} text-white`
-                  : 'bg-surface-2 border border-border-subtle text-muted-foreground hover:text-foreground hover:border-border'
-              }`}
-            >
-              {role === 'all' ? t('filterAll') : role === 'Trainer' ? t('filterTrainers') : t('filterNutritionists')}
-            </button>
-          )
-        })}
-      </div>
-
-      {/* Error State */}
-      {error && !loading && (
-        <div className="text-center py-12">
-          <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-red-500/20 flex items-center justify-center">
-            <span className="text-2xl">⚠️</span>
-          </div>
-          <h3 className="text-lg font-semibold text-foreground mb-2">{t('errorLoading')}</h3>
-          <p className="text-sm text-muted-foreground">{error}</p>
-          <button
-            onClick={() => window.location.reload()}
-            className={`mt-4 px-4 py-2 bg-gradient-to-r ${accent.gradient} text-white rounded-lg text-sm`}
-          >
-            {tc('tryAgain')}
-          </button>
-        </div>
-      )}
-
-      {/* Trainers Grid */}
-      {!loading && !error && (
-        <>
-          {filteredTrainers.length === 0 ? (
-            <div className="bg-surface-2 rounded-xl border border-border-subtle p-8 text-center">
-              <Users className="w-12 h-12 text-gray-600 mx-auto mb-4" />
-              <h3 className="text-foreground font-semibold mb-2">{t('noTrainers')}</h3>
-              <p className="text-muted-foreground text-sm">{t('tryDifferentSearch')}</p>
+        {/* ─── Search + Filters bar ─── */}
+        <div className="rounded-2xl bg-surface-1 ring-1 ring-inset ring-border-subtle p-3 sm:p-4 space-y-3">
+          <div className="flex gap-2">
+            <div className="relative flex-1">
+              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
+              <input
+                type="text"
+                placeholder={t('searchPlaceholder')}
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full h-10 pl-10 pr-4 bg-surface-2 ring-1 ring-inset ring-border-subtle rounded-xl text-sm text-foreground placeholder:text-faint-foreground focus:outline-none focus:ring-2 focus:ring-[var(--ring-color)] transition-[box-shadow] duration-200"
+              />
             </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {filteredTrainers.map((trainer, index) => {
-                const trainerAccent = getAccentColorsByRole(trainer.role)
+            <button
+              onClick={() => setShowFilterModal(true)}
+              className="relative inline-flex items-center justify-center h-10 w-10 rounded-xl bg-surface-2 ring-1 ring-inset ring-border-subtle text-muted-foreground hover:text-foreground hover:bg-surface-3 transition-[background-color,color] duration-200 ease-out-expo"
+              aria-label="Filters"
+            >
+              <SlidersHorizontal className="w-4 h-4" />
+              {activeFilterCount > 0 && (
+                <span
+                  className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full text-white text-[10px] font-bold flex items-center justify-center ring-2 ring-surface-1"
+                  style={{ background: accent.primary }}
+                >
+                  {activeFilterCount}
+                </span>
+              )}
+            </button>
+          </div>
+
+          {/* Role chips */}
+          <div className="-mx-1 overflow-x-auto pb-1">
+            <div className="flex min-w-max items-center gap-1 rounded-xl bg-surface-2 p-1 ring-1 ring-inset ring-border-subtle">
+              {([
+                { key: 'all' as const, label: t('filterAll'), text: 'text-foreground', ring: 'ring-border-subtle' },
+                { key: 'Trainer' as const, label: t('filterTrainers'), text: 'text-trainer-600 dark:text-trainer-300', ring: 'ring-trainer-500/30' },
+                { key: 'Nutritionist' as const, label: t('filterNutritionists'), text: 'text-nutritionist-600 dark:text-nutritionist-300', ring: 'ring-nutritionist-500/30' },
+              ]).map(({ key, label, text, ring }) => {
+                const isActive = roleFilter === key
                 return (
-                  <motion.div
-                    key={trainer.id}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: index * 0.05 }}
-                    onClick={() => router.push(`${basePath}/profile/${trainer.userId}`)}
-                    className={`bg-surface-2 rounded-xl border border-border-subtle p-5 ${trainerAccent.hoverBorder} transition-all cursor-pointer group`}
+                  <button
+                    key={key}
+                    onClick={() => setRoleFilter(key)}
+                    className={cn(
+                      'inline-flex items-center px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition-[background-color,color,box-shadow] duration-200 ease-out-expo',
+                      isActive
+                        ? cn('bg-surface-1 shadow-xs ring-1 ring-inset', text, ring)
+                        : 'text-muted-foreground hover:text-foreground',
+                    )}
                   >
-                    <div className="flex items-start gap-4">
-                      {trainer.avatarUrl ? (
-                        <img
-                          src={getMediaUrl(trainer.avatarUrl) || '/default-avatar.png'}
-                          alt={trainer.name}
-                          className={`w-16 h-16 rounded-xl object-cover ${getRoleRingClass(trainer.role)}`}
-                        />
-                      ) : (
-                        <div className={`w-16 h-16 rounded-xl bg-gradient-to-br ${trainerAccent.gradient} flex items-center justify-center`}>
-                          <span className="text-white text-xl font-bold">{trainer.name.charAt(0)}</span>
-                        </div>
-                      )}
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-1">
-                          <h3 className={`font-semibold text-foreground ${trainerAccent.groupHoverText} transition-colors`}>
+                    {label}
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+        </div>
+
+        {/* Error State */}
+        {error && !loading && (
+          <div className="rounded-2xl bg-surface-1 ring-1 ring-inset ring-border-subtle py-16 text-center">
+            <div className="inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-red-500/10 ring-1 ring-red-500/20 mb-4">
+              <Search className="w-6 h-6 text-red-500" />
+            </div>
+            <h3 className="font-semibold text-foreground mb-1">{t('errorLoading')}</h3>
+            <p className="text-sm text-muted-foreground mb-4">{error}</p>
+            <button
+              onClick={() => window.location.reload()}
+              className={`inline-flex items-center px-4 py-2 rounded-lg bg-gradient-to-r ${accent.gradient} text-white text-sm font-semibold hover:opacity-90 transition-opacity`}
+            >
+              {tc('tryAgain')}
+            </button>
+          </div>
+        )}
+
+        {/* Trainers Grid */}
+        {!loading && !error && (
+          <>
+            {filteredTrainers.length === 0 ? (
+              <div className="rounded-2xl bg-surface-1 ring-1 ring-inset ring-border-subtle py-16 text-center">
+                <div className="inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-surface-2 ring-1 ring-border-subtle mb-4">
+                  <Users className="w-6 h-6 text-muted-foreground" />
+                </div>
+                <h3 className="font-semibold text-foreground mb-1">{t('noTrainers')}</h3>
+                <p className="text-sm text-muted-foreground">{t('tryDifferentSearch')}</p>
+              </div>
+            ) : (
+              <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+                {filteredTrainers.map((trainer, index) => {
+                  const trainerAccent = getAccentColorsByRole(trainer.role)
+                  const isSelf = trainer.userId === currentUser?.id
+                  const isFollowing = followedIds.has(trainer.userId)
+                  const roleLabel = trainer.primaryTitle || (trainer.role === 'Nutritionist' ? t('nutritionistRole') : t('trainerRole'))
+
+                  return (
+                    <motion.div
+                      key={trainer.id}
+                      initial={{ opacity: 0, y: 12 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: Math.min(index * 0.03, 0.3), ease: [0.16, 1, 0.3, 1] }}
+                      onClick={() => router.push(`${basePath}/profile/${trainer.userId}`)}
+                      className="group relative flex flex-col rounded-2xl bg-surface-1 ring-1 ring-inset ring-border-subtle overflow-hidden hover:ring-border-strong hover:shadow-lg hover:-translate-y-0.5 transition-[transform,box-shadow,border-color] duration-300 ease-out-expo cursor-pointer"
+                    >
+                      {/* Accent strip */}
+                      <div
+                        className="absolute inset-x-0 top-0 h-0.5 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                        style={{ background: `linear-gradient(to right, ${trainerAccent.primary}, ${trainerAccent.secondary})` }}
+                      />
+
+                      <div className="p-4 sm:p-5 flex items-start gap-3.5">
+                        {trainer.avatarUrl ? (
+                          <img
+                            src={getMediaUrl(trainer.avatarUrl) || '/default-avatar.png'}
+                            alt={trainer.name}
+                            className={cn('w-14 h-14 rounded-2xl object-cover ring-2 ring-offset-2 ring-offset-surface-1', getRoleRingClass(trainer.role))}
+                          />
+                        ) : (
+                          <div
+                            className="w-14 h-14 rounded-2xl grid place-items-center ring-2 ring-offset-2 ring-offset-surface-1"
+                            style={{
+                              background: `linear-gradient(to bottom right, ${trainerAccent.primary}, ${trainerAccent.secondary})`,
+                              // @ts-expect-error tw color
+                              '--tw-ring-color': `${trainerAccent.primary}55`,
+                            }}
+                          >
+                            <span className="text-white text-lg font-bold">{trainer.name.charAt(0)}</span>
+                          </div>
+                        )}
+
+                        <div className="flex-1 min-w-0">
+                          <h3 className={cn('font-semibold text-foreground truncate transition-colors', trainerAccent.groupHoverText)}>
                             {trainer.name}
                           </h3>
+                          <p className="mt-0.5 text-xs text-muted-foreground truncate">{roleLabel}</p>
+                          {trainer.location && (
+                            <p className="mt-1 inline-flex items-center gap-1 text-[11px] text-faint-foreground">
+                              <MapPin className="w-3 h-3" />
+                              <span className="truncate">{trainer.location}</span>
+                            </p>
+                          )}
                         </div>
+                      </div>
 
-                        <p className="text-sm text-muted-foreground mb-2">
-                          {trainer.primaryTitle || (trainer.role === 'Nutritionist' ? t('nutritionistRole') : t('trainerRole'))}
-                          {trainer.location && ` • ${trainer.location}`}
-                        </p>
-
-                        <div className="flex flex-wrap gap-1.5">
+                      {/* Specs */}
+                      {trainer.specializations.length > 0 && (
+                        <div className="px-4 sm:px-5 pb-3 flex flex-wrap gap-1">
                           {trainer.specializations.slice(0, 3).map((spec, i) => (
-                            <span key={i} className="px-2 py-0.5 bg-border-subtle text-muted-foreground text-[10px] rounded">
+                            <span key={i} className="px-2 py-0.5 rounded-md bg-surface-2 ring-1 ring-inset ring-border-subtle text-muted-foreground text-[10px] font-medium">
                               {spec}
                             </span>
                           ))}
                           {trainer.specializations.length > 3 && (
-                            <span className="px-2 py-0.5 bg-border-subtle text-muted-foreground rounded text-[10px]">
+                            <span className="px-2 py-0.5 rounded-md bg-surface-2 ring-1 ring-inset ring-border-subtle text-muted-foreground text-[10px] font-medium">
                               +{trainer.specializations.length - 3}
                             </span>
                           )}
                         </div>
-                      </div>
-                    </div>
+                      )}
 
-                    <div className="flex items-center justify-between mt-4 pt-4 border-t border-border-subtle">
-                      <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                        <div className="flex items-center gap-1">
-                          <Star className="w-3.5 h-3.5 text-yellow-400 fill-yellow-400" />
-                          <span className="text-foreground font-medium">{trainer.ratingValue > 0 ? trainer.ratingValue.toFixed(1) : '0.0'}</span>
-                          <span>({trainer.reviewsCount})</span>
+                      {/* Footer */}
+                      <div className="mt-auto px-4 sm:px-5 py-3 border-t border-border-subtle flex items-center justify-between gap-3">
+                        <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                          <span className="inline-flex items-center gap-1">
+                            <Star className="w-3.5 h-3.5 text-amber-400 fill-amber-400" />
+                            <span className="font-medium text-foreground tabular-nums">
+                              {trainer.ratingValue > 0 ? trainer.ratingValue.toFixed(1) : '–'}
+                            </span>
+                            <span className="text-faint-foreground tabular-nums">({trainer.reviewsCount})</span>
+                          </span>
+                          <span className="inline-flex items-center gap-1">
+                            <BookOpen className="w-3.5 h-3.5" />
+                            <span className="tabular-nums">{trainer.programsCount}</span>
+                          </span>
+                          {trainer.experienceYears != null && trainer.experienceYears > 0 && (
+                            <span className="inline-flex items-center gap-1">
+                              <Award className="w-3.5 h-3.5" />
+                              <span className="tabular-nums">{trainer.experienceYears}+</span>
+                            </span>
+                          )}
                         </div>
-                        <div className="flex items-center gap-1">
-                          <BookOpen className="w-3.5 h-3.5" />
-                          <span>{trainer.programsCount} {t('programs')}</span>
-                        </div>
-                        {trainer.experienceYears && (
-                          <div className="flex items-center gap-1">
-                            <Award className="w-3.5 h-3.5" />
-                            <span>{trainer.experienceYears}+ {t('years')}</span>
+
+                        {!isSelf && (
+                          <div className="flex items-center gap-1.5 shrink-0">
+                            <button
+                              onClick={(e) => handleMessage(e, trainer)}
+                              className="inline-flex items-center justify-center h-8 w-8 rounded-lg bg-surface-2 ring-1 ring-inset ring-border-subtle text-muted-foreground hover:text-foreground hover:ring-border-strong transition-[color,box-shadow] duration-200"
+                              aria-label="Message"
+                            >
+                              <MessageCircle className="w-3.5 h-3.5" />
+                            </button>
+                            <button
+                              onClick={(e) => handleFollow(e, trainer.userId)}
+                              disabled={followLoading === trainer.userId}
+                              className={cn(
+                                'inline-flex items-center gap-1 px-2.5 h-8 text-[11px] font-semibold rounded-lg transition-all disabled:opacity-50',
+                                isFollowing
+                                  ? cn('bg-surface-2 ring-1 ring-inset ring-border-subtle', trainerAccent.text, 'hover:ring-border-strong')
+                                  : `text-white hover:opacity-90 bg-gradient-to-r ${trainerAccent.gradient}`,
+                              )}
+                            >
+                              {followLoading === trainer.userId ? (
+                                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                              ) : isFollowing ? (
+                                <UserCheck className="w-3.5 h-3.5" />
+                              ) : (
+                                <UserPlus className="w-3.5 h-3.5" />
+                              )}
+                              {isFollowing ? t('following') : t('follow')}
+                            </button>
                           </div>
                         )}
                       </div>
+                    </motion.div>
+                  )
+                })}
+              </div>
+            )}
+          </>
+        )}
 
-                      {trainer.userId !== currentUser?.id && (
-                        <div className="flex items-center gap-2">
-                          <button
-                            onClick={(e) => handleFollow(e, trainer.userId)}
-                            disabled={followLoading === trainer.userId}
-                            className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg transition-all disabled:opacity-50 ${
-                              followedIds.has(trainer.userId)
-                                ? `${trainerAccent.bgMuted} ${trainerAccent.text} hover:opacity-80`
-                                : `bg-gradient-to-r ${trainerAccent.gradient} text-white hover:opacity-90`
-                            }`}
-                          >
-                            {followLoading === trainer.userId ? (
-                              <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                            ) : followedIds.has(trainer.userId) ? (
-                              <UserCheck className="w-3.5 h-3.5" />
-                            ) : (
-                              <UserPlus className="w-3.5 h-3.5" />
-                            )}
-                            {followedIds.has(trainer.userId) ? t('following') : t('follow')}
-                          </button>
-                        </div>
-                      )}
-                    </div>
-                  </motion.div>
-                )
-              })}
-            </div>
-          )}
-        </>
-      )}
+        {!loading && !error && (
+          <div ref={infiniteScrollRef} className="flex min-h-12 justify-center pt-2">
+            {loadingMore ? (
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <Loader2 className="w-4 h-4 animate-spin" />
+                {t('loading')}
+              </div>
+            ) : !hasMore && trainers.length > 0 ? (
+              <p className="text-xs text-faint-foreground">{tc('allItemsLoaded')}</p>
+            ) : null}
+          </div>
+        )}
+      </div>
 
-      {!loading && !error && (
-        <div ref={infiniteScrollRef} className="flex min-h-12 justify-center pt-4">
-          {loadingMore ? (
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <Loader2 className="w-4 h-4 animate-spin" />
-              {t('loading')}
-            </div>
-          ) : !hasMore && trainers.length > 0 ? (
-            <p className="text-sm text-faint-foreground">{tc('allItemsLoaded')}</p>
-          ) : null}
-        </div>
-      )}
-    </div>
-
-    <ExpertsFilterModal
-      isOpen={showFilterModal}
-      onClose={() => setShowFilterModal(false)}
-      onApply={setFilters}
-      currentFilters={filters}
-    />
+      <ExpertsFilterModal
+        isOpen={showFilterModal}
+        onClose={() => setShowFilterModal(false)}
+        onApply={setFilters}
+        currentFilters={filters}
+      />
     </>
   )
 }

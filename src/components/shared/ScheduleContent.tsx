@@ -302,7 +302,10 @@ export function ScheduleContent({ api, fetchStudents, readOnly, currentUserId }:
   const [loading, setLoading] = useState(true)
   const [calendarDate, setCalendarDate] = useState(startOfDay(new Date()))
   const [selectedDate, setSelectedDate] = useState(startOfDay(new Date()))
-  const [viewMode, setViewMode] = useState<CalendarViewMode>('week')
+  const [viewMode, setViewMode] = useState<CalendarViewMode>(() => {
+    if (typeof window !== 'undefined' && window.innerWidth < 640) return 'day'
+    return 'week'
+  })
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [editingEvent, setEditingEvent] = useState<ScheduleEvent | null>(null)
   const [saving, setSaving] = useState(false)
@@ -611,48 +614,47 @@ export function ScheduleContent({ api, fetchStudents, readOnly, currentUserId }:
   }
 
   return (
-    <div className="space-y-6 pb-6">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <h1 className="page-title">{t('title')}</h1>
-          <p className="text-muted-foreground">{t('description')}</p>
+    <div className="space-y-5 pb-6">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+        <div className="min-w-0">
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground">{t('title')}</h1>
+          <p className="mt-1 text-sm text-muted-foreground">{t('description')}</p>
         </div>
 
         {!readOnly && (
           <button
             onClick={openCreateModal}
-            className={`inline-flex w-full items-center justify-center gap-2 rounded-lg bg-gradient-to-r px-4 py-2 font-semibold text-white sm:w-auto ${accent.gradient}`}
+            className="inline-flex w-full items-center justify-center gap-2 rounded-xl px-4 h-10 text-sm font-semibold text-white shadow-md transition-[opacity,transform] duration-200 hover:opacity-90 active:scale-[0.98] sm:w-auto"
+            style={{ background: `linear-gradient(135deg, ${accent.primary}, ${accent.secondary})` }}
           >
-            <Plus className="h-5 w-5" />
+            <Plus className="h-4 w-4" />
             {t('addEvent')}
           </button>
         )}
       </div>
 
-      <section className="relative overflow-hidden rounded-2xl border border-border-subtle bg-surface-2">
-        <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-white/[0.04] via-transparent to-transparent" />
-
-        <div className="relative space-y-4 p-3 sm:p-4">
+      <section className="rounded-2xl bg-surface-1 ring-1 ring-inset ring-border-subtle">
+        <div className="space-y-4 p-3 sm:p-4">
           <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
             <div className="flex flex-wrap items-center gap-2">
               <button
                 onClick={() => moveCalendar(-1)}
-                className="rounded-lg border border-border-subtle bg-background/50 p-2 hover:bg-hover-overlay"
+                className="inline-flex items-center justify-center h-9 w-9 rounded-xl bg-surface-2 ring-1 ring-inset ring-border-subtle text-muted-foreground hover:text-foreground hover:ring-border-strong transition-[color,box-shadow] duration-200"
                 aria-label="Previous"
               >
-                <ChevronLeft className="h-5 w-5 text-muted-foreground" />
+                <ChevronLeft className="h-4 w-4" />
               </button>
               <button
                 onClick={() => moveCalendar(1)}
-                className="rounded-lg border border-border-subtle bg-background/50 p-2 hover:bg-hover-overlay"
+                className="inline-flex items-center justify-center h-9 w-9 rounded-xl bg-surface-2 ring-1 ring-inset ring-border-subtle text-muted-foreground hover:text-foreground hover:ring-border-strong transition-[color,box-shadow] duration-200"
                 aria-label="Next"
               >
-                <ChevronRight className="h-5 w-5 text-muted-foreground" />
+                <ChevronRight className="h-4 w-4" />
               </button>
 
               <button
                 onClick={goToToday}
-                className="rounded-lg border border-border-subtle bg-background/50 px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-hover-overlay"
+                className="inline-flex items-center justify-center h-9 px-3 rounded-xl bg-surface-2 ring-1 ring-inset ring-border-subtle text-sm font-medium text-muted-foreground hover:text-foreground hover:ring-border-strong transition-[color,box-shadow] duration-200"
               >
                 {t('today')}
               </button>
@@ -662,14 +664,14 @@ export function ScheduleContent({ api, fetchStudents, readOnly, currentUserId }:
               </h2>
             </div>
 
-            <div className="inline-flex w-full rounded-xl border border-border-subtle bg-background/40 p-1 sm:w-auto">
+            <div className="inline-flex w-full rounded-xl bg-surface-2 ring-1 ring-inset ring-border-subtle p-1 sm:w-auto">
               {viewOptions.map((option) => (
                 <button
                   key={option.value}
                   onClick={() => setViewMode(option.value)}
-                  className={`flex-1 rounded-lg px-3 py-1.5 text-sm font-semibold sm:flex-none ${
+                  className={`flex-1 rounded-lg px-3 py-1.5 text-sm font-semibold transition-[background,color,box-shadow] duration-200 sm:flex-none ${
                     viewMode === option.value
-                      ? `bg-gradient-to-r text-white ${accent.gradient}`
+                      ? 'bg-surface-1 text-foreground shadow-xs ring-1 ring-inset ring-border-subtle'
                       : 'text-muted-foreground hover:text-foreground'
                   }`}
                 >
@@ -679,14 +681,14 @@ export function ScheduleContent({ api, fetchStudents, readOnly, currentUserId }:
             </div>
           </div>
 
-          <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-            <span className="font-semibold">{t('eventType')}:</span>
+          <div className="flex flex-wrap items-center gap-2 text-xs">
+            <span className="font-medium text-muted-foreground">{t('eventType')}:</span>
             {eventTypes.map((type) => {
               const tone = getEventTone(type.value)
               return (
                 <span
                   key={type.value}
-                  className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 ${tone.chip}`}
+                  className={`inline-flex items-center gap-1.5 rounded-full bg-surface-2 ring-1 ring-inset ring-border-subtle px-2.5 py-1 text-foreground`}
                 >
                   <span className={`h-1.5 w-1.5 rounded-full ${tone.dot}`} />
                   {type.label}
@@ -696,12 +698,12 @@ export function ScheduleContent({ api, fetchStudents, readOnly, currentUserId }:
           </div>
 
           {loading ? (
-            <div className="flex h-[420px] items-center justify-center rounded-xl border border-border-subtle bg-background/20">
-              <Loader2 className={`h-8 w-8 animate-spin ${accent.text}`} />
+            <div className="flex h-[420px] items-center justify-center rounded-xl bg-surface-2 ring-1 ring-inset ring-border-subtle">
+              <Loader2 className={`h-6 w-6 animate-spin ${accent.text}`} />
             </div>
           ) : viewMode === 'month' ? (
             <div className="-mx-3 overflow-x-auto px-3 pb-1">
-              <div className="min-w-[760px] overflow-hidden rounded-xl border border-border-subtle bg-background/30">
+              <div className="min-w-[560px] sm:min-w-[760px] overflow-hidden rounded-xl bg-surface-2 ring-1 ring-inset ring-border-subtle">
                 <div className="grid grid-cols-7 border-b border-border-subtle/80">
                   {weekDays.map((day) => (
                     <div
@@ -785,13 +787,13 @@ export function ScheduleContent({ api, fetchStudents, readOnly, currentUserId }:
           ) : (
             <div className="-mx-3 overflow-x-auto px-3 pb-1">
               <div
-                className={`overflow-hidden rounded-xl border border-border-subtle bg-background/35 ${
-                  viewMode === 'week' ? 'min-w-[940px]' : 'min-w-[340px]'
+                className={`overflow-hidden rounded-xl bg-surface-2 ring-1 ring-inset ring-border-subtle ${
+                  viewMode === 'week' ? 'min-w-[640px] sm:min-w-[940px]' : 'min-w-[300px]'
                 }`}
               >
                 <div
                   className="grid border-b border-border-subtle"
-                  style={{ gridTemplateColumns: `72px repeat(${gridDates.length}, minmax(0, 1fr))` }}
+                  style={{ gridTemplateColumns: `56px repeat(${gridDates.length}, minmax(0, 1fr))` }}
                 >
                   <div className="bg-surface-3" />
                   {gridDates.map((date) => {
@@ -827,9 +829,9 @@ export function ScheduleContent({ api, fetchStudents, readOnly, currentUserId }:
 
                 <div
                   className="grid border-b border-border-subtle bg-background/70"
-                  style={{ gridTemplateColumns: `72px repeat(${gridDates.length}, minmax(0, 1fr))` }}
+                  style={{ gridTemplateColumns: `56px repeat(${gridDates.length}, minmax(0, 1fr))` }}
                 >
-                  <div className="px-2 py-2 text-xs font-medium text-muted-foreground">{t('allDay')}</div>
+                  <div className="px-2 py-2 text-[10px] font-medium text-muted-foreground">{t('allDay')}</div>
                   {gridDates.map((date) => (
                     <div
                       key={`all-day-${getLocalDateKey(date)}`}
@@ -843,22 +845,20 @@ export function ScheduleContent({ api, fetchStudents, readOnly, currentUserId }:
                   <div
                     className="grid"
                     style={{
-                      gridTemplateColumns: `72px repeat(${gridDates.length}, minmax(0, 1fr))`,
+                      gridTemplateColumns: `56px repeat(${gridDates.length}, minmax(0, 1fr))`,
                     }}
                   >
                     <div
-                      className="relative bg-surface-3/70"
+                      className="relative"
                       style={{ height: HOURS.length * HOUR_ROW_HEIGHT }}
                     >
                       {HOURS.map((hour) => (
                         <div
                           key={hour}
-                          className="absolute left-0 right-0 border-t border-border-subtle/75 px-2 text-[11px] text-muted-foreground"
-                          style={{ top: hour * HOUR_ROW_HEIGHT }}
+                          className="absolute left-0 right-0 px-2 text-[10px] font-medium tabular-nums text-faint-foreground"
+                          style={{ top: hour * HOUR_ROW_HEIGHT + 4 }}
                         >
-                          <span className="relative -top-3 inline-block bg-surface-3/90 pr-1">
-                            {formatHour(hour, locale)}
-                          </span>
+                          {formatHour(hour, locale)}
                         </div>
                       ))}
                     </div>
@@ -924,7 +924,7 @@ export function ScheduleContent({ api, fetchStudents, readOnly, currentUserId }:
       </section>
 
       <section>
-        <h2 className="mb-4 text-lg font-bold text-foreground">
+        <h2 className="mb-3 text-base font-semibold tracking-tight text-foreground sm:text-lg">
           {selectedDate.toLocaleDateString(locale, {
             weekday: 'long',
             day: 'numeric',
@@ -933,12 +933,14 @@ export function ScheduleContent({ api, fetchStudents, readOnly, currentUserId }:
         </h2>
 
         {selectedDayEvents.length === 0 ? (
-          <div className="rounded-xl border border-border-subtle bg-surface-2 py-10 text-center">
-            <Calendar className="mx-auto mb-3 h-10 w-10 text-faint-foreground" />
-            <p className="text-muted-foreground">{t('noEvents')}</p>
+          <div className="flex flex-col items-center justify-center rounded-2xl bg-surface-1 ring-1 ring-inset ring-border-subtle py-12 text-center">
+            <div className="inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-surface-2 ring-1 ring-border-subtle mb-3">
+              <Calendar className="h-5 w-5 text-muted-foreground" />
+            </div>
+            <p className="text-sm font-medium text-foreground">{t('noEvents')}</p>
           </div>
         ) : (
-          <div className="space-y-3">
+          <div className="space-y-2.5">
             {selectedDayEvents.map((event, index) => {
               const tone = getEventTone(event.type)
               const participant = getListParticipantName(event)
@@ -950,18 +952,19 @@ export function ScheduleContent({ api, fetchStudents, readOnly, currentUserId }:
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: index * 0.04 }}
                   onClick={() => setDetailEvent(event)}
-                  className="cursor-pointer rounded-xl border border-border-subtle bg-surface-2 p-4 transition hover:border-border"
+                  className="group cursor-pointer rounded-2xl bg-surface-1 ring-1 ring-inset ring-border-subtle p-4 transition-[box-shadow,transform] duration-200 hover:ring-border-strong hover:-translate-y-0.5"
                 >
                   <div className="flex flex-col gap-3 sm:flex-row sm:items-start">
-                    <div className={`hidden h-14 w-1.5 rounded-full sm:block ${tone.dot}`} />
+                    <div className={`hidden h-14 w-1 rounded-full sm:block ${tone.dot}`} />
 
                     <div className="min-w-0 flex-1">
-                      <div className="mb-1 flex flex-wrap items-center gap-2">
+                      <div className="mb-1.5 flex flex-wrap items-center gap-2">
                         <h3 className="truncate font-semibold text-foreground">{event.title}</h3>
-                        <span className={`rounded border px-2 py-0.5 text-[10px] font-bold ${tone.chip}`}>
+                        <span className="inline-flex items-center gap-1.5 rounded-full bg-surface-2 ring-1 ring-inset ring-border-subtle px-2 py-0.5 text-[10px] font-semibold text-foreground">
+                          <span className={`h-1.5 w-1.5 rounded-full ${tone.dot}`} />
                           {eventTypes.find((et) => et.value === event.type)?.label}
                         </span>
-                        <span className={`rounded px-2 py-0.5 text-[10px] font-bold ${getStatusBadgeClass(event.status)}`}>
+                        <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${getStatusBadgeClass(event.status)}`}>
                           {event.status === 'Confirmed'
                             ? t('confirmed')
                             : event.status === 'Completed'
@@ -998,19 +1001,21 @@ export function ScheduleContent({ api, fetchStudents, readOnly, currentUserId }:
 
                     {(canStartCall(event) || canManageEvent(event)) && (
                       <div
-                        className="flex items-center gap-2 self-stretch sm:self-auto"
+                        className="flex items-center gap-1.5 self-stretch sm:self-auto"
                         onClick={(e) => e.stopPropagation()}
                       >
                         {canStartCall(event) && (
                           <button
                             onClick={() => handleStartCall(event.id)}
                             disabled={startingCall === event.id}
-                            className={`flex-1 rounded-lg bg-gradient-to-r p-2.5 sm:flex-none ${accent.gradient}`}
+                            className="inline-flex h-9 w-9 items-center justify-center rounded-xl text-white shadow-md transition-[opacity,transform] duration-200 hover:opacity-90 active:scale-95"
+                            style={{ background: `linear-gradient(135deg, ${accent.primary}, ${accent.secondary})` }}
+                            title={t('startCall')}
                           >
                             {startingCall === event.id ? (
-                              <Loader2 className="h-5 w-5 animate-spin text-white" />
+                              <Loader2 className="h-4 w-4 animate-spin text-white" />
                             ) : (
-                              <Video className="h-5 w-5 text-white" />
+                              <Video className="h-4 w-4 text-white" />
                             )}
                           </button>
                         )}
@@ -1018,7 +1023,7 @@ export function ScheduleContent({ api, fetchStudents, readOnly, currentUserId }:
                         {canManageEvent(event) && (
                           <button
                             onClick={() => openEditModal(event)}
-                            className="flex-1 rounded-lg bg-border-subtle p-2.5 text-muted-foreground hover:bg-hover-overlay sm:flex-none"
+                            className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-surface-2 ring-1 ring-inset ring-border-subtle text-muted-foreground hover:text-foreground hover:ring-border-strong transition-[color,box-shadow] duration-200"
                           >
                             <Edit className="h-4 w-4" />
                           </button>
@@ -1028,7 +1033,7 @@ export function ScheduleContent({ api, fetchStudents, readOnly, currentUserId }:
                           <button
                             onClick={() => handleDelete(event.id)}
                             disabled={deleting === event.id}
-                            className="flex-1 rounded-lg bg-border-subtle p-2.5 text-muted-foreground hover:bg-red-500/20 disabled:opacity-50 sm:flex-none"
+                            className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-surface-2 ring-1 ring-inset ring-border-subtle text-muted-foreground hover:text-red-500 hover:ring-red-500/40 transition-[color,box-shadow] duration-200 disabled:opacity-50"
                           >
                             {deleting === event.id ? (
                               <Loader2 className="h-4 w-4 animate-spin" />
@@ -1047,69 +1052,91 @@ export function ScheduleContent({ api, fetchStudents, readOnly, currentUserId }:
         )}
       </section>
 
-      <section className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-        <div className="rounded-xl border border-border-subtle bg-surface-2 p-4 text-center">
-          <Calendar className={`mx-auto mb-2 h-7 w-7 ${accent.text}`} />
-          <p className="text-2xl font-bold text-foreground">{selectedDayEvents.length}</p>
-          <p className="text-xs text-muted-foreground">{t('totalEvents')}</p>
+      <section className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+        <div className="rounded-2xl bg-surface-1 ring-1 ring-inset ring-border-subtle p-4">
+          <div className="flex items-center gap-3">
+            <div className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-surface-2 ring-1 ring-border-subtle">
+              <Calendar className={`h-4 w-4 ${accent.text}`} />
+            </div>
+            <div className="min-w-0">
+              <p className="text-xl font-bold tracking-tight text-foreground">{selectedDayEvents.length}</p>
+              <p className="text-xs text-muted-foreground">{t('totalEvents')}</p>
+            </div>
+          </div>
         </div>
 
-        <div className="rounded-xl border border-border-subtle bg-surface-2 p-4 text-center">
-          <Users className={`mx-auto mb-2 h-7 w-7 ${accent.text}`} />
-          <p className="text-2xl font-bold text-foreground">{stats?.upcomingEvents || 0}</p>
-          <p className="text-xs text-muted-foreground">{t('upcoming')}</p>
+        <div className="rounded-2xl bg-surface-1 ring-1 ring-inset ring-border-subtle p-4">
+          <div className="flex items-center gap-3">
+            <div className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-surface-2 ring-1 ring-border-subtle">
+              <Users className={`h-4 w-4 ${accent.text}`} />
+            </div>
+            <div className="min-w-0">
+              <p className="text-xl font-bold tracking-tight text-foreground">{stats?.upcomingEvents || 0}</p>
+              <p className="text-xs text-muted-foreground">{t('upcoming')}</p>
+            </div>
+          </div>
         </div>
 
-        <div className="rounded-xl border border-border-subtle bg-surface-2 p-4 text-center">
-          <Clock className={`mx-auto mb-2 h-7 w-7 ${accent.text}`} />
-          <p className="text-2xl font-bold text-foreground">
-            {stats?.totalMinutes ? Math.round(stats.totalMinutes / 60) : 0}h
-          </p>
-          <p className="text-xs text-muted-foreground">{t('trainingHours')}</p>
+        <div className="rounded-2xl bg-surface-1 ring-1 ring-inset ring-border-subtle p-4">
+          <div className="flex items-center gap-3">
+            <div className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-surface-2 ring-1 ring-border-subtle">
+              <Clock className={`h-4 w-4 ${accent.text}`} />
+            </div>
+            <div className="min-w-0">
+              <p className="text-xl font-bold tracking-tight text-foreground">
+                {stats?.totalMinutes ? Math.round(stats.totalMinutes / 60) : 0}h
+              </p>
+              <p className="text-xs text-muted-foreground">{t('trainingHours')}</p>
+            </div>
+          </div>
         </div>
       </section>
 
       {showCreateModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 backdrop-blur-sm">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
           <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
+            initial={{ opacity: 0, scale: 0.96 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-2xl border border-border-subtle bg-surface-2"
+            transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+            className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-2xl bg-surface-1 ring-1 ring-inset ring-border-subtle shadow-xl"
           >
-            <div className="p-6">
-              <div className="mb-6 flex items-center justify-between">
-                <h2 className="text-xl font-bold text-foreground">
+            <div className="p-5 sm:p-6">
+              <div className="mb-5 flex items-center justify-between">
+                <h2 className="text-lg sm:text-xl font-semibold tracking-tight text-foreground">
                   {editingEvent ? t('editEvent') : t('newEvent')}
                 </h2>
-                <button onClick={closeModal} className="text-muted-foreground hover:text-foreground">
-                  <X className="h-6 w-6" />
+                <button
+                  onClick={closeModal}
+                  className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-surface-2 ring-1 ring-inset ring-border-subtle text-muted-foreground hover:text-foreground hover:ring-border-strong transition-[color,box-shadow] duration-200"
+                >
+                  <X className="h-4 w-4" />
                 </button>
               </div>
 
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
-                  <label className="mb-2 block text-sm font-medium text-muted-foreground">{t('eventName')}</label>
+                  <label className="mb-1.5 block text-xs font-medium text-muted-foreground">{t('eventName')}</label>
                   <input
                     type="text"
                     value={title}
                     onChange={(e) => setTitle(e.target.value)}
-                    className={`w-full rounded-lg border border-border-subtle bg-background px-4 py-2.5 text-foreground ${accent.focusBorder} focus:outline-none`}
+                    className="w-full h-10 rounded-xl bg-surface-2 ring-1 ring-inset ring-border-subtle px-3.5 text-sm text-foreground placeholder:text-faint-foreground focus:outline-none focus:ring-2 focus:ring-[var(--ring-color)] transition-[box-shadow] duration-200"
                     placeholder={t('eventNamePlaceholder')}
                   />
                 </div>
 
                 <div>
-                  <label className="mb-2 block text-sm font-medium text-muted-foreground">{t('eventType')}</label>
-                  <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+                  <label className="mb-1.5 block text-xs font-medium text-muted-foreground">{t('eventType')}</label>
+                  <div className="inline-flex w-full rounded-xl bg-surface-2 ring-1 ring-inset ring-border-subtle p-1">
                     {eventTypes.map((type) => (
                       <button
                         key={type.value}
                         type="button"
                         onClick={() => setEventType(type.value)}
-                        className={`rounded-lg px-4 py-2 font-medium ${
+                        className={`flex-1 rounded-lg px-3 py-1.5 text-sm font-semibold transition-[background,color,box-shadow] duration-200 ${
                           eventType === type.value
-                            ? `bg-gradient-to-r text-white ${accent.gradient}`
-                            : 'bg-white/5 text-muted-foreground hover:text-foreground'
+                            ? 'bg-surface-1 text-foreground shadow-xs ring-1 ring-inset ring-border-subtle'
+                            : 'text-muted-foreground hover:text-foreground'
                         }`}
                       >
                         {type.label}
@@ -1120,11 +1147,11 @@ export function ScheduleContent({ api, fetchStudents, readOnly, currentUserId }:
 
                 {students.length > 0 && (
                   <div>
-                    <label className="mb-2 block text-sm font-medium text-muted-foreground">{t('student')}</label>
+                    <label className="mb-1.5 block text-xs font-medium text-muted-foreground">{t('student')}</label>
                     <select
                       value={studentId}
                       onChange={(e) => setStudentId(e.target.value)}
-                      className={`w-full rounded-lg border border-border-subtle bg-background px-4 py-2.5 text-foreground ${accent.focusBorder} focus:outline-none`}
+                      className="w-full h-10 rounded-xl bg-surface-2 ring-1 ring-inset ring-border-subtle px-3.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-[var(--ring-color)] transition-[box-shadow] duration-200"
                     >
                       <option value="">{t('selectStudent')}</option>
                       {students.map((s) => (
@@ -1136,33 +1163,33 @@ export function ScheduleContent({ api, fetchStudents, readOnly, currentUserId }:
                   </div>
                 )}
 
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                   <div>
-                    <label className="mb-2 block text-sm font-medium text-muted-foreground">{t('date')}</label>
+                    <label className="mb-1.5 block text-xs font-medium text-muted-foreground">{t('date')}</label>
                     <input
                       type="date"
                       value={startDate}
                       onChange={(e) => setStartDate(e.target.value)}
-                      className={`w-full rounded-lg border border-border-subtle bg-background px-4 py-2.5 text-foreground ${accent.focusBorder} focus:outline-none`}
+                      className="w-full h-10 rounded-xl bg-surface-2 ring-1 ring-inset ring-border-subtle px-3.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-[var(--ring-color)] transition-[box-shadow] duration-200"
                     />
                   </div>
                   <div>
-                    <label className="mb-2 block text-sm font-medium text-muted-foreground">{t('time')}</label>
+                    <label className="mb-1.5 block text-xs font-medium text-muted-foreground">{t('time')}</label>
                     <input
                       type="time"
                       value={startTime}
                       onChange={(e) => setStartTime(e.target.value)}
-                      className={`w-full rounded-lg border border-border-subtle bg-background px-4 py-2.5 text-foreground ${accent.focusBorder} focus:outline-none`}
+                      className="w-full h-10 rounded-xl bg-surface-2 ring-1 ring-inset ring-border-subtle px-3.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-[var(--ring-color)] transition-[box-shadow] duration-200"
                     />
                   </div>
                 </div>
 
                 <div>
-                  <label className="mb-2 block text-sm font-medium text-muted-foreground">{t('duration')}</label>
+                  <label className="mb-1.5 block text-xs font-medium text-muted-foreground">{t('duration')}</label>
                   <select
                     value={duration}
                     onChange={(e) => setDuration(e.target.value)}
-                    className={`w-full rounded-lg border border-border-subtle bg-background px-4 py-2.5 text-foreground ${accent.focusBorder} focus:outline-none`}
+                    className="w-full h-10 rounded-xl bg-surface-2 ring-1 ring-inset ring-border-subtle px-3.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-[var(--ring-color)] transition-[box-shadow] duration-200"
                   >
                     <option value="30">{t('duration30')}</option>
                     <option value="45">{t('duration45')}</option>
@@ -1174,24 +1201,24 @@ export function ScheduleContent({ api, fetchStudents, readOnly, currentUserId }:
 
                 {eventType === 'Gym' && (
                   <div>
-                    <label className="mb-2 block text-sm font-medium text-muted-foreground">{t('location')}</label>
+                    <label className="mb-1.5 block text-xs font-medium text-muted-foreground">{t('location')}</label>
                     <input
                       type="text"
                       value={location}
                       onChange={(e) => setLocation(e.target.value)}
-                      className={`w-full rounded-lg border border-border-subtle bg-background px-4 py-2.5 text-foreground ${accent.focusBorder} focus:outline-none`}
+                      className="w-full h-10 rounded-xl bg-surface-2 ring-1 ring-inset ring-border-subtle px-3.5 text-sm text-foreground placeholder:text-faint-foreground focus:outline-none focus:ring-2 focus:ring-[var(--ring-color)] transition-[box-shadow] duration-200"
                       placeholder={t('locationPlaceholder')}
                     />
                   </div>
                 )}
 
                 <div>
-                  <label className="mb-2 block text-sm font-medium text-muted-foreground">{t('comment')}</label>
+                  <label className="mb-1.5 block text-xs font-medium text-muted-foreground">{t('comment')}</label>
                   <textarea
                     value={comment}
                     onChange={(e) => setComment(e.target.value)}
                     rows={2}
-                    className={`w-full resize-none rounded-lg border border-border-subtle bg-background px-4 py-2.5 text-foreground ${accent.focusBorder} focus:outline-none`}
+                    className="w-full resize-none rounded-xl bg-surface-2 ring-1 ring-inset ring-border-subtle px-3.5 py-2.5 text-sm text-foreground placeholder:text-faint-foreground focus:outline-none focus:ring-2 focus:ring-[var(--ring-color)] transition-[box-shadow] duration-200"
                     placeholder={t('commentPlaceholder')}
                   />
                 </div>
@@ -1199,9 +1226,10 @@ export function ScheduleContent({ api, fetchStudents, readOnly, currentUserId }:
                 <button
                   type="submit"
                   disabled={saving}
-                  className={`flex w-full items-center justify-center gap-2 rounded-lg bg-gradient-to-r py-3 font-semibold text-white disabled:opacity-50 ${accent.gradient}`}
+                  className="flex w-full items-center justify-center gap-2 rounded-xl py-2.5 text-sm font-semibold text-white shadow-md transition-[opacity,transform] duration-200 hover:opacity-90 active:scale-[0.99] disabled:opacity-50"
+                  style={{ background: `linear-gradient(135deg, ${accent.primary}, ${accent.secondary})` }}
                 >
-                  {saving && <Loader2 className="h-5 w-5 animate-spin" />}
+                  {saving && <Loader2 className="h-4 w-4 animate-spin" />}
                   {editingEvent ? t('saveChanges') : t('createEvent')}
                 </button>
               </form>
@@ -1211,33 +1239,34 @@ export function ScheduleContent({ api, fetchStudents, readOnly, currentUserId }:
       )}
 
       {detailEvent && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 backdrop-blur-sm">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
           <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
+            initial={{ opacity: 0, scale: 0.96 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-2xl border border-border-subtle bg-surface-2"
+            transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+            className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-2xl bg-surface-1 ring-1 ring-inset ring-border-subtle shadow-xl"
           >
-            <div className="p-6">
-              <div className="mb-6 flex items-center justify-between">
-                <h2 className="text-xl font-bold text-foreground">{t('eventDetails')}</h2>
-                <button onClick={() => setDetailEvent(null)} className="text-muted-foreground hover:text-foreground">
-                  <X className="h-6 w-6" />
+            <div className="p-5 sm:p-6">
+              <div className="mb-5 flex items-center justify-between">
+                <h2 className="text-lg sm:text-xl font-semibold tracking-tight text-foreground">{t('eventDetails')}</h2>
+                <button
+                  onClick={() => setDetailEvent(null)}
+                  className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-surface-2 ring-1 ring-inset ring-border-subtle text-muted-foreground hover:text-foreground hover:ring-border-strong transition-[color,box-shadow] duration-200"
+                >
+                  <X className="h-4 w-4" />
                 </button>
               </div>
 
               <div className="space-y-4">
                 <div>
-                  <h3 className="mb-2 text-lg font-semibold text-foreground">{detailEvent.title}</h3>
+                  <h3 className="mb-2 text-lg font-semibold tracking-tight text-foreground">{detailEvent.title}</h3>
                   <div className="flex flex-wrap items-center gap-2">
-                    <span
-                      className={`rounded px-2.5 py-1 text-xs font-bold ${
-                        getEventTone(detailEvent.type).chip
-                      }`}
-                    >
+                    <span className="inline-flex items-center gap-1.5 rounded-full bg-surface-2 ring-1 ring-inset ring-border-subtle px-2.5 py-1 text-[11px] font-semibold text-foreground">
+                      <span className={`h-1.5 w-1.5 rounded-full ${getEventTone(detailEvent.type).dot}`} />
                       {eventTypes.find((et) => et.value === detailEvent.type)?.label}
                     </span>
                     <span
-                      className={`rounded px-2.5 py-1 text-xs font-bold ${getStatusBadgeClass(
+                      className={`rounded-full px-2.5 py-1 text-[11px] font-semibold ${getStatusBadgeClass(
                         detailEvent.status
                       )}`}
                     >
@@ -1250,8 +1279,8 @@ export function ScheduleContent({ api, fetchStudents, readOnly, currentUserId }:
                   </div>
                 </div>
 
-                <div className="flex items-center gap-3 text-muted-foreground">
-                  <Calendar className={`h-5 w-5 ${accent.text}`} />
+                <div className="flex items-center gap-3 text-sm text-muted-foreground">
+                  <Calendar className={`h-4 w-4 ${accent.text}`} />
                   <span>
                     {new Date(detailEvent.startAt).toLocaleDateString(locale, {
                       weekday: 'long',
@@ -1262,23 +1291,23 @@ export function ScheduleContent({ api, fetchStudents, readOnly, currentUserId }:
                   </span>
                 </div>
 
-                <div className="flex items-center gap-3 text-muted-foreground">
-                  <Clock className={`h-5 w-5 ${accent.text}`} />
+                <div className="flex items-center gap-3 text-sm text-muted-foreground">
+                  <Clock className={`h-4 w-4 ${accent.text}`} />
                   <span>
                     {formatTime(detailEvent.startAt, locale)} • {detailEvent.durationMinutes} {tc('min')}
                   </span>
                 </div>
 
                 {detailEvent.location && (
-                  <div className="flex items-center gap-3 text-muted-foreground">
-                    <MapPin className={`h-5 w-5 ${accent.text}`} />
+                  <div className="flex items-center gap-3 text-sm text-muted-foreground">
+                    <MapPin className={`h-4 w-4 ${accent.text}`} />
                     <span>{detailEvent.location}</span>
                   </div>
                 )}
 
                 {detailEvent.trainerName && (
-                  <div className="flex items-center gap-3 text-muted-foreground">
-                    <Users className={`h-5 w-5 ${accent.text}`} />
+                  <div className="flex items-center gap-3 text-sm text-muted-foreground">
+                    <Users className={`h-4 w-4 ${accent.text}`} />
                     <span>
                       {t('trainerLabel')}: {detailEvent.trainerName}
                     </span>
@@ -1286,8 +1315,8 @@ export function ScheduleContent({ api, fetchStudents, readOnly, currentUserId }:
                 )}
 
                 {detailEvent.studentName && (
-                  <div className="flex items-center gap-3 text-muted-foreground">
-                    <Users className={`h-5 w-5 ${accent.text}`} />
+                  <div className="flex items-center gap-3 text-sm text-muted-foreground">
+                    <Users className={`h-4 w-4 ${accent.text}`} />
                     <span>
                       {t('student')}: {detailEvent.studentName}
                     </span>
@@ -1295,9 +1324,9 @@ export function ScheduleContent({ api, fetchStudents, readOnly, currentUserId }:
                 )}
 
                 {detailEvent.comment && (
-                  <div className="rounded-lg border border-border-subtle bg-background p-4">
-                    <p className="mb-1 text-sm text-muted-foreground">{t('comment')}</p>
-                    <p className="text-foreground">{detailEvent.comment}</p>
+                  <div className="rounded-xl bg-surface-2 ring-1 ring-inset ring-border-subtle p-3.5">
+                    <p className="mb-1 text-xs font-medium text-muted-foreground">{t('comment')}</p>
+                    <p className="text-sm text-foreground">{detailEvent.comment}</p>
                   </div>
                 )}
 
@@ -1314,7 +1343,7 @@ export function ScheduleContent({ api, fetchStudents, readOnly, currentUserId }:
               </div>
 
               {(canStartCall(detailEvent) || canManageEvent(detailEvent)) && (
-                <div className="mt-6 flex flex-col gap-3 border-t border-border-subtle pt-4 sm:flex-row">
+                <div className="mt-5 flex flex-col gap-2 border-t border-border-subtle pt-4 sm:flex-row">
                   {canStartCall(detailEvent) && (
                     <button
                       onClick={() => {
@@ -1322,7 +1351,8 @@ export function ScheduleContent({ api, fetchStudents, readOnly, currentUserId }:
                         setDetailEvent(null)
                       }}
                       disabled={startingCall === detailEvent.id}
-                      className={`flex flex-1 items-center justify-center gap-2 rounded-lg bg-gradient-to-r py-2.5 font-semibold text-white ${accent.gradient}`}
+                      className="flex flex-1 items-center justify-center gap-2 rounded-xl py-2.5 text-sm font-semibold text-white shadow-md transition-[opacity,transform] duration-200 hover:opacity-90 active:scale-[0.99] disabled:opacity-50"
+                      style={{ background: `linear-gradient(135deg, ${accent.primary}, ${accent.secondary})` }}
                     >
                       {startingCall === detailEvent.id ? (
                         <Loader2 className="h-4 w-4 animate-spin" />
@@ -1339,7 +1369,7 @@ export function ScheduleContent({ api, fetchStudents, readOnly, currentUserId }:
                         openEditModal(detailEvent)
                         setDetailEvent(null)
                       }}
-                      className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-border-subtle py-2.5 font-semibold text-foreground hover:bg-hover-overlay"
+                      className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-surface-2 ring-1 ring-inset ring-border-subtle py-2.5 text-sm font-semibold text-foreground hover:ring-border-strong transition-[box-shadow] duration-200"
                     >
                       <Edit className="h-4 w-4" />
                       {t('editEvent')}
@@ -1352,7 +1382,7 @@ export function ScheduleContent({ api, fetchStudents, readOnly, currentUserId }:
                         handleDelete(detailEvent.id)
                         setDetailEvent(null)
                       }}
-                      className="flex items-center justify-center gap-2 rounded-lg bg-red-500/10 px-4 py-2.5 font-semibold text-red-400 hover:bg-red-500/20"
+                      className="flex items-center justify-center gap-2 rounded-xl bg-red-500/10 ring-1 ring-inset ring-red-500/30 px-4 py-2.5 text-sm font-semibold text-red-500 hover:bg-red-500/20 transition-colors"
                     >
                       <Trash2 className="h-4 w-4" />
                     </button>

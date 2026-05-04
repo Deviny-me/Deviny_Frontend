@@ -19,6 +19,7 @@ import {
 import { useTranslations } from 'next-intl'
 import { useLanguage, getLanguageLabel, Language } from '@/components/language/LanguageProvider'
 import { DeleteAccountModal } from '@/components/shared/DeleteAccountModal'
+import { useAccentColors } from '@/lib/theme/useAccentColors'
 
 interface SettingsItem {
   icon: LucideIcon
@@ -39,6 +40,7 @@ export default function SettingsPage() {
   const { user, logout } = useUser()
   const { theme, toggleTheme } = useTheme()
   const { language, setLanguage } = useLanguage()
+  const accent = useAccentColors()
   const isDarkMode = theme === 'dark'
   const [notifications, setNotifications] = useState({
     workoutReminders: true,
@@ -122,38 +124,52 @@ export default function SettingsPage() {
 
   return (
     <>
-      <div className="space-y-6 pb-6">
+      <div className="space-y-5 pb-6">
         {/* Header */}
         <div>
-          <h1 className="page-title">{t('title')}</h1>
-          <p className="text-sm text-muted-foreground">{t('description')}</p>
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground">{t('title')}</h1>
+          <p className="mt-1 text-sm text-muted-foreground">{t('description')}</p>
         </div>
 
         {/* Settings Sections */}
         {settingsSections.map((section, sectionIndex) => (
-          <div key={sectionIndex} className="bg-surface-3 rounded-xl border border-border overflow-hidden">
-            <div className="px-4 py-3 border-b border-border">
-              <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">{section.title}</h3>
+          <div key={sectionIndex} className="overflow-hidden rounded-2xl bg-surface-1 ring-1 ring-inset ring-border-subtle">
+            <div className="border-b border-border-subtle px-4 py-2.5">
+              <h3 className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">{section.title}</h3>
             </div>
-            <div className="divide-y divide-border">
+            <div className="divide-y divide-border-subtle">
               {section.items.map((item, itemIndex) => (
                 <button
                   key={itemIndex}
                   onClick={item.action}
-                  className="w-full flex items-center justify-between px-4 py-3 hover:bg-hover-overlay transition-colors"
+                  className="flex w-full items-center justify-between gap-3 px-4 py-3 transition-colors hover:bg-hover-overlay"
                 >
-                  <div className="flex items-center gap-3">
-                    <item.icon className="w-5 h-5 text-muted-foreground" />
-                    <span className="text-sm text-foreground">{item.label}</span>
+                  <div className="flex min-w-0 items-center gap-3">
+                    <span className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-surface-2 ring-1 ring-inset ring-border-subtle">
+                      <item.icon className="h-4 w-4 text-muted-foreground" />
+                    </span>
+                    <span className="truncate text-sm font-medium text-foreground">{item.label}</span>
                   </div>
                   {item.toggle ? (
-                    <div className={`w-10 h-6 rounded-full transition-colors ${item.value ? 'bg-[#0c8de6]' : 'bg-gray-600'} p-0.5`}>
-                      <div className={`w-5 h-5 rounded-full bg-white transition-transform ${item.value ? 'translate-x-4' : 'translate-x-0'}`} />
+                    <div
+                      className={`h-6 w-11 flex-shrink-0 rounded-full p-0.5 transition-colors ${
+                        item.value ? '' : 'bg-surface-2 ring-1 ring-inset ring-border-subtle'
+                      }`}
+                      style={item.value ? { background: `linear-gradient(135deg, ${accent.primary}, ${accent.secondary})` } : undefined}
+                    >
+                      <div
+                        className={`h-5 w-5 rounded-full bg-white shadow-sm transition-transform ${
+                          item.value ? 'translate-x-5' : 'translate-x-0'
+                        }`}
+                      />
                     </div>
                   ) : item.value ? (
-                    <span className="text-sm text-muted-foreground">{item.value}</span>
+                    <div className="flex flex-shrink-0 items-center gap-1.5">
+                      <span className="text-sm text-muted-foreground">{item.value}</span>
+                      <ChevronRight className="h-4 w-4 text-faint-foreground" />
+                    </div>
                   ) : (
-                    <ChevronRight className="w-5 h-5 text-muted-foreground" />
+                    <ChevronRight className="h-4 w-4 flex-shrink-0 text-faint-foreground" />
                   )}
                 </button>
               ))}
@@ -164,19 +180,19 @@ export default function SettingsPage() {
         {/* Logout Button */}
         <button
           onClick={handleLogout}
-          className="w-full flex items-center justify-center gap-2 py-3 bg-red-500/10 border border-red-500/30 text-red-500 rounded-xl hover:bg-red-500/20 transition-colors"
+          className="flex w-full items-center justify-center gap-2 rounded-xl bg-surface-1 ring-1 ring-inset ring-border-subtle px-4 py-2.5 text-sm font-semibold text-foreground transition-[color,box-shadow] duration-200 hover:text-red-500 hover:ring-red-500/40"
         >
-          <LogOut className="w-5 h-5" />
-          <span className="font-semibold">{t('signOut')}</span>
+          <LogOut className="h-4 w-4" />
+          <span>{t('signOut')}</span>
         </button>
 
         {/* Delete Account Button */}
         <button
           onClick={() => setShowDeleteModal(true)}
-          className="w-full flex items-center justify-center gap-2 py-3 border border-red-500/20 text-red-500/70 rounded-xl hover:bg-red-500/10 hover:text-red-500 hover:border-red-500/40 transition-colors"
+          className="flex w-full items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-xs font-medium text-faint-foreground transition-colors hover:text-red-500"
         >
-          <Trash2 className="w-4 h-4" />
-          <span className="text-sm font-medium">{t('deleteAccount')}</span>
+          <Trash2 className="h-3.5 w-3.5" />
+          <span>{t('deleteAccount')}</span>
         </button>
       </div>
 

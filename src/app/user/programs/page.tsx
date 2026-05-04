@@ -24,6 +24,7 @@ import { useRealtimeScopeRefresh } from '@/lib/signalr/useRealtimeScopeRefresh'
 import { ProgramsFilterModal } from '@/components/shared/ProgramsFilterModal'
 import type { ProgramsFilterParams } from '@/lib/api/programsApi'
 import { useInfiniteScroll } from '@/lib/hooks/useInfiniteScroll'
+import { cn } from '@/lib/utils/cn'
 
 type SortOption = 'newest' | 'popular' | 'rating' | 'price-low' | 'price-high'
 type FilterType = 'all' | 'Training' | 'Diet' | 'Consultation'
@@ -301,89 +302,88 @@ export default function ProgramsPage() {
 
   return (
     <>
-      <div className="space-y-4 pb-6">
-        {/* Header */}
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="page-title">{t('title')}</h1>
-            <p className="text-sm text-muted-foreground">{t('description')}</p>
-          </div>
+      <div className="space-y-4 pb-10">
+        {/* ─── Header ─── */}
+        <div className="flex flex-col gap-1">
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground">{t('title')}</h1>
+          <p className="text-sm text-muted-foreground">{t('description')}</p>
         </div>
 
-        {/* Search and Filters */}
-        <div className="bg-surface-3 rounded-xl border border-border p-4 space-y-4">
+        {/* ─── Search + Filters bar ─── */}
+        <div className="rounded-2xl bg-surface-1 ring-1 ring-inset ring-border-subtle p-3 sm:p-4 space-y-3">
+          {/* Search row */}
           <div className="flex gap-2">
             <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-faint-foreground" />
+              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
               <input
                 type="text"
                 placeholder={t('searchPlaceholder')}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-10 pr-4 py-2.5 bg-background border border-border rounded-lg text-foreground placeholder-gray-500 focus:outline-none focus:border-[#0c8de6]/50"
+                className="w-full h-10 pl-10 pr-4 bg-surface-2 ring-1 ring-inset ring-border-subtle rounded-xl text-sm text-foreground placeholder:text-faint-foreground focus:outline-none focus:ring-2 focus:ring-[var(--ring-color)] transition-[box-shadow] duration-200"
               />
             </div>
             <button
               onClick={() => setShowFilterModal(true)}
-              className="relative flex items-center justify-center w-12 h-[42px] bg-background border border-border rounded-lg hover:border-[#0c8de6]/50 transition-colors shrink-0"
+              className="relative inline-flex items-center justify-center h-10 w-10 rounded-xl bg-surface-2 ring-1 ring-inset ring-border-subtle text-muted-foreground hover:text-foreground hover:bg-surface-3 transition-[background-color,color] duration-200 ease-out-expo"
+              aria-label="Filters"
             >
-              <SlidersHorizontal className="w-5 h-5 text-muted-foreground" />
+              <SlidersHorizontal className="w-4 h-4" />
               {activeFilterCount > 0 && (
-                <span
-                  className="absolute -top-1 -right-1 w-5 h-5 rounded-full text-white text-[10px] font-bold flex items-center justify-center"
-                  style={{ background: '#0c8de6' }}
-                >
+                <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-user-500 text-white text-[10px] font-bold flex items-center justify-center ring-2 ring-surface-1">
                   {activeFilterCount}
                 </span>
               )}
             </button>
           </div>
 
-          <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
-            {/* Type Filters */}
+          {/* Category chips + Sort */}
+          <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
             <div className="-mx-1 overflow-x-auto pb-1">
-              <div className="flex min-w-max items-center gap-1 rounded-lg bg-background p-1">
+              <div className="flex min-w-max items-center gap-1 rounded-xl bg-surface-2 p-1 ring-1 ring-inset ring-border-subtle">
                 <button
                   onClick={() => setFilterType('all')}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
+                  className={cn(
+                    'inline-flex items-center px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition-[background-color,color,box-shadow] duration-200 ease-out-expo',
                     filterType === 'all'
-                      ? 'bg-[#0c8de6] text-foreground' 
-                      : 'text-muted-foreground hover:text-foreground'
-                  }`}
+                      ? 'bg-surface-1 text-foreground shadow-xs ring-1 ring-inset ring-border-subtle'
+                      : 'text-muted-foreground hover:text-foreground',
+                  )}
                 >
                   {tc('all')}
+                  <span className="ml-1.5 text-[10px] opacity-60 tabular-nums">({allPrograms.length})</span>
                 </button>
                 {([
-                  { cat: 'Training' as FilterType, icon: Dumbbell, label: t('training'), count: allPrograms.filter(p => p.category === 'Training').length, activeColor: 'bg-[#d4722a]' },
-                  { cat: 'Diet' as FilterType, icon: Apple, label: t('nutrition'), count: allPrograms.filter(p => p.category === 'Diet').length, activeColor: 'bg-[#28bf68]' },
-                  { cat: 'Consultation' as FilterType, icon: MessageSquare, label: t('consultation'), count: allPrograms.filter(p => p.category === 'Consultation').length, activeColor: 'bg-violet-600' },
-                ]).map(({ cat, icon: Icon, label, count, activeColor }) => (
+                  { cat: 'Training' as FilterType, icon: Dumbbell, label: t('training'), count: allPrograms.filter(p => p.category === 'Training').length, activeText: 'text-trainer-600 dark:text-trainer-300', activeRing: 'ring-trainer-500/30' },
+                  { cat: 'Diet' as FilterType, icon: Apple, label: t('nutrition'), count: allPrograms.filter(p => p.category === 'Diet').length, activeText: 'text-nutritionist-600 dark:text-nutritionist-300', activeRing: 'ring-nutritionist-500/30' },
+                  { cat: 'Consultation' as FilterType, icon: MessageSquare, label: t('consultation'), count: allPrograms.filter(p => p.category === 'Consultation').length, activeText: 'text-violet-600 dark:text-violet-300', activeRing: 'ring-violet-500/30' },
+                ]).map(({ cat, icon: Icon, label, count, activeText, activeRing }) => (
                   <button
                     key={cat}
                     onClick={() => setFilterType(cat)}
-                    className={`flex items-center gap-1.5 whitespace-nowrap px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
-                      filterType === cat 
-                        ? `${activeColor} text-foreground` 
-                        : 'text-muted-foreground hover:text-foreground'
-                    }`}
+                    className={cn(
+                      'inline-flex items-center gap-1.5 whitespace-nowrap px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition-[background-color,color,box-shadow] duration-200 ease-out-expo',
+                      filterType === cat
+                        ? cn('bg-surface-1 shadow-xs ring-1 ring-inset', activeText, activeRing)
+                        : 'text-muted-foreground hover:text-foreground',
+                    )}
                   >
-                    <Icon className="w-4 h-4" />
+                    <Icon className="w-3.5 h-3.5" />
                     {label}
-                    <span className="text-xs opacity-70">({count})</span>
+                    <span className="text-[10px] opacity-60 tabular-nums">({count})</span>
                   </button>
                 ))}
               </div>
             </div>
 
             {/* Sort */}
-            <div className="w-full sm:w-auto lg:min-w-[220px]">
-              <div className="relative">
-                <SortAsc className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-faint-foreground" />
-                <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-faint-foreground" />
+            <div className="relative w-full sm:w-auto lg:min-w-[220px]">
+              <SortAsc className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <select
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value as SortOption)}
-                className="h-12 w-full appearance-none rounded-2xl border border-[rgba(148,163,184,0.18)] bg-background pl-10 pr-10 text-sm font-medium text-foreground transition-colors focus:border-[rgba(148,163,184,0.28)] focus:outline-none"
+                className="h-10 w-full appearance-none rounded-xl bg-surface-2 ring-1 ring-inset ring-border-subtle pl-10 pr-10 text-sm font-medium text-foreground transition-[box-shadow] duration-200 focus:outline-none focus:ring-2 focus:ring-[var(--ring-color)] cursor-pointer"
               >
                 <option value="newest">{t('newest')}</option>
                 <option value="popular">{t('mostPopular')}</option>
@@ -391,32 +391,34 @@ export default function ProgramsPage() {
                 <option value="price-low">{t('priceLowToHigh')}</option>
                 <option value="price-high">{t('priceHighToLow')}</option>
               </select>
-              </div>
             </div>
           </div>
         </div>
 
-        {/* Programs List */}
+        {/* ─── Programs List ─── */}
         {isLoading ? (
-          <div className="flex items-center justify-center py-12">
-            <Loader2 className="w-8 h-8 text-[#0c8de6] animate-spin" />
+          <div className="flex items-center justify-center py-16">
+            <Loader2 className="w-6 h-6 text-user-500 animate-spin" />
           </div>
         ) : error ? (
-          <div className="text-center py-12 bg-surface-3 rounded-xl border border-border">
-            <p className="text-red-400 mb-4">{error}</p>
+          <div className="rounded-2xl bg-surface-1 ring-1 ring-inset ring-border-subtle py-16 text-center">
+            <div className="inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-red-500/10 ring-1 ring-red-500/20 mb-4">
+              <Search className="w-6 h-6 text-red-500" />
+            </div>
+            <p className="text-sm text-muted-foreground mb-4">{error}</p>
             <button
               onClick={loadAllPrograms}
-              className="px-4 py-2 bg-[#0c8de6] text-foreground rounded-lg hover:bg-[#FF8555] transition-colors"
+              className="inline-flex items-center px-4 py-2 rounded-lg bg-user-600 text-white text-sm font-semibold hover:bg-user-700 transition-colors"
             >
               {tc('tryAgain')}
             </button>
           </div>
         ) : filteredPrograms.length === 0 ? (
-          <div className="text-center py-12 bg-surface-3 rounded-xl border border-border">
-            <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-background flex items-center justify-center">
-              <Search className="w-8 h-8 text-faint-foreground" />
+          <div className="rounded-2xl bg-surface-1 ring-1 ring-inset ring-border-subtle py-16 text-center">
+            <div className="inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-surface-2 ring-1 ring-border-subtle mb-4">
+              <Search className="w-6 h-6 text-muted-foreground" />
             </div>
-            <h3 className="text-lg font-semibold text-foreground mb-2">
+            <h3 className="font-semibold text-foreground mb-1">
               {totalCount === 0 ? t('noPrograms') : t('noProgramsFound')}
             </h3>
             <p className="text-sm text-muted-foreground">
@@ -424,116 +426,120 @@ export default function ProgramsPage() {
             </p>
           </div>
         ) : (
-          <div className="grid gap-4">
-            {filteredPrograms.map((program) => (
-              <div
-                key={`${program.category}-${program.id}`}
-                className="bg-surface-3 rounded-xl border border-border overflow-hidden hover:border-border transition-colors cursor-pointer"
-                onClick={() => router.push(`/user/programs/${program.id}?category=${program.category}`)}
-              >
-                <div className="flex flex-col sm:flex-row">
-                  {/* Cover Image */}
-                  <div className="h-48 w-full flex-shrink-0 bg-background relative sm:h-40 sm:w-40">
+          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+            {filteredPrograms.map((program) => {
+              const accent = getAccentColorsByRole(program.trainerRole)
+              const categoryAccent =
+                program.category === 'Training' ? { ring: 'ring-trainer-500/20', text: 'text-trainer-600 dark:text-trainer-300', bg: 'bg-trainer-500/10' } :
+                program.category === 'Diet' ? { ring: 'ring-nutritionist-500/20', text: 'text-nutritionist-600 dark:text-nutritionist-300', bg: 'bg-nutritionist-500/10' } :
+                { ring: 'ring-violet-500/20', text: 'text-violet-600 dark:text-violet-300', bg: 'bg-violet-500/10' }
+
+              const availablePrices: number[] = []
+              if (program.price > 0) availablePrices.push(program.price)
+              if (program.standardPrice != null && program.standardPrice > 0) availablePrices.push(program.standardPrice)
+              if (program.proPrice != null && program.proPrice > 0) availablePrices.push(program.proPrice)
+              const minPrice = availablePrices.length > 0 ? Math.min(...availablePrices) : 0
+              const hasMultiplePrices = availablePrices.length > 1
+
+              const CategoryIcon = program.category === 'Training' ? Dumbbell : program.category === 'Diet' ? Apple : MessageSquare
+              const categoryLabel = program.category === 'Training' ? t('training') : program.category === 'Diet' ? t('nutrition') : t('consultation')
+
+              return (
+                <button
+                  type="button"
+                  key={`${program.category}-${program.id}`}
+                  onClick={() => router.push(`/user/programs/${program.id}?category=${program.category}`)}
+                  className="group relative flex flex-col text-left rounded-2xl bg-surface-1 ring-1 ring-inset ring-border-subtle overflow-hidden hover:ring-border-strong hover:shadow-lg hover:-translate-y-0.5 transition-[transform,box-shadow,border-color] duration-300 ease-out-expo focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring-color)]"
+                >
+                  {/* Cover */}
+                  <div className="relative aspect-[16/9] w-full bg-surface-2 overflow-hidden">
                     {program.coverImageUrl ? (
                       <img
                         src={getMediaUrl(program.coverImageUrl) || ''}
                         alt={program.title}
-                        className="w-full h-full object-cover"
+                        className="w-full h-full object-cover transition-transform duration-500 ease-out-expo group-hover:scale-[1.03]"
+                        loading="lazy"
                       />
                     ) : (
-                      <div className="w-full h-full flex items-center justify-center">
-                        {program.category === 'Training' ? (
-                          <Dumbbell className="w-10 h-10 text-gray-600" />
-                        ) : program.category === 'Diet' ? (
-                          <Apple className="w-10 h-10 text-gray-600" />
-                        ) : (
-                          <MessageSquare className="w-10 h-10 text-gray-600" />
-                        )}
+                      <div className="w-full h-full grid place-items-center">
+                        <CategoryIcon className="w-10 h-10 text-faint-foreground" />
                       </div>
                     )}
-                    {/* Category badge — color based on creator role */}
+                    {/* Gradient overlay */}
+                    <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-black/40 to-transparent" />
+                    {/* Category badge */}
                     <span
-                      className="absolute top-2 left-2 px-1.5 py-0.5 text-[10px] font-bold rounded text-foreground flex items-center gap-0.5"
-                      style={{ backgroundColor: program.category === 'Consultation' ? '#7c3aed' : getAccentColorsByRole(program.trainerRole).primary }}
+                      className={cn(
+                        'absolute top-2.5 left-2.5 inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold backdrop-blur-md ring-1 ring-inset',
+                        'bg-white/85 dark:bg-black/55',
+                        categoryAccent.text,
+                        categoryAccent.ring,
+                      )}
                     >
-                      {program.category === 'Training' ? (
-                        <><Dumbbell className="w-2.5 h-2.5" />{t('training')}</>
-                      ) : program.category === 'Diet' ? (
-                        <><Apple className="w-2.5 h-2.5" />{t('nutrition')}</>
+                      <CategoryIcon className="w-2.5 h-2.5" />
+                      {categoryLabel}
+                    </span>
+                    {/* Price badge */}
+                    <span className="absolute top-2.5 right-2.5 inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-white/90 dark:bg-black/60 backdrop-blur-md ring-1 ring-inset ring-border-subtle text-foreground text-xs font-bold tabular-nums">
+                      {availablePrices.length === 0 ? (
+                        tc('free')
                       ) : (
-                        <><MessageSquare className="w-2.5 h-2.5" />{t('consultation')}</>
+                        <>
+                          {hasMultiplePrices && <span className="text-[10px] font-normal text-muted-foreground">{tc('from')}</span>}
+                          ${minPrice.toFixed(2)}
+                        </>
                       )}
                     </span>
                   </div>
 
                   {/* Content */}
-                  <div className="flex flex-1 flex-col p-4">
-                    <div className="flex-1">
-                      <h3 className="text-base sm:text-lg font-semibold text-foreground line-clamp-2">{program.title}</h3>
-                      <div className="flex items-center gap-2 mt-1">
-                        {program.trainerAvatarUrl ? (
-                          <img
-                            src={getMediaUrl(program.trainerAvatarUrl) || ''}
-                            alt={program.trainerName}
-                            className="w-5 h-5 rounded-full object-cover"
-                          />
-                        ) : (
-                          <div className="w-5 h-5 rounded-full flex items-center justify-center" style={{ background: `linear-gradient(to bottom right, ${getAccentColorsByRole(program.trainerRole).primary}, ${getAccentColorsByRole(program.trainerRole).secondary})` }}>
-                            <span className="text-foreground text-[10px] font-bold">
-                              {program.trainerName.charAt(0)}
-                            </span>
-                          </div>
-                        )}
-                        <span className="text-sm text-muted-foreground">{program.trainerName}</span>
-                      </div>
-                      <p className="text-sm text-faint-foreground mt-2 line-clamp-2">{program.description}</p>
+                  <div className="flex flex-1 flex-col p-3.5 sm:p-4">
+                    <h3 className="text-sm sm:text-base font-semibold text-foreground line-clamp-2 leading-snug group-hover:text-user-600 dark:group-hover:text-user-300 transition-colors">
+                      {program.title}
+                    </h3>
+                    <p className="mt-1.5 text-xs sm:text-[13px] text-muted-foreground line-clamp-2 leading-relaxed">
+                      {program.description}
+                    </p>
 
+                    {/* Trainer */}
+                    <div className="mt-3 flex items-center gap-2">
+                      {program.trainerAvatarUrl ? (
+                        <img
+                          src={getMediaUrl(program.trainerAvatarUrl) || ''}
+                          alt={program.trainerName}
+                          className="w-6 h-6 rounded-full object-cover ring-1 ring-border-subtle"
+                        />
+                      ) : (
+                        <div
+                          className="w-6 h-6 rounded-full grid place-items-center ring-1 ring-border-subtle"
+                          style={{ background: `linear-gradient(to bottom right, ${accent.primary}, ${accent.secondary})` }}
+                        >
+                          <span className="text-white text-[10px] font-bold">{program.trainerName.charAt(0)}</span>
+                        </div>
+                      )}
+                      <span className="text-xs text-muted-foreground truncate">{program.trainerName}</span>
                     </div>
 
-                    <div className="mt-3 flex flex-col gap-3 border-t border-border pt-3 sm:flex-row sm:items-center sm:justify-between">
-                      <div className="flex flex-wrap items-center gap-4">
-                        <div className="flex items-center gap-1">
-                          <Star className="w-4 h-4 text-amber-400 fill-amber-400" />
-                          <span className="text-sm text-foreground">
-                            {(program.averageRating ?? 0) > 0 ? (program.averageRating ?? 0).toFixed(1) : '-'}
+                    {/* Stats */}
+                    <div className="mt-3 pt-3 border-t border-border-subtle flex items-center justify-between gap-3">
+                      <div className="flex items-center gap-3 text-xs">
+                        <span className="inline-flex items-center gap-1 text-muted-foreground">
+                          <Star className="w-3.5 h-3.5 text-amber-400 fill-amber-400" />
+                          <span className="font-medium text-foreground tabular-nums">
+                            {(program.averageRating ?? 0) > 0 ? (program.averageRating ?? 0).toFixed(1) : '–'}
                           </span>
-                          <span className="text-xs text-faint-foreground">({program.totalReviews ?? 0})</span>
-                        </div>
-                        <div className="flex items-center gap-1 text-muted-foreground">
-                          <Users className="w-4 h-4" />
-                          <span className="text-sm">{program.totalPurchases ?? 0}</span>
-                        </div>
-                      </div>
-                      <div className="flex flex-col sm:items-end">
-                        {(() => {
-                          // Collect all available tier prices (only non-null tiers)
-                          const availablePrices: number[] = []
-                          if (program.price > 0) availablePrices.push(program.price)
-                          if (program.standardPrice != null && program.standardPrice > 0) availablePrices.push(program.standardPrice)
-                          if (program.proPrice != null && program.proPrice > 0) availablePrices.push(program.proPrice)
-
-                          // If no tier has a price > 0, show $0.00
-                          if (availablePrices.length === 0) {
-                            return <span className="text-lg font-bold text-[#0c8de6]">$0.00</span>
-                          }
-
-                          const minPrice = Math.min(...availablePrices)
-                          const hasMultiplePrices = availablePrices.length > 1
-                          return (
-                            <span className="text-lg font-bold text-[#0c8de6]">
-                              {hasMultiplePrices && (
-                                <span className="text-sm font-normal text-muted-foreground mr-1">{tc('from')}</span>
-                              )}
-                              {`$${minPrice.toFixed(2)}`}
-                            </span>
-                          )
-                        })()}
+                          <span className="text-faint-foreground tabular-nums">({program.totalReviews ?? 0})</span>
+                        </span>
+                        <span className="inline-flex items-center gap-1 text-muted-foreground">
+                          <Users className="w-3.5 h-3.5" />
+                          <span className="tabular-nums">{program.totalPurchases ?? 0}</span>
+                        </span>
                       </div>
                     </div>
                   </div>
-                </div>
-              </div>
-            ))}
+                </button>
+              )
+            })}
           </div>
         )}
 
@@ -545,14 +551,13 @@ export default function ProgramsPage() {
                 {tc('loading')}
               </div>
             ) : !(hasMoreTraining || hasMoreMeal) && loadedCount > 0 ? (
-              <p className="text-sm text-faint-foreground">{tc('allItemsLoaded')}</p>
+              <p className="text-xs text-faint-foreground">{tc('allItemsLoaded')}</p>
             ) : null}
           </div>
         )}
 
-        {/* Results Count */}
         {!isLoading && !error && totalCount > 0 && (
-          <p className="text-center text-sm text-faint-foreground">
+          <p className="text-center text-xs text-faint-foreground tabular-nums">
             {tc('showingXofY', { shown: filteredPrograms.length, total: totalCount })}
           </p>
         )}

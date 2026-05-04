@@ -11,12 +11,11 @@ import {
   Calendar,
   Activity,
   MessageCircle,
-  MoreVertical,
-  UserX,
+  UserRound,
   Loader2,
 } from 'lucide-react'
 import { getMediaUrl } from '@/lib/config'
-import { useAccentColors, getAccentColorsByRole } from '@/lib/theme/useAccentColors'
+import { getAccentColorsByRole } from '@/lib/theme/useAccentColors'
 
 export interface ClientOrStudent {
   id: string
@@ -37,12 +36,16 @@ interface StudentsClientsContentProps {
 export function StudentsClientsContent({ fetchData }: StudentsClientsContentProps) {
   const router = useRouter()
   const pathname = usePathname()
-  const accent = useAccentColors()
   const t = useTranslations('students')
   const tc = useTranslations('common')
 
-  // Derive basePath from current route: /trainer, /nutritionist, or /user
-  const basePath = pathname?.split('/').slice(0, 2).join('/') || '/user'
+  // Derive role + base path from current route
+  const segment = pathname?.split('/')[1] || 'user'
+  const role: 'trainer' | 'nutritionist' | 'user' =
+    segment === 'nutritionist' ? 'nutritionist' : segment === 'trainer' ? 'trainer' : 'user'
+  const accent = getAccentColorsByRole(role)
+  const basePath = `/${segment}`
+
   const [students, setStudents] = useState<ClientOrStudent[]>([])
   const [filteredStudents, setFilteredStudents] = useState<ClientOrStudent[]>([])
   const [loading, setLoading] = useState(true)
@@ -62,6 +65,7 @@ export function StudentsClientsContent({ fetchData }: StudentsClientsContentProp
       }
     }
     load()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   useEffect(() => {
@@ -81,7 +85,7 @@ export function StudentsClientsContent({ fetchData }: StudentsClientsContentProp
   }, [searchQuery, students])
 
   const getInitials = (name: string) => {
-    const parts = name.split(' ')
+    const parts = name.trim().split(/\s+/)
     if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase()
     return name.slice(0, 2).toUpperCase()
   }
@@ -89,13 +93,13 @@ export function StudentsClientsContent({ fetchData }: StudentsClientsContentProp
   if (loading) {
     return (
       <div className="flex items-center justify-center py-24">
-        <Loader2 className={`w-8 h-8 ${accent.text} animate-spin`} />
+        <Loader2 className="w-8 h-8 animate-spin" style={{ color: accent.primary }} />
       </div>
     )
   }
 
   return (
-    <div className="space-y-5 pb-6">
+    <div className="space-y-4 sm:space-y-5 pb-24 lg:pb-8">
       {/* Header */}
       <div>
         <h1 className="page-title">{t('title')}</h1>
@@ -103,137 +107,171 @@ export function StudentsClientsContent({ fetchData }: StudentsClientsContentProp
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-2 gap-3 xl:grid-cols-3">
-        <div className="bg-surface-2/50 rounded-xl border border-border-subtle p-4">
-          <div className="flex items-center gap-3">
-            <div className={`w-10 h-10 rounded-lg bg-gradient-to-r ${accent.gradientBg20} flex items-center justify-center`}>
-              <Users className={`w-5 h-5 ${accent.text}`} />
-            </div>
-            <div className="min-w-0">
-              <p className="text-xl sm:text-2xl font-bold text-foreground">{students.length}</p>
-              <p className="text-sm text-muted-foreground">{t('totalStudents')}</p>
-            </div>
-          </div>
-        </div>
-        <div className="bg-surface-2/50 rounded-xl border border-border-subtle p-4">
-          <div className="flex items-center gap-3">
-            <div className={`w-10 h-10 rounded-lg ${accent.bgMuted} flex items-center justify-center`}>
-              <Activity className={`w-5 h-5 ${accent.text}`} />
-            </div>
-            <div className="min-w-0">
-              <p className="text-xl sm:text-2xl font-bold text-foreground">{students.length}</p>
-              <p className="text-sm text-muted-foreground">{t('active')}</p>
-            </div>
-          </div>
-        </div>
-        <div className="bg-surface-2/50 rounded-xl border border-border-subtle p-4">
-          <div className="flex items-center gap-3">
-            <div className={`w-10 h-10 rounded-lg ${accent.bgMuted} flex items-center justify-center`}>
-              <Calendar className={`w-5 h-5 ${accent.text}`} />
-            </div>
-            <div className="min-w-0">
-              <p className="text-xl sm:text-2xl font-bold text-foreground">0</p>
-              <p className="text-sm text-muted-foreground">{t('todaySessions')}</p>
-            </div>
-          </div>
-        </div>
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <StatCard
+          icon={<Users className="w-5 h-5" style={{ color: accent.primary }} />}
+          label={t('totalStudents')}
+          value={students.length}
+          accent={accent}
+        />
+        <StatCard
+          icon={<Activity className="w-5 h-5" style={{ color: accent.primary }} />}
+          label={t('active')}
+          value={students.length}
+          accent={accent}
+        />
+        <StatCard
+          icon={<Calendar className="w-5 h-5" style={{ color: accent.primary }} />}
+          label={t('todaySessions')}
+          value={0}
+          accent={accent}
+        />
       </div>
 
       {/* Search */}
       <div className="relative">
-        <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-faint-foreground" />
+        <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
         <input
           type="text"
           placeholder={t('searchPlaceholder')}
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          className="h-12 w-full rounded-2xl border border-[rgba(148,163,184,0.18)] bg-background pl-10 pr-4 text-sm font-medium text-foreground placeholder-gray-500 transition-colors focus:border-[rgba(148,163,184,0.28)] focus:outline-none"
+          className="h-11 w-full rounded-xl bg-surface-1 ring-1 ring-inset ring-border-subtle pl-10 pr-4 text-sm text-foreground placeholder:text-faint-foreground focus:outline-none focus:ring-2 transition-all"
+          style={{ ['--tw-ring-color' as never]: `${accent.primary}55` }}
         />
       </div>
 
       {/* List */}
       {filteredStudents.length === 0 ? (
-        <div className="text-center py-16">
-          <div className="w-16 h-16 rounded-full bg-border-subtle flex items-center justify-center mx-auto mb-4">
-            <Users className="w-8 h-8 text-gray-600" />
+        <div className="rounded-2xl bg-surface-1 ring-1 ring-inset ring-border-subtle p-10 text-center">
+          <div
+            className="w-14 h-14 rounded-2xl mx-auto mb-4 flex items-center justify-center ring-1 ring-inset ring-border-subtle"
+            style={{ background: `linear-gradient(135deg, ${accent.primary}1f, ${accent.secondary}10)` }}
+          >
+            <Users className="w-6 h-6" style={{ color: accent.primary }} />
           </div>
-          <h3 className="text-lg font-semibold text-foreground mb-2">
+          <h3 className="text-base font-semibold text-foreground mb-1">
             {searchQuery ? t('notFound') : t('noStudents')}
           </h3>
-          <p className="text-muted-foreground text-sm">
+          <p className="text-muted-foreground text-sm max-w-md mx-auto">
             {searchQuery ? t('tryDifferentSearch') : t('willAppear')}
           </p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
           {filteredStudents.map((student) => (
             <div
               key={student.id}
-              className="rounded-xl border border-border-subtle bg-surface-2/50 p-4 transition-colors hover:border-border-subtle"
+              className="group rounded-2xl bg-surface-1 ring-1 ring-inset ring-border-subtle p-4 sm:p-5 transition-all hover:shadow-md hover:-translate-y-0.5"
             >
-              <div className="mb-4 flex items-start justify-between gap-3">
-                <div
-                  className="flex min-w-0 items-center gap-3 cursor-pointer"
+              <div className="flex items-center gap-3 mb-4">
+                <button
                   onClick={() => router.push(`${basePath}/profile/${student.id}`)}
+                  className="shrink-0"
+                  aria-label={t('viewProfile')}
                 >
                   {student.avatarUrl ? (
                     <img
                       src={getMediaUrl(student.avatarUrl) || ''}
                       alt={student.name}
-                      className="w-12 h-12 rounded-full object-cover"
+                      className="w-12 h-12 rounded-full object-cover ring-2 ring-background"
                     />
                   ) : (
-                    <div className={`w-12 h-12 rounded-full bg-gradient-to-br ${getAccentColorsByRole(student.role || 'user').gradient} flex items-center justify-center text-white font-bold`}>
+                    <div
+                      className="w-12 h-12 rounded-full flex items-center justify-center text-white font-bold text-sm ring-2 ring-background"
+                      style={{
+                        background: (() => {
+                          const c = getAccentColorsByRole((student.role as 'trainer' | 'nutritionist' | 'user') || 'user')
+                          return `linear-gradient(135deg, ${c.primary}, ${c.secondary})`
+                        })(),
+                      }}
+                    >
                       {getInitials(student.name)}
                     </div>
                   )}
-                  <div className="min-w-0">
-                    <h3 className="truncate font-semibold text-foreground hover:underline">{student.name}</h3>
-                    <p className="text-sm text-muted-foreground">{t('student')}</p>
-                  </div>
-                </div>
+                </button>
                 <button
                   onClick={() => router.push(`${basePath}/profile/${student.id}`)}
-                  className="p-1.5 hover:bg-hover-overlay rounded-lg transition-colors"
-                  title={t('viewProfile')}
+                  className="min-w-0 flex-1 text-left"
                 >
-                  <MoreVertical className="w-5 h-5 text-muted-foreground" />
+                  <h3 className="truncate text-sm font-semibold text-foreground hover:underline">
+                    {student.name}
+                  </h3>
+                  <p className="text-xs text-muted-foreground">{t('student')}</p>
                 </button>
               </div>
 
-              <div className="space-y-2 mb-4">
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <Mail className="w-4 h-4 text-faint-foreground" />
+              <div className="space-y-1.5 mb-4">
+                <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                  <Mail className="w-3.5 h-3.5 text-faint-foreground shrink-0" />
                   <span className="truncate">{student.email}</span>
                 </div>
                 {student.phone && (
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <Phone className="w-4 h-4 text-faint-foreground" />
+                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                    <Phone className="w-3.5 h-3.5 text-faint-foreground shrink-0" />
                     <span className="truncate">{student.phone}</span>
                   </div>
                 )}
               </div>
 
-              <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+              <div className="flex items-center gap-2">
                 <button
                   onClick={() => router.push(`${basePath}/messages?userId=${student.id}`)}
-                  className={`flex flex-1 items-center justify-center gap-2 rounded-lg bg-gradient-to-r py-2.5 text-sm font-medium text-white transition-opacity hover:opacity-90 ${accent.gradient}`}
+                  className="flex-1 inline-flex items-center justify-center gap-2 h-10 rounded-xl text-sm font-semibold ring-1 ring-inset hover:brightness-110 active:scale-[0.99] transition-all"
+                  style={{
+                    color: accent.primary,
+                    backgroundColor: `${accent.primary}1a`,
+                    ['--tw-ring-color' as never]: `${accent.primary}55`,
+                  }}
                 >
                   <MessageCircle className="w-4 h-4" />
                   {t('write')}
                 </button>
                 <button
                   onClick={() => router.push(`${basePath}/profile/${student.id}`)}
-                  className="rounded-lg border border-border-subtle bg-border-subtle px-3 py-2.5 transition-colors hover:bg-white/10"
+                  className="inline-flex items-center justify-center h-10 w-10 rounded-xl bg-surface-2 ring-1 ring-inset ring-border-subtle text-muted-foreground hover:text-foreground hover:bg-surface-3 transition-colors"
                   title={t('viewProfile')}
+                  aria-label={t('viewProfile')}
                 >
-                  <Users className="w-4 h-4 text-muted-foreground" />
+                  <UserRound className="w-4 h-4" />
                 </button>
               </div>
             </div>
           ))}
         </div>
       )}
+
+      {/* hint for tc usage to silence unused var warning if any */}
+      <span className="sr-only">{tc('search')}</span>
+    </div>
+  )
+}
+
+function StatCard({
+  icon,
+  label,
+  value,
+  accent,
+}: {
+  icon: React.ReactNode
+  label: string
+  value: number
+  accent: { primary: string; secondary: string }
+}) {
+  return (
+    <div className="rounded-2xl bg-surface-1 ring-1 ring-inset ring-border-subtle p-4 sm:p-5">
+      <div className="flex items-center gap-3">
+        <div
+          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl ring-1 ring-inset ring-border-subtle"
+          style={{ background: `linear-gradient(135deg, ${accent.primary}1f, ${accent.secondary}10)` }}
+        >
+          {icon}
+        </div>
+        <div className="min-w-0">
+          <p className="text-xl sm:text-2xl font-bold text-foreground tabular-nums leading-tight">{value}</p>
+          <p className="text-xs sm:text-sm text-muted-foreground truncate">{label}</p>
+        </div>
+      </div>
     </div>
   )
 }

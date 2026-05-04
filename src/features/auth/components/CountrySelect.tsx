@@ -46,7 +46,7 @@ function FlagBadge({ countryCode, compact = false }: { countryCode?: string; com
   }
 
   return (
-    <span className={cn('flex h-9 w-9 items-center justify-center rounded-xl border border-gray-200 bg-gradient-to-br from-white to-gray-50 shadow-sm dark:border-white/10 dark:from-white/[0.08] dark:to-white/[0.03]', compact && 'h-9 w-9 rounded-lg')}>
+    <span className="flex items-center justify-center">
       <ReactCountryFlag
         countryCode={countryCode}
         svg

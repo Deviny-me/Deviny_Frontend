@@ -1696,9 +1696,9 @@ export default function ChatInbox() {
 
   // ─── render ───
   return (
-    <div className="relative h-[calc(100vh-130px)] overflow-hidden md:rounded-xl md:border md:border-border-subtle md:bg-surface-2">
+    <div className="relative h-[calc(100vh-130px)] overflow-hidden md:rounded-2xl md:bg-surface-1 md:ring-1 md:ring-inset md:ring-border-subtle">
       {incomingCall && (
-        <div className="fixed right-4 top-4 z-[220] w-72 rounded-lg border border-border-subtle bg-background p-3 shadow-xl">
+        <div className="fixed right-4 top-4 z-[220] w-72 rounded-2xl bg-surface-1 ring-1 ring-inset ring-border-subtle p-3 shadow-xl">
           <p className="text-sm text-foreground font-semibold">
             {t('incomingCallTitle', { callType: callTypeText(incomingCall.callType) })}
           </p>
@@ -1707,7 +1707,7 @@ export default function ChatInbox() {
             <button
               type="button"
               onClick={handleDeclineIncomingCall}
-              className="flex-1 px-3 py-1.5 rounded-lg bg-red-500/20 text-red-300 hover:bg-red-500/30 transition-colors"
+              className="flex-1 px-3 py-1.5 rounded-lg bg-red-500/10 ring-1 ring-inset ring-red-500/20 text-red-500 hover:bg-red-500/15 transition-colors"
             >
               {t('decline')}
             </button>
@@ -1721,7 +1721,7 @@ export default function ChatInbox() {
           </div>
         </div>
       )}
-      <div className="flex h-full min-h-[calc(100dvh-10rem)] flex-col overflow-hidden md:flex-row md:rounded-xl md:border md:border-border-subtle md:bg-surface-3">
+      <div className="flex h-full min-h-[calc(100dvh-10rem)] flex-col overflow-hidden md:flex-row md:rounded-2xl">
         {/* ── Left: Conversations List ── */}
         <div
           className={`flex min-h-0 w-full flex-col border-b border-border-subtle md:w-80 md:border-b-0 md:border-r ${
@@ -1730,20 +1730,20 @@ export default function ChatInbox() {
         >
           {/* Header + search */}
           <div className="border-b border-border-subtle p-4">
-            <h1 className="page-title mb-1 text-xl sm:text-2xl md:text-lg">{t('messagesTitle')}</h1>
-            <p className="mb-3 text-sm text-muted-foreground">
+            <h1 className="text-lg font-semibold tracking-tight text-foreground mb-1">{t('messagesTitle')}</h1>
+            <p className="mb-3 text-xs text-muted-foreground">
               {filteredConvs.length > 0
                 ? t('conversationsCount', { count: filteredConvs.length })
                 : t('recentChatsHint')}
             </p>
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
               <input
                 type="text"
                 placeholder={t('searchPlaceholder')}
                 value={searchQuery}
                 onChange={e => setSearchQuery(e.target.value)}
-                className={`w-full pl-10 pr-4 py-2 bg-background border border-border-subtle rounded-lg text-sm text-foreground placeholder-gray-500 focus:outline-none ${accent.focusBorder}`}
+                className="w-full h-9 pl-9 pr-3 bg-surface-2 ring-1 ring-inset ring-border-subtle rounded-lg text-sm text-foreground placeholder:text-faint-foreground focus:outline-none focus:ring-2 focus:ring-[var(--ring-color)] transition-[box-shadow] duration-200"
               />
             </div>
           </div>
@@ -1756,8 +1756,10 @@ export default function ChatInbox() {
               </div>
             ) : filteredConvs.length === 0 ? (
               <div className="flex flex-col items-center justify-center h-full p-6 text-center">
-                <MessageCircle className="w-12 h-12 text-gray-600 mb-2" />
-                <p className="text-muted-foreground text-sm">
+                <div className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-surface-2 ring-1 ring-border-subtle mb-3">
+                  <MessageCircle className="w-5 h-5 text-muted-foreground" />
+                </div>
+                <p className="text-sm text-muted-foreground">
                   {searchQuery ? t('noConversationsFound') : t('noMessagesYet')}
                 </p>
               </div>
@@ -1774,13 +1776,19 @@ export default function ChatInbox() {
                       )
                     )
                   }}
-                  className={`w-full border-b border-border-subtle/10 p-4 text-left transition-colors ${
+                  className={`relative w-full px-4 py-3 text-left transition-[background-color] duration-150 ${
                     selectedConvId === conv.id
-                      ? 'bg-white/5'
+                      ? 'bg-surface-2'
                       : 'hover:bg-hover-overlay'
                   }`}
-                  style={{ borderBottomColor: 'var(--separator-color)' }}
+                  style={{ borderBottom: '1px solid var(--separator-color)' }}
                 >
+                  {selectedConvId === conv.id && (
+                    <span
+                      className="absolute left-0 top-1/2 -translate-y-1/2 h-8 w-0.5 rounded-r-full"
+                      style={{ background: accent.primary }}
+                    />
+                  )}
                   <div className="flex items-center gap-3">
                     <Avatar
                       url={avatarUrl(conv.peerUser.avatarUrl)}
@@ -1814,8 +1822,11 @@ export default function ChatInbox() {
                       </div>
                     </div>
                     {conv.unreadCount > 0 && (
-                      <div className={`flex h-5 w-5 items-center justify-center rounded-full ${accent.bg}`}>
-                        <span className="text-[10px] font-bold text-foreground">
+                      <div
+                        className="flex h-5 min-w-[20px] px-1 items-center justify-center rounded-full text-white"
+                        style={{ background: accent.primary }}
+                      >
+                        <span className="text-[10px] font-bold tabular-nums">
                           {conv.unreadCount}
                         </span>
                       </div>
@@ -1829,14 +1840,14 @@ export default function ChatInbox() {
 
         {!selectedConvId && (
           <div className="flex-1 hidden md:flex items-center justify-center">
-            <div className="text-center">
-              <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-background flex items-center justify-center">
-                <Send className="w-8 h-8 text-faint-foreground" />
+            <div className="text-center px-6">
+              <div className="inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-surface-2 ring-1 ring-border-subtle mb-4">
+                <Send className="w-5 h-5 text-muted-foreground" />
               </div>
-              <h3 className="text-lg font-semibold text-foreground mb-2">
+              <h3 className="font-semibold text-foreground mb-1">
                 {t('selectConversation')}
               </h3>
-              <p className="text-sm text-muted-foreground">
+              <p className="text-sm text-muted-foreground max-w-xs mx-auto">
                 {t('selectConversationHint')}
               </p>
             </div>
@@ -1846,21 +1857,20 @@ export default function ChatInbox() {
 
       {selectedConvId && (
         <div className="fixed inset-0 z-[180] overflow-hidden bg-background">
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.06),transparent_30%),linear-gradient(to_bottom,rgba(255,255,255,0.02),transparent_35%)]" />
           <div className="relative flex h-full min-h-0 flex-col">
             <div
-              className="border-b border-border-subtle bg-background/95 px-4 py-3 backdrop-blur-xl sm:px-5"
+              className="border-b border-border-subtle bg-surface-1/85 px-4 py-3 backdrop-blur-xl sm:px-5"
               style={{ borderBottomColor: 'var(--separator-color)' }}
             >
               <div className="flex items-center justify-between gap-3">
                 <div className="flex min-w-0 items-center gap-3">
                   <button
                     type="button"
-                    className="inline-flex items-center gap-2 rounded-xl border border-border-subtle bg-surface-2/85 px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-hover-overlay hover:text-foreground"
+                    className="inline-flex items-center justify-center h-9 px-2.5 rounded-xl bg-surface-2 ring-1 ring-inset ring-border-subtle text-muted-foreground hover:text-foreground hover:ring-border-strong transition-[color,box-shadow] duration-200"
                     onClick={handleBackToMessages}
                   >
                     <ArrowLeft className="h-4 w-4" />
-                    <span className="hidden sm:inline">{t('backToMessages')}</span>
+                    <span className="hidden sm:inline ml-1.5 text-xs font-medium">{t('backToMessages')}</span>
                   </button>
                   <Avatar url={avatarUrl(peerAvatar)} name={peerName} size={44} role={selectedConv?.peerUser.role} />
                   <div className="min-w-0">
@@ -1881,18 +1891,18 @@ export default function ChatInbox() {
                   <button
                     type="button"
                     onClick={() => handleCallClick('audio')}
-                    className={`rounded-xl p-2.5 text-muted-foreground ${accent.hoverText} transition-colors`}
+                    className="inline-flex items-center justify-center h-9 w-9 rounded-xl bg-surface-2 ring-1 ring-inset ring-border-subtle text-muted-foreground hover:text-foreground hover:ring-border-strong transition-[color,box-shadow] duration-200"
                     title={t('startAudioCall')}
                   >
-                    <Phone className="w-5 h-5" />
+                    <Phone className="w-4 h-4" />
                   </button>
                   <button
                     type="button"
                     onClick={() => handleCallClick('video')}
-                    className={`rounded-xl p-2.5 text-muted-foreground ${accent.hoverText} transition-colors`}
+                    className="inline-flex items-center justify-center h-9 w-9 rounded-xl bg-surface-2 ring-1 ring-inset ring-border-subtle text-muted-foreground hover:text-foreground hover:ring-border-strong transition-[color,box-shadow] duration-200"
                     title={t('startVideoCall')}
                   >
-                    <Video className="w-5 h-5" />
+                    <Video className="w-4 h-4" />
                   </button>
                 </div>
               </div>
@@ -1908,9 +1918,11 @@ export default function ChatInbox() {
                 </div>
               ) : messages.length === 0 ? (
                 <div className="flex h-full flex-col items-center justify-center text-center">
-                  <MessageCircle className="mb-3 h-12 w-12 text-gray-600" />
-                  <p className="text-sm text-muted-foreground">{t('noMessagesYet')}</p>
-                  <p className="mt-1 text-xs text-faint-foreground">
+                  <div className="inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-surface-2 ring-1 ring-border-subtle mb-3">
+                    <MessageCircle className="h-5 w-5 text-muted-foreground" />
+                  </div>
+                  <p className="text-sm font-medium text-foreground">{t('noMessagesYet')}</p>
+                  <p className="mt-1 text-xs text-muted-foreground">
                     {t('sendMessageToStart')}
                   </p>
                 </div>
@@ -1958,9 +1970,10 @@ export default function ChatInbox() {
                               <div
                                 className={`group relative rounded-2xl px-4 py-2.5 ${
                                   isMe
-                                    ? `${accent.bg} rounded-br-sm text-foreground`
-                                    : 'rounded-bl-sm border border-border-subtle bg-surface-2 text-foreground shadow-sm'
+                                    ? `rounded-br-md text-white shadow-md`
+                                    : 'rounded-bl-md bg-surface-1 ring-1 ring-inset ring-border-subtle text-foreground'
                                 }`}
+                                style={isMe ? { background: `linear-gradient(135deg, ${accent.primary}, ${accent.secondary})` } : undefined}
                               >
                                 {msg.attachmentUrl && (
                                   msg.attachmentContentType?.startsWith('image/') ? (
@@ -2008,7 +2021,7 @@ export default function ChatInbox() {
                                       setReplyTo(msg)
                                       inputRef.current?.focus()
                                     }}
-                                    className="absolute -top-2 right-0 rounded-full border border-border-subtle bg-background p-1 opacity-0 transition-opacity group-hover:opacity-100"
+                                    className="absolute -top-2 right-0 rounded-full bg-surface-1 ring-1 ring-inset ring-border-subtle p-1 opacity-0 transition-opacity group-hover:opacity-100 hover:ring-border-strong"
                                   >
                                     <Reply className="w-3 h-3 text-muted-foreground" />
                                   </button>
@@ -2032,7 +2045,7 @@ export default function ChatInbox() {
 
             {pendingFile && (
               <div
-                className="flex items-center gap-2 border-t border-border-subtle bg-background/95 px-4 pt-3 backdrop-blur-xl sm:px-5"
+                className="flex items-center gap-2 border-t border-border-subtle bg-surface-1/85 px-4 pt-3 backdrop-blur-xl sm:px-5"
                 style={{ borderTopColor: 'var(--separator-color)' }}
               >
                 {pendingFile.contentType.startsWith('image/') ? (
@@ -2052,7 +2065,7 @@ export default function ChatInbox() {
 
             {replyTo && (
               <div
-                className="flex items-center gap-2 border-t border-border-subtle bg-background/95 px-4 pt-3 backdrop-blur-xl sm:px-5"
+                className="flex items-center gap-2 border-t border-border-subtle bg-surface-1/85 px-4 pt-3 backdrop-blur-xl sm:px-5"
                 style={{ borderTopColor: 'var(--separator-color)' }}
               >
                 <Reply className={`w-4 h-4 ${accent.text}`} />
@@ -2067,7 +2080,7 @@ export default function ChatInbox() {
             )}
 
             <div
-              className="border-t border-border-subtle bg-background/95 px-3 pb-[calc(1rem+env(safe-area-inset-bottom))] pt-3 backdrop-blur-xl sm:px-5"
+              className="border-t border-border-subtle bg-surface-1/85 px-3 pb-[calc(1rem+env(safe-area-inset-bottom))] pt-3 backdrop-blur-xl sm:px-5"
               style={{ borderTopColor: 'var(--separator-color)' }}
             >
               <div className="relative flex items-end gap-2" ref={emojiPickerRef}>
@@ -2081,33 +2094,33 @@ export default function ChatInbox() {
                 <button
                   onClick={() => fileInputRef.current?.click()}
                   disabled={uploading || sending}
-                  className={`rounded-full p-2.5 text-muted-foreground ${accent.hoverText} transition-colors disabled:opacity-50`}
+                  className="inline-flex items-center justify-center h-10 w-10 rounded-full bg-surface-2 ring-1 ring-inset ring-border-subtle text-muted-foreground hover:text-foreground hover:ring-border-strong transition-[color,box-shadow] duration-200 disabled:opacity-50"
                   title={t('attachFile')}
                 >
                   {uploading ? (
-                    <Loader2 className="w-5 h-5 animate-spin" />
+                    <Loader2 className="w-4 h-4 animate-spin" />
                   ) : (
-                    <Paperclip className="w-5 h-5" />
+                    <Paperclip className="w-4 h-4" />
                   )}
                 </button>
                 <button
                   type="button"
                   onClick={() => setShowEmojiPicker(prev => !prev)}
                   disabled={sending}
-                  className={`rounded-full p-2.5 text-muted-foreground ${accent.hoverText} transition-colors disabled:opacity-50`}
+                  className="inline-flex items-center justify-center h-10 w-10 rounded-full bg-surface-2 ring-1 ring-inset ring-border-subtle text-muted-foreground hover:text-foreground hover:ring-border-strong transition-[color,box-shadow] duration-200 disabled:opacity-50"
                   title={t('addEmoji')}
                 >
-                  <Smile className="w-5 h-5" />
+                  <Smile className="w-4 h-4" />
                 </button>
                 {showEmojiPicker && (
-                  <div className="absolute bottom-14 left-0 z-20 w-56 rounded-xl border border-border-subtle bg-background p-2 shadow-xl sm:left-12">
+                  <div className="absolute bottom-14 left-0 z-20 w-56 rounded-xl bg-surface-1 ring-1 ring-inset ring-border-subtle p-2 shadow-xl sm:left-12">
                     <div className="grid grid-cols-6 gap-1">
                       {QUICK_EMOJIS.map(emoji => (
                         <button
                           key={emoji}
                           type="button"
                           onClick={() => handlePickEmoji(emoji)}
-                          className="rounded p-1.5 text-lg transition-colors hover:bg-white/10"
+                          className="rounded p-1.5 text-lg transition-colors hover:bg-hover-overlay"
                         >
                           {emoji}
                         </button>
@@ -2126,17 +2139,18 @@ export default function ChatInbox() {
                   }}
                   onKeyDown={handleKeyDown}
                   disabled={sending}
-                  className={`min-w-0 flex-1 rounded-full border border-border-subtle/70 bg-background px-4 py-3 text-sm text-foreground placeholder-gray-500 focus:outline-none ${accent.focusBorder}`}
+                  className="min-w-0 flex-1 h-10 rounded-full bg-surface-2 ring-1 ring-inset ring-border-subtle px-4 text-sm text-foreground placeholder:text-faint-foreground focus:outline-none focus:ring-2 focus:ring-[var(--ring-color)] transition-[box-shadow] duration-200"
                 />
                 <button
                   onClick={handleSend}
                   disabled={sending || (!inputText.trim() && !pendingFile)}
-                  className={`rounded-full bg-gradient-to-r p-3 ${accent.gradient} transition-opacity hover:opacity-90 disabled:opacity-50`}
+                  className="inline-flex items-center justify-center h-10 w-10 rounded-full text-white transition-[opacity,transform] duration-200 hover:opacity-90 active:scale-95 disabled:opacity-50 shadow-md"
+                  style={{ background: `linear-gradient(135deg, ${accent.primary}, ${accent.secondary})` }}
                 >
                   {sending ? (
-                    <Loader2 className="w-5 h-5 text-foreground animate-spin" />
+                    <Loader2 className="w-4 h-4 text-white animate-spin" />
                   ) : (
-                    <Send className="w-5 h-5 text-foreground" />
+                    <Send className="w-4 h-4 text-white" />
                   )}
                 </button>
               </div>

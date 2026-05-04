@@ -5,7 +5,6 @@ import { useTranslations } from 'next-intl'
 import { useRouter, useSearchParams } from 'next/navigation'
 import {
   ArrowLeft,
-  Upload,
   Loader2,
   Video,
   Plus,
@@ -15,11 +14,12 @@ import {
   X,
   Eye,
   EyeOff,
+  ImageIcon,
 } from 'lucide-react'
 import { nutritionistProgramsApi } from '@/lib/api/nutritionistProgramsApi'
 import { ProgramCategory } from '@/types/program'
 import { getMediaUrl } from '@/lib/config'
-import { useAccentColors } from '@/lib/theme/useAccentColors'
+import { getAccentColorsByRole } from '@/lib/theme/useAccentColors'
 
 const toast = {
   success: (msg: string) => console.log('Success:', msg),
@@ -45,18 +45,27 @@ const createVideoBlock = (): VideoBlock => ({
 const createDefaultVideoBlocks = (): VideoBlock[] =>
   Array.from({ length: DEFAULT_VIDEO_BLOCKS }, () => createVideoBlock())
 
+const CATEGORY_OPTIONS: {
+  value: 'Diet' | 'Consultation'
+  Icon: typeof Apple
+  labelKey: 'tabMeal' | 'tabConsultation'
+}[] = [
+  { value: 'Diet', Icon: Apple, labelKey: 'tabMeal' },
+  { value: 'Consultation', Icon: MessageSquare, labelKey: 'tabConsultation' },
+]
+
 export default function NutritionistProgramFormPage() {
   const router = useRouter()
   const searchParams = useSearchParams()
-  const accent = useAccentColors()
   const t = useTranslations('programs')
   const tc = useTranslations('common')
+
+  const accent = getAccentColorsByRole('nutritionist')
 
   const editId = searchParams.get('edit')
   const defaultCategory = (searchParams.get('category') as ProgramCategory) || 'Diet'
   const isEditing = !!editId
 
-  // Form state
   const [formCategory, setFormCategory] = useState<ProgramCategory>(defaultCategory)
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
@@ -73,7 +82,6 @@ export default function NutritionistProgramFormPage() {
   const [saving, setSaving] = useState(false)
   const [loading, setLoading] = useState(false)
 
-  // Load existing program data for editing
   useEffect(() => {
     if (!editId) return
     const loadProgram = async () => {
@@ -113,38 +121,25 @@ export default function NutritionistProgramFormPage() {
   }
 
   const handleVideoFileChange = (index: number, file: File | null) => {
-    setVideoBlocks((prev) =>
-      prev.map((block, i) => (i === index ? { ...block, file } : block))
-    )
+    setVideoBlocks((prev) => prev.map((block, i) => (i === index ? { ...block, file } : block)))
   }
 
   const handleVideoTextChange = (index: number, field: 'title' | 'description', value: string) => {
-    setVideoBlocks((prev) =>
-      prev.map((block, i) => (i === index ? { ...block, [field]: value } : block))
-    )
+    setVideoBlocks((prev) => prev.map((block, i) => (i === index ? { ...block, [field]: value } : block)))
   }
 
-  const addVideoBlock = () => {
-    setVideoBlocks((prev) => [...prev, createVideoBlock()])
-  }
-
-  const removeVideoBlock = (index: number) => {
-    setVideoBlocks((prev) => prev.filter((_, i) => i !== index))
-  }
+  const addVideoBlock = () => setVideoBlocks((prev) => [...prev, createVideoBlock()])
+  const removeVideoBlock = (index: number) => setVideoBlocks((prev) => prev.filter((_, i) => i !== index))
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-
-    const selectedVideoBlocks = videoBlocks.filter((block) => block.file !== null)
-    const videos = selectedVideoBlocks
-      .map((block) => block.file)
-      .filter((file): file is File => file !== null)
+    const selectedVideoBlocks = videoBlocks.filter((b) => b.file !== null)
+    const videos = selectedVideoBlocks.map((b) => b.file).filter((f): f is File => f !== null)
 
     if (!title || !description) {
       toast.error(t('toasts.fillRequired'))
       return
     }
-
     if (!isEditing && !coverImage) {
       toast.error(t('toasts.addCover'))
       return
@@ -152,50 +147,39 @@ export default function NutritionistProgramFormPage() {
 
     try {
       setSaving(true)
+      const payload = {
+        title,
+        description,
+        detailedDescription: detailedDescription || undefined,
+        price: price ? parseFloat(price) : 0,
+        standardPrice: standardPrice ? parseFloat(standardPrice) : undefined,
+        proPrice: proPrice ? parseFloat(proPrice) : undefined,
+        maxStandardSpots: maxStandardSpots ? parseInt(maxStandardSpots) : undefined,
+        maxProSpots: maxProSpots ? parseInt(maxProSpots) : undefined,
+        isPublic,
+        category: formCategory,
+      }
 
       if (isEditing) {
         await nutritionistProgramsApi.updateProgram(editId!, {
-          title,
-          description,
-          detailedDescription: detailedDescription || undefined,
-          price: price ? parseFloat(price) : 0,
-          standardPrice: standardPrice ? parseFloat(standardPrice) : undefined,
-          proPrice: proPrice ? parseFloat(proPrice) : undefined,
-          maxStandardSpots: maxStandardSpots ? parseInt(maxStandardSpots) : undefined,
-          maxProSpots: maxProSpots ? parseInt(maxProSpots) : undefined,
-          isPublic,
+          ...payload,
           coverImage: coverImage || undefined,
           videos: videos.length > 0 ? videos : undefined,
-          category: formCategory,
         })
         toast.success(t('toasts.updated'))
       } else {
         await nutritionistProgramsApi.createProgram({
-          title,
-          description,
-          detailedDescription: detailedDescription || undefined,
-          price: price ? parseFloat(price) : 0,
-          standardPrice: standardPrice ? parseFloat(standardPrice) : undefined,
-          proPrice: proPrice ? parseFloat(proPrice) : undefined,
-          maxStandardSpots: maxStandardSpots ? parseInt(maxStandardSpots) : undefined,
-          maxProSpots: maxProSpots ? parseInt(maxProSpots) : undefined,
-          isPublic,
+          ...payload,
           coverImage: coverImage!,
           videos,
-          category: formCategory,
         })
         toast.success(t('toasts.created'))
       }
-
       router.push('/nutritionist/programs')
     } catch (error) {
       console.error('Failed to save program:', error)
       const message = error instanceof Error ? error.message : 'Unknown error'
-      toast.error(
-        isEditing
-          ? `${t('toasts.updateError')}: ${message}`
-          : `${t('toasts.createError')}: ${message}`
-      )
+      toast.error(isEditing ? `${t('toasts.updateError')}: ${message}` : `${t('toasts.createError')}: ${message}`)
     } finally {
       setSaving(false)
     }
@@ -203,369 +187,388 @@ export default function NutritionistProgramFormPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-20">
-        <Loader2 className={`w-8 h-8 ${accent.text} animate-spin`} />
+      <div className="flex items-center justify-center py-24">
+        <Loader2 className="w-8 h-8 animate-spin" style={{ color: accent.primary }} />
       </div>
     )
   }
 
-  return (
-    <div className="space-y-4 pb-6 max-w-2xl mx-auto">
-      <div>
-        <h1 className="page-title">
-          {isEditing
-            ? formCategory === 'Diet'
-              ? t('editMealProgram')
-              : t('editConsultation')
-            : formCategory === 'Diet'
-            ? t('newMealProgram')
-            : t('newConsultation')}
-        </h1>
-      </div>
+  const titleText = isEditing
+    ? formCategory === 'Diet'
+      ? t('editMealProgram')
+      : t('editConsultation')
+    : formCategory === 'Diet'
+    ? t('newMealProgram')
+    : t('newConsultation')
 
-      {/* Back button */}
+  return (
+    <div className="space-y-4 sm:space-y-5 pb-24 lg:pb-8">
       <button
         onClick={() => router.back()}
-        className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors"
+        className="inline-flex items-center gap-2 h-9 px-3 rounded-xl bg-surface-1 ring-1 ring-inset ring-border-subtle text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-surface-2 active:scale-95 transition-all"
       >
-        <ArrowLeft className="w-5 h-5" />
-        <span className="text-sm font-medium">{tc('back')}</span>
+        <ArrowLeft className="h-4 w-4" />
+        {tc('back')}
       </button>
 
-      <div className="bg-surface-3 rounded-xl border border-border overflow-hidden">
-        <div className="p-6">
-          <form onSubmit={handleSubmit} className="space-y-4">
-            {/* Category Selector — only for new programs */}
-            {!isEditing && (
-              <div>
-                <label className="block text-sm font-medium text-muted-foreground mb-2">
-                  {t('categoryLabel')}
-                </label>
-                <div className="grid grid-cols-2 gap-2">
-                  {(
-                    [
-                      { cat: 'Diet' as ProgramCategory, icon: Apple, label: t('tabMeal'), color: 'green' },
-                      { cat: 'Consultation' as ProgramCategory, icon: MessageSquare, label: t('tabConsultation'), color: 'violet' },
-                    ] as const
-                  ).map(({ cat, icon: Icon, label, color }) => (
-                    <button
-                      key={cat}
-                      type="button"
-                      onClick={() => setFormCategory(cat)}
-                      className={`flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-medium transition-all border ${
-                        formCategory === cat
-                          ? color === 'green'
-                            ? 'bg-green-500/20 text-green-400 border-green-500/50'
-                            : 'bg-violet-500/20 text-violet-400 border-violet-500/50'
-                          : 'bg-background text-muted-foreground border-border hover:border-border'
-                      }`}
-                    >
-                      <Icon className="w-4 h-4" />
-                      {label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
+      <div>
+        <h1 className="page-title">{titleText}</h1>
+      </div>
 
-            {/* Cover Image */}
-            <div>
-              <label className="block text-sm font-medium text-muted-foreground mb-2">
-                {t('coverImage')}
-              </label>
-              <div className="relative">
-                {coverPreview ? (
-                  <div className="relative">
-                    <img
-                      src={coverPreview}
-                      alt="Cover preview"
-                      className="w-full h-48 object-cover rounded-lg"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setCoverImage(null)
-                        setCoverPreview(null)
-                      }}
-                      className="absolute top-2 right-2 p-1 bg-black/50 rounded-full text-foreground hover:bg-black/70"
-                    >
-                      <X className="w-4 h-4" />
-                    </button>
-                  </div>
-                ) : (
-                  <label
-                    className={`flex flex-col items-center justify-center w-full h-48 border-2 border-dashed border-white/20 rounded-lg cursor-pointer ${accent.hoverBorder} transition-colors`}
+      <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-5">
+        {!isEditing && (
+          <FormSection title={t('categoryLabel')} accent={accent}>
+            <div className="grid grid-cols-2 gap-2 sm:gap-3">
+              {CATEGORY_OPTIONS.map(({ value, Icon, labelKey }) => {
+                const isActive = formCategory === value
+                return (
+                  <button
+                    key={value}
+                    type="button"
+                    onClick={() => setFormCategory(value)}
+                    className={`flex items-center justify-center gap-2 py-3 px-3 rounded-xl text-sm font-medium transition-all ring-1 ring-inset ${
+                      isActive
+                        ? 'text-white shadow-md ring-transparent'
+                        : 'bg-surface-2 ring-border-subtle text-muted-foreground hover:text-foreground hover:bg-surface-3'
+                    }`}
+                    style={isActive ? { background: `linear-gradient(135deg, ${accent.primary}, ${accent.secondary})` } : undefined}
                   >
-                    <Upload className="w-8 h-8 text-muted-foreground mb-2" />
-                    <span className="text-sm text-muted-foreground">{t('clickToUpload')}</span>
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={handleCoverImageChange}
-                      className="hidden"
-                    />
-                  </label>
-                )}
-              </div>
+                    <Icon className="w-4 h-4" />
+                    {t(labelKey)}
+                  </button>
+                )
+              })}
             </div>
+          </FormSection>
+        )}
 
-            {/* Title */}
-            <div>
-              <label className="block text-sm font-medium text-muted-foreground mb-2">
-                {t('nameLabel')}
-              </label>
+        <FormSection title={t('coverImage')} accent={accent}>
+          {coverPreview ? (
+            <div className="relative aspect-[16/9] w-full overflow-hidden rounded-xl bg-surface-3">
+              <img src={coverPreview} alt="Cover preview" className="absolute inset-0 h-full w-full object-cover" />
+              <button
+                type="button"
+                onClick={() => {
+                  setCoverImage(null)
+                  setCoverPreview(null)
+                }}
+                className="absolute top-2.5 right-2.5 inline-flex h-8 w-8 items-center justify-center rounded-full bg-black/55 backdrop-blur-md ring-1 ring-inset ring-white/15 text-white hover:bg-black/75 transition-colors"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+          ) : (
+            <label className="flex flex-col items-center justify-center w-full aspect-[16/9] rounded-xl bg-surface-2 ring-1 ring-inset ring-dashed ring-border-subtle cursor-pointer hover:bg-surface-3 transition-colors">
+              <div
+                className="inline-flex h-12 w-12 items-center justify-center rounded-2xl ring-1 ring-inset ring-border-subtle mb-2.5"
+                style={{ background: `linear-gradient(135deg, ${accent.primary}1f, ${accent.secondary}10)` }}
+              >
+                <ImageIcon className="w-5 h-5" style={{ color: accent.primary }} />
+              </div>
+              <span className="text-sm font-medium text-foreground">{t('clickToUpload')}</span>
+              <span className="text-xs text-muted-foreground mt-0.5">PNG, JPG · 16:9</span>
+              <input type="file" accept="image/*" onChange={handleCoverImageChange} className="hidden" />
+            </label>
+          )}
+        </FormSection>
+
+        <FormSection accent={accent}>
+          <div className="space-y-3">
+            <FieldLabel label={t('nameLabel')}>
               <input
                 type="text"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
-                className={`w-full px-4 py-2.5 bg-background border border-border rounded-lg text-foreground focus:outline-none ${accent.focusBorder}`}
+                className="w-full h-11 px-3.5 rounded-xl bg-surface-2 ring-1 ring-inset ring-border-subtle text-foreground text-sm placeholder:text-faint-foreground focus:outline-none focus:ring-2 transition-all"
+                style={{ ['--tw-ring-color' as never]: `${accent.primary}55` }}
                 placeholder={t('namePlaceholder')}
               />
-            </div>
+            </FieldLabel>
 
-            {/* Description */}
-            <div>
-              <label className="block text-sm font-medium text-muted-foreground mb-2">
-                {t('descriptionLabel')}
-              </label>
+            <FieldLabel label={t('descriptionLabel')}>
               <textarea
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 rows={3}
-                className={`w-full px-4 py-2.5 bg-background border border-border rounded-lg text-foreground focus:outline-none ${accent.focusBorder} resize-none`}
+                className="w-full px-3.5 py-2.5 rounded-xl bg-surface-2 ring-1 ring-inset ring-border-subtle text-foreground text-sm placeholder:text-faint-foreground focus:outline-none focus:ring-2 resize-none transition-all"
+                style={{ ['--tw-ring-color' as never]: `${accent.primary}55` }}
                 placeholder={t('descriptionPlaceholder')}
               />
-            </div>
+            </FieldLabel>
 
-            {/* Detailed Description */}
-            <div>
-              <label className="block text-sm font-medium text-muted-foreground mb-2">
-                {t('detailedDescriptionLabel')}
-              </label>
+            <FieldLabel label={t('detailedDescriptionLabel')}>
               <textarea
                 value={detailedDescription}
                 onChange={(e) => setDetailedDescription(e.target.value)}
                 rows={5}
-                className={`w-full px-4 py-2.5 bg-background border border-border rounded-lg text-foreground focus:outline-none ${accent.focusBorder} resize-none`}
+                className="w-full px-3.5 py-2.5 rounded-xl bg-surface-2 ring-1 ring-inset ring-border-subtle text-foreground text-sm placeholder:text-faint-foreground focus:outline-none focus:ring-2 resize-none transition-all"
+                style={{ ['--tw-ring-color' as never]: `${accent.primary}55` }}
                 placeholder={t('detailedDescriptionPlaceholder')}
               />
-            </div>
+            </FieldLabel>
+          </div>
+        </FormSection>
 
-            {/* Price — Basic Tier */}
-            <div>
-              <label className="block text-sm font-medium text-muted-foreground mb-2">
-                {t('basicPriceLabel')}
-              </label>
-              <div className="relative">
-                <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-                <input
-                  type="number"
-                  value={price}
-                  onChange={(e) => setPrice(e.target.value)}
-                  min="0"
-                  step="0.01"
-                  className={`w-full pl-10 pr-4 py-2.5 bg-background border border-border rounded-lg text-foreground focus:outline-none ${accent.focusBorder}`}
-                  placeholder="0.00"
-                />
-              </div>
-              <p className="mt-1 text-xs text-faint-foreground">{t('basicPriceHint')}</p>
-            </div>
+        <FormSection title={t('basicPriceLabel')} accent={accent}>
+          <FieldLabel label={t('basicPriceLabel')} hint={t('basicPriceHint')}>
+            <PriceInput value={price} onChange={setPrice} accent={accent} placeholder="0.00" />
+          </FieldLabel>
 
-            {/* Standard Tier */}
-            <div className="p-4 bg-background rounded-lg border border-border space-y-3">
-              <h4 className="text-sm font-semibold text-blue-400">{t('standardTierLabel')}</h4>
-              <div>
-                <label className="block text-xs font-medium text-muted-foreground mb-1">
-                  {t('standardPriceLabel')}
-                </label>
-                <div className="relative">
-                  <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                  <input
-                    type="number"
-                    value={standardPrice}
-                    onChange={(e) => setStandardPrice(e.target.value)}
-                    min="0"
-                    step="0.01"
-                    className={`w-full pl-9 pr-4 py-2 bg-[#111] border border-border rounded-lg text-foreground text-sm focus:outline-none ${accent.focusBorder}`}
-                    placeholder={t('standardPricePlaceholder')}
-                  />
-                </div>
-              </div>
+          <div className="mt-3 grid gap-3">
+            <TierBlock title={t('standardTierLabel')} hint={t('standardTierHint')} titleColor="text-amber-400" ringColor="ring-amber-500/30">
+              <FieldLabel label={t('standardPriceLabel')} small>
+                <PriceInput value={standardPrice} onChange={setStandardPrice} accent={accent} placeholder={t('standardPricePlaceholder')} />
+              </FieldLabel>
               {standardPrice && (
-                <div>
-                  <label className="block text-xs font-medium text-muted-foreground mb-1">
-                    {t('maxStandardSpotsLabel')}
-                  </label>
+                <FieldLabel label={t('maxStandardSpotsLabel')} small>
                   <input
                     type="number"
                     value={maxStandardSpots}
                     onChange={(e) => setMaxStandardSpots(e.target.value)}
                     min="1"
                     step="1"
-                    className={`w-full px-4 py-2 bg-[#111] border border-border rounded-lg text-foreground text-sm focus:outline-none ${accent.focusBorder}`}
+                    className="w-full h-10 px-3.5 rounded-xl bg-surface-1 ring-1 ring-inset ring-border-subtle text-foreground text-sm placeholder:text-faint-foreground focus:outline-none focus:ring-2 transition-all"
+                    style={{ ['--tw-ring-color' as never]: `${accent.primary}55` }}
                     placeholder={t('maxSpotsPlaceholder')}
                   />
-                </div>
+                </FieldLabel>
               )}
-              <p className="text-xs text-faint-foreground">{t('standardTierHint')}</p>
-            </div>
+            </TierBlock>
 
-            {/* Pro Tier */}
-            <div className="p-4 bg-background rounded-lg border border-border space-y-3">
-              <h4 className="text-sm font-semibold text-purple-400">{t('proTierLabel')}</h4>
-              <div>
-                <label className="block text-xs font-medium text-muted-foreground mb-1">
-                  {t('proPriceLabel')}
-                </label>
-                <div className="relative">
-                  <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                  <input
-                    type="number"
-                    value={proPrice}
-                    onChange={(e) => setProPrice(e.target.value)}
-                    min="0"
-                    step="0.01"
-                    className={`w-full pl-9 pr-4 py-2 bg-[#111] border border-border rounded-lg text-foreground text-sm focus:outline-none ${accent.focusBorder}`}
-                    placeholder={t('proPricePlaceholder')}
-                  />
-                </div>
-              </div>
+            <TierBlock title={t('proTierLabel')} hint={t('proTierHint')} titleColor="text-purple-400" ringColor="ring-purple-500/30">
+              <FieldLabel label={t('proPriceLabel')} small>
+                <PriceInput value={proPrice} onChange={setProPrice} accent={accent} placeholder={t('proPricePlaceholder')} />
+              </FieldLabel>
               {proPrice && (
-                <div>
-                  <label className="block text-xs font-medium text-muted-foreground mb-1">
-                    {t('maxProSpotsLabel')}
-                  </label>
+                <FieldLabel label={t('maxProSpotsLabel')} small>
                   <input
                     type="number"
                     value={maxProSpots}
                     onChange={(e) => setMaxProSpots(e.target.value)}
                     min="1"
                     step="1"
-                    className={`w-full px-4 py-2 bg-[#111] border border-border rounded-lg text-foreground text-sm focus:outline-none ${accent.focusBorder}`}
+                    className="w-full h-10 px-3.5 rounded-xl bg-surface-1 ring-1 ring-inset ring-border-subtle text-foreground text-sm placeholder:text-faint-foreground focus:outline-none focus:ring-2 transition-all"
+                    style={{ ['--tw-ring-color' as never]: `${accent.primary}55` }}
                     placeholder={t('maxSpotsPlaceholder')}
                   />
-                </div>
+                </FieldLabel>
               )}
-              <p className="text-xs text-faint-foreground">{t('proTierHint')}</p>
-            </div>
+            </TierBlock>
+          </div>
+        </FormSection>
 
-            {/* Visibility Toggle */}
-            <div>
-              <label className="block text-sm font-medium text-muted-foreground mb-2">
-                {t('visibility')}
-              </label>
-              <button
-                type="button"
-                onClick={() => setIsPublic(!isPublic)}
-                className={`w-full flex items-center justify-between px-4 py-3 rounded-lg border-2 transition-all ${
-                  isPublic
-                    ? 'border-green-500/50 bg-green-500/10'
-                    : 'border-yellow-500/50 bg-yellow-500/10'
+        <FormSection title={t('visibility')} accent={accent}>
+          <button
+            type="button"
+            onClick={() => setIsPublic(!isPublic)}
+            className={`w-full flex items-center justify-between gap-3 px-4 py-3 rounded-xl ring-1 ring-inset transition-all ${
+              isPublic ? 'bg-emerald-500/10 ring-emerald-500/30' : 'bg-amber-500/10 ring-amber-500/30'
+            }`}
+          >
+            <div className="flex items-center gap-3 min-w-0">
+              <div
+                className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${
+                  isPublic ? 'bg-emerald-500/15 text-emerald-400' : 'bg-amber-500/15 text-amber-400'
                 }`}
               >
-                <div className="flex items-center gap-3">
-                  {isPublic ? (
-                    <Eye className="w-5 h-5 text-green-400" />
-                  ) : (
-                    <EyeOff className="w-5 h-5 text-yellow-400" />
-                  )}
-                  <div className="text-left">
-                    <p className={`text-sm font-medium ${isPublic ? 'text-green-400' : 'text-yellow-400'}`}>
-                      {isPublic ? t('visibilityPublic') : t('visibilityPrivate')}
-                    </p>
-                    <p className="text-xs text-faint-foreground">
-                      {isPublic ? t('visibilityPublicHint') : t('visibilityPrivateHint')}
-                    </p>
+                {isPublic ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
+              </div>
+              <div className="text-left min-w-0">
+                <p className={`text-sm font-semibold ${isPublic ? 'text-emerald-400' : 'text-amber-400'}`}>
+                  {isPublic ? t('visibilityPublic') : t('visibilityPrivate')}
+                </p>
+                <p className="text-xs text-muted-foreground truncate">
+                  {isPublic ? t('visibilityPublicHint') : t('visibilityPrivateHint')}
+                </p>
+              </div>
+            </div>
+            <div className={`relative w-11 h-6 shrink-0 rounded-full transition-colors ${isPublic ? 'bg-emerald-500' : 'bg-surface-3'}`}>
+              <div
+                className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${
+                  isPublic ? 'translate-x-[22px]' : 'translate-x-0.5'
+                }`}
+              />
+            </div>
+          </button>
+        </FormSection>
+
+        {formCategory !== 'Consultation' && (
+          <FormSection title={t('mealRecipeVideos')} accent={accent}>
+            <div className="space-y-2.5">
+              {videoBlocks.map((block, index) => (
+                <div key={block.id} className="rounded-xl bg-surface-2 ring-1 ring-inset ring-border-subtle p-3 sm:p-4 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div className="inline-flex items-center gap-2">
+                      <div
+                        className="flex h-7 w-7 items-center justify-center rounded-lg ring-1 ring-inset ring-border-subtle"
+                        style={{ background: `linear-gradient(135deg, ${accent.primary}1f, ${accent.secondary}10)` }}
+                      >
+                        <Video className="w-3.5 h-3.5" style={{ color: accent.primary }} />
+                      </div>
+                      <p className="text-sm font-semibold text-foreground">
+                        {t('recipeBlock', { number: index + 1 })}
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => removeVideoBlock(index)}
+                      className="inline-flex h-7 w-7 items-center justify-center rounded-lg text-red-400 hover:bg-red-500/10 transition-colors"
+                      title={t('removeVideo')}
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
                   </div>
-                </div>
-                <div
-                  className={`w-11 h-6 rounded-full relative transition-colors ${isPublic ? 'bg-green-500' : 'bg-gray-600'}`}
-                >
-                  <div
-                    className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${isPublic ? 'translate-x-5' : 'translate-x-0.5'}`}
+
+                  <input
+                    type="text"
+                    value={block.title}
+                    onChange={(e) => handleVideoTextChange(index, 'title', e.target.value)}
+                    className="w-full h-10 px-3.5 rounded-xl bg-surface-1 ring-1 ring-inset ring-border-subtle text-foreground text-sm placeholder:text-faint-foreground focus:outline-none focus:ring-2 transition-all"
+                    style={{ ['--tw-ring-color' as never]: `${accent.primary}55` }}
+                    placeholder={t('recipeTitlePlaceholder')}
                   />
+
+                  <textarea
+                    value={block.description}
+                    onChange={(e) => handleVideoTextChange(index, 'description', e.target.value)}
+                    rows={2}
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-surface-1 ring-1 ring-inset ring-border-subtle text-foreground text-sm placeholder:text-faint-foreground focus:outline-none focus:ring-2 resize-none transition-all"
+                    style={{ ['--tw-ring-color' as never]: `${accent.primary}55` }}
+                    placeholder={t('recipeDescriptionPlaceholder')}
+                  />
+
+                  <label className="flex items-center justify-center gap-2 w-full py-2.5 rounded-xl bg-surface-1 ring-1 ring-inset ring-dashed ring-border-subtle cursor-pointer hover:bg-surface-3 transition-colors">
+                    <Video className="w-4 h-4 text-muted-foreground" />
+                    <span className="text-sm text-muted-foreground truncate">
+                      {block.file ? block.file.name : t('addRecipeVideo')}
+                    </span>
+                    <input
+                      type="file"
+                      accept="video/*"
+                      onChange={(e) => handleVideoFileChange(index, e.target.files?.[0] ?? null)}
+                      className="hidden"
+                    />
+                  </label>
                 </div>
+              ))}
+
+              <button
+                type="button"
+                onClick={addVideoBlock}
+                className="w-full inline-flex items-center justify-center gap-2 py-2.5 rounded-xl bg-surface-2 ring-1 ring-inset ring-dashed ring-border-subtle text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-surface-3 transition-colors"
+              >
+                <Plus className="w-4 h-4" />
+                {t('addRecipeBlock')}
               </button>
             </div>
+          </FormSection>
+        )}
 
-            {/* Videos (hidden for Consultation) */}
-            {formCategory !== 'Consultation' && (
-              <div>
-                <label className="block text-sm font-medium text-muted-foreground mb-2">
-                  {t('mealRecipeVideos')}
-                </label>
-                <div className="space-y-3">
-                  {videoBlocks.map((block, index) => (
-                    <div key={block.id} className="p-3 bg-background rounded-lg border border-border space-y-3">
-                      <div className="flex items-center justify-between">
-                        <p className="text-sm font-medium text-muted-foreground">{t('recipeBlock', { number: index + 1 })}</p>
-                        <button
-                          type="button"
-                          onClick={() => removeVideoBlock(index)}
-                          className="text-red-400 hover:text-red-300"
-                          title={t('removeVideo')}
-                        >
-                          <X className="w-4 h-4" />
-                        </button>
-                      </div>
+        <button
+          type="submit"
+          disabled={saving}
+          className="w-full inline-flex items-center justify-center gap-2 h-12 rounded-xl text-sm font-semibold text-white shadow-md hover:shadow-lg active:scale-[0.99] disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+          style={{ background: `linear-gradient(135deg, ${accent.primary}, ${accent.secondary})` }}
+        >
+          {saving && <Loader2 className="w-4 h-4 animate-spin" />}
+          {isEditing ? t('saveChanges') : t('createProgram')}
+        </button>
+      </form>
+    </div>
+  )
+}
 
-                      <input
-                        type="text"
-                        value={block.title}
-                        onChange={(e) => handleVideoTextChange(index, 'title', e.target.value)}
-                        className={`w-full px-3 py-2 bg-[#111] border border-border rounded-lg text-foreground text-sm focus:outline-none ${accent.focusBorder}`}
-                        placeholder={t('recipeTitlePlaceholder')}
-                      />
+// --- Helpers ---
 
-                      <textarea
-                        value={block.description}
-                        onChange={(e) => handleVideoTextChange(index, 'description', e.target.value)}
-                        rows={2}
-                        className={`w-full px-3 py-2 bg-[#111] border border-border rounded-lg text-foreground text-sm focus:outline-none ${accent.focusBorder} resize-none`}
-                        placeholder={t('recipeDescriptionPlaceholder')}
-                      />
+function FormSection({
+  title,
+  accent: _accent,
+  children,
+}: {
+  title?: string
+  accent: { primary: string; secondary: string }
+  children: React.ReactNode
+}) {
+  return (
+    <section className="rounded-2xl bg-surface-1 ring-1 ring-inset ring-border-subtle p-4 sm:p-5">
+      {title && (
+        <h2 className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground mb-3">
+          {title}
+        </h2>
+      )}
+      {children}
+    </section>
+  )
+}
 
-                      <label
-                        className={`flex items-center justify-center w-full py-2.5 border-2 border-dashed border-white/20 rounded-lg cursor-pointer ${accent.hoverBorder} transition-colors`}
-                      >
-                        <Video className="w-5 h-5 text-muted-foreground mr-2" />
-                        <span className="text-sm text-muted-foreground">
-                          {block.file ? block.file.name : t('addRecipeVideo')}
-                        </span>
-                        <input
-                          type="file"
-                          accept="video/*"
-                          onChange={(e) => handleVideoFileChange(index, e.target.files?.[0] ?? null)}
-                          className="hidden"
-                        />
-                      </label>
-                    </div>
-                  ))}
+function FieldLabel({
+  label,
+  children,
+  hint,
+  small,
+}: {
+  label: string
+  children: React.ReactNode
+  hint?: string
+  small?: boolean
+}) {
+  return (
+    <div>
+      <label className={`block ${small ? 'text-xs' : 'text-sm'} font-medium text-foreground mb-1.5`}>
+        {label}
+      </label>
+      {children}
+      {hint && <p className="mt-1.5 text-xs text-muted-foreground">{hint}</p>}
+    </div>
+  )
+}
 
-                  <button
-                    type="button"
-                    onClick={addVideoBlock}
-                    className={`w-full py-2.5 border border-white/20 rounded-lg text-sm text-muted-foreground hover:text-foreground ${accent.hoverBorder} transition-colors flex items-center justify-center gap-2`}
-                  >
-                    <Plus className="w-4 h-4" />
-                    {t('addRecipeBlock')}
-                  </button>
-                </div>
-              </div>
-            )}
+function PriceInput({
+  value,
+  onChange,
+  accent,
+  placeholder,
+}: {
+  value: string
+  onChange: (v: string) => void
+  accent: { primary: string }
+  placeholder: string
+}) {
+  return (
+    <div className="relative">
+      <DollarSign className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
+      <input
+        type="number"
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        min="0"
+        step="0.01"
+        className="w-full h-11 pl-10 pr-4 rounded-xl bg-surface-2 ring-1 ring-inset ring-border-subtle text-foreground text-sm placeholder:text-faint-foreground focus:outline-none focus:ring-2 tabular-nums transition-all"
+        style={{ ['--tw-ring-color' as never]: `${accent.primary}55` }}
+        placeholder={placeholder}
+      />
+    </div>
+  )
+}
 
-            {/* Submit */}
-            <button
-              type="submit"
-              disabled={saving}
-              className={`w-full py-3 bg-gradient-to-r ${accent.gradient} text-white font-semibold rounded-lg hover:opacity-90 disabled:opacity-50 flex items-center justify-center gap-2`}
-            >
-              {saving && <Loader2 className="w-5 h-5 animate-spin" />}
-              {isEditing ? t('saveChanges') : t('createProgram')}
-            </button>
-          </form>
-        </div>
-      </div>
+function TierBlock({
+  title,
+  hint,
+  titleColor,
+  ringColor,
+  children,
+}: {
+  title: string
+  hint: string
+  titleColor: string
+  ringColor: string
+  children: React.ReactNode
+}) {
+  return (
+    <div className={`rounded-xl bg-surface-2 ring-1 ring-inset ${ringColor} p-3 sm:p-4 space-y-3`}>
+      <h3 className={`text-sm font-semibold ${titleColor}`}>{title}</h3>
+      {children}
+      <p className="text-xs text-muted-foreground">{hint}</p>
     </div>
   )
 }
