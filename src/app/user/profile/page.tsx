@@ -20,7 +20,7 @@ import {
   Trophy,
   ShieldAlert,
 } from 'lucide-react'
-import { motion } from 'framer-motion'
+import { AnimatePresence, motion } from 'framer-motion'
 
 import { useState, useEffect, useCallback, useRef } from 'react'
 import Link from 'next/link'
@@ -531,146 +531,176 @@ export default function UserProfilePage() {
           ))}
         </div>
 
-        {/* Posts Tab Content */}
-        {mainTab === 'posts' && (
-          <div className="overflow-hidden bg-surface-2/35 sm:rounded-xl sm:border sm:border-border sm:bg-surface-3">
-            <div className="flex flex-col gap-3 border-b border-border px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
-              <div className="flex items-center gap-2">
-                <Grid className="w-5 h-5 text-[#0c8de6]" />
-                <h3 className="font-semibold text-foreground">{tPosts('postsTab')}</h3>
-                {totalPosts > 0 && <span className="text-xs text-faint-foreground">({totalPosts})</span>}
-              </div>
-              <div className="flex items-center gap-1 bg-background rounded-lg p-0.5">
-                <button
-                  onClick={() => setViewMode('grid')}
-                  className={`p-1.5 rounded-md transition-colors ${viewMode === 'grid' ? 'bg-white/10 text-[#0c8de6]' : 'text-faint-foreground hover:text-muted-foreground'}`}
-                >
-                  <Grid className="w-4 h-4" />
-                </button>
-                <button
-                  onClick={() => setViewMode('list')}
-                  className={`p-1.5 rounded-md transition-colors ${viewMode === 'list' ? 'bg-white/10 text-[#0c8de6]' : 'text-faint-foreground hover:text-muted-foreground'}`}
-                >
-                  <List className="w-4 h-4" />
-                </button>
-              </div>
-            </div>
-
-            <ProfilePostTabs activeTab={postTab} onTabChange={handlePostTabChange} disabled={isLoadingPosts} />
-
-            <div className="relative">
-              {postIds.length === 0 && !isLoadingPosts ? (
-                <div className="py-12 text-center">
-                  <Camera className="w-12 h-12 text-gray-600 mx-auto mb-4" />
-                  <p className="text-muted-foreground">{tPosts('noPublications')}</p>
-                  <p className="text-sm text-faint-foreground mt-1">{tp('uploadPhotoOrVideo')}</p>
-                </div>
-              ) : viewMode === 'grid' ? (
-                <div>
-                  <div className="grid grid-cols-2 gap-2 p-2 sm:grid-cols-3">
-                    {postIds.map((id) => (
-                      <GridCell key={id} postId={id} onSelect={setSelectedPostId} onDelete={handleDeletePost} deletingPostId={deletingPostId === id ? id : null} />
-                    ))}
+        {/* Tabs Content */}
+        <div className="relative min-h-[420px]">
+          <AnimatePresence mode="wait" initial={false}>
+            {mainTab === 'posts' && (
+              <motion.div
+                key="posts"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.18, ease: 'easeOut' }}
+                className="overflow-hidden bg-surface-2/35 sm:rounded-xl sm:border sm:border-border sm:bg-surface-3"
+              >
+                <div className="flex flex-col gap-3 border-b border-border px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="flex items-center gap-2">
+                    <Grid className="w-5 h-5 text-[#0c8de6]" />
+                    <h3 className="font-semibold text-foreground">{tPosts('postsTab')}</h3>
+                    {totalPosts > 0 && <span className="text-xs text-faint-foreground">({totalPosts})</span>}
                   </div>
-                  {!isRefreshingPosts && (isLoadingPosts || hasMore) && (
-                    <div ref={observerRef} className="py-8 flex justify-center">
-                      {isLoadingPosts && <Loader2 className="w-6 h-6 text-[#0c8de6] animate-spin" />}
+                  <div className="flex items-center gap-1 bg-background rounded-lg p-0.5">
+                    <button
+                      onClick={() => setViewMode('grid')}
+                      className={`p-1.5 rounded-md transition-colors ${viewMode === 'grid' ? 'bg-white/10 text-[#0c8de6]' : 'text-faint-foreground hover:text-muted-foreground'}`}
+                    >
+                      <Grid className="w-4 h-4" />
+                    </button>
+                    <button
+                      onClick={() => setViewMode('list')}
+                      className={`p-1.5 rounded-md transition-colors ${viewMode === 'list' ? 'bg-white/10 text-[#0c8de6]' : 'text-faint-foreground hover:text-muted-foreground'}`}
+                    >
+                      <List className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+
+                <ProfilePostTabs activeTab={postTab} onTabChange={handlePostTabChange} disabled={isLoadingPosts} />
+
+                <div className="relative min-h-[280px]">
+                  {postIds.length === 0 && !isLoadingPosts ? (
+                    <div className="py-12 text-center">
+                      <Camera className="w-12 h-12 text-gray-600 mx-auto mb-4" />
+                      <p className="text-muted-foreground">{tPosts('noPublications')}</p>
+                      <p className="text-sm text-faint-foreground mt-1">{tp('uploadPhotoOrVideo')}</p>
                     </div>
-                  )}
-                </div>
-              ) : (
-                <div className="p-3 space-y-3">
-                  {postIds.map((id) => (
-                    <PostCard
-                      key={id}
-                      postId={id}
-                      isOwnProfile
-                      showDeleteInHeader
-                      onDelete={handleDeletePost}
-                      deletingPostId={deletingPostId === id ? id : null}
-                      onRepostSuccess={handleRepostSuccess}
-                      playingVideoId={playingVideoId === id ? id : null}
-                      onVideoToggle={setPlayingVideoId}
-                      onPhotoClick={handlePhotoClick}
-                    />
-                  ))}
-                  {!isRefreshingPosts && (isLoadingPosts || hasMore) && (
-                    <div ref={observerRef} className="py-8 flex justify-center">
-                      {isLoadingPosts && <Loader2 className="w-6 h-6 text-[#0c8de6] animate-spin" />}
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {isRefreshingPosts && (
-                <div className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center bg-surface-3/72 backdrop-blur-[1px]">
-                  <Loader2 className="w-7 h-7 text-[#0c8de6] animate-spin" />
-                </div>
-              )}
-            </div>
-          </div>
-        )}
-
-        {/* Reviews Tab Content */}
-        {mainTab === 'reviews' && (
-          <ProfileReviewsTab
-            expertId={user?.id ?? ''}
-            accentText="text-[#0c8de6]"
-            accentGradient="from-[#0c8de6]/10 to-[#0070c4]/10"
-          />
-        )}
-
-        {/* Injuries Tab Content */}
-        {mainTab === 'injuries' && (
-          <div className="text-center py-12">
-            <ShieldAlert className="w-12 h-12 text-gray-600 mx-auto mb-4" />
-            <p className="text-muted-foreground">{tp('noInjuries')}</p>
-            <p className="text-sm text-faint-foreground mt-1">{tp('injuriesDescription')}</p>
-          </div>
-        )}
-
-        {/* Achievements Tab Content */}
-        {mainTab === 'achievements' && (
-          <div className="space-y-4">
-            {isLoadingAchievements ? (
-              <div className="flex items-center justify-center py-16">
-                <Loader2 className="w-8 h-8 text-[#0c8de6] animate-spin" />
-              </div>
-            ) : achievementsData ? (
-              achievementsData.all.filter(a => a.isUnlocked).length > 0 ? (
-                <div className="grid grid-cols-2 gap-4">
-                  {achievementsData.all.filter(a => a.isUnlocked).map((achievement) => {
-                    const Icon = getIcon(achievement.iconKey)
-                    return (
-                      <div
-                        key={achievement.id}
-                        className={`p-4 rounded-xl border ${getRarityBorder(achievement.rarity)} ${getRarityGlow(achievement.rarity)} bg-surface-3`}
-                      >
-                        <div className="flex items-start gap-3">
-                          <div className="w-10 h-10 rounded-xl flex items-center justify-center bg-[#0c8de6]/20">
-                            <Icon className="w-5 h-5 text-[#0c8de6]" />
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <h4 className={`font-semibold text-sm truncate ${getRarityLabelColor(achievement.rarity)}`}>
-                              {achievement.title}
-                            </h4>
-                            <p className="text-xs text-faint-foreground mt-0.5 line-clamp-2">{achievement.description}</p>
-                          </div>
-                        </div>
+                  ) : viewMode === 'grid' ? (
+                    <div>
+                      <div className="grid grid-cols-2 gap-2 p-2 sm:grid-cols-3">
+                        {postIds.map((id) => (
+                          <GridCell key={id} postId={id} onSelect={setSelectedPostId} onDelete={handleDeletePost} deletingPostId={deletingPostId === id ? id : null} />
+                        ))}
                       </div>
-                    )
-                  })}
+                      {!isRefreshingPosts && (isLoadingPosts || hasMore) && (
+                        <div ref={observerRef} className="py-8 flex justify-center">
+                          {isLoadingPosts && <Loader2 className="w-6 h-6 text-[#0c8de6] animate-spin" />}
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="p-3 space-y-3">
+                      {postIds.map((id) => (
+                        <PostCard
+                          key={id}
+                          postId={id}
+                          isOwnProfile
+                          showDeleteInHeader
+                          onDelete={handleDeletePost}
+                          deletingPostId={deletingPostId === id ? id : null}
+                          onRepostSuccess={handleRepostSuccess}
+                          playingVideoId={playingVideoId === id ? id : null}
+                          onVideoToggle={setPlayingVideoId}
+                          onPhotoClick={handlePhotoClick}
+                        />
+                      ))}
+                      {!isRefreshingPosts && (isLoadingPosts || hasMore) && (
+                        <div ref={observerRef} className="py-8 flex justify-center">
+                          {isLoadingPosts && <Loader2 className="w-6 h-6 text-[#0c8de6] animate-spin" />}
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {isRefreshingPosts && (
+                    <div className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center bg-surface-3/72 backdrop-blur-[1px]">
+                      <Loader2 className="w-7 h-7 text-[#0c8de6] animate-spin" />
+                    </div>
+                  )}
                 </div>
-              ) : (
-                <div className="text-center py-12">
-                  <Trophy className="w-12 h-12 text-gray-600 mx-auto mb-4" />
-                  <p className="text-muted-foreground">{tp('noAchievements')}</p>
-                  <p className="text-sm text-faint-foreground mt-1">{tp('achievementsWillAppear')}</p>
-                </div>
-              )
-            ) : null}
-          </div>
-        )}
+              </motion.div>
+            )}
+
+            {mainTab === 'reviews' && (
+              <motion.div
+                key="reviews"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.18, ease: 'easeOut' }}
+              >
+                <ProfileReviewsTab
+                  expertId={user?.id ?? ''}
+                  accentText="text-[#0c8de6]"
+                  accentGradient="from-[#0c8de6]/10 to-[#0070c4]/10"
+                />
+              </motion.div>
+            )}
+
+            {mainTab === 'injuries' && (
+              <motion.div
+                key="injuries"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.18, ease: 'easeOut' }}
+                className="text-center py-12"
+              >
+                <ShieldAlert className="w-12 h-12 text-gray-600 mx-auto mb-4" />
+                <p className="text-muted-foreground">{tp('noInjuries')}</p>
+                <p className="text-sm text-faint-foreground mt-1">{tp('injuriesDescription')}</p>
+              </motion.div>
+            )}
+
+            {mainTab === 'achievements' && (
+              <motion.div
+                key="achievements"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.18, ease: 'easeOut' }}
+                className="space-y-4"
+              >
+                {isLoadingAchievements ? (
+                  <div className="flex items-center justify-center py-16">
+                    <Loader2 className="w-8 h-8 text-[#0c8de6] animate-spin" />
+                  </div>
+                ) : achievementsData ? (
+                  achievementsData.all.filter(a => a.isUnlocked).length > 0 ? (
+                    <div className="grid grid-cols-2 gap-4">
+                      {achievementsData.all.filter(a => a.isUnlocked).map((achievement) => {
+                        const Icon = getIcon(achievement.iconKey)
+                        return (
+                          <div
+                            key={achievement.id}
+                            className={`p-4 rounded-xl border ${getRarityBorder(achievement.rarity)} ${getRarityGlow(achievement.rarity)} bg-surface-3`}
+                          >
+                            <div className="flex items-start gap-3">
+                              <div className="w-10 h-10 rounded-xl flex items-center justify-center bg-[#0c8de6]/20">
+                                <Icon className="w-5 h-5 text-[#0c8de6]" />
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <h4 className={`font-semibold text-sm truncate ${getRarityLabelColor(achievement.rarity)}`}>
+                                  {achievement.title}
+                                </h4>
+                                <p className="text-xs text-faint-foreground mt-0.5 line-clamp-2">{achievement.description}</p>
+                              </div>
+                            </div>
+                          </div>
+                        )
+                      })}
+                    </div>
+                  ) : (
+                    <div className="text-center py-12">
+                      <Trophy className="w-12 h-12 text-gray-600 mx-auto mb-4" />
+                      <p className="text-muted-foreground">{tp('noAchievements')}</p>
+                      <p className="text-sm text-faint-foreground mt-1">{tp('achievementsWillAppear')}</p>
+                    </div>
+                  )
+                ) : null}
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
       </div>
 
       {/* Post Detail Modal */}

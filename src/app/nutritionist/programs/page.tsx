@@ -202,7 +202,7 @@ export default function NutritionistProgramsPage() {
             onClick={() => setActiveTab('Consultation')}
             className={`flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-medium transition-all ${
               activeTab === 'Consultation'
-                ? `bg-gradient-to-r ${accent.gradient} text-white shadow-lg`
+                ? 'bg-gradient-to-r from-violet-600 to-violet-500 text-white shadow-lg'
                 : 'text-muted-foreground hover:text-foreground'
             }`}
           >

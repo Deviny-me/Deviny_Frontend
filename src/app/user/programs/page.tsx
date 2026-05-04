@@ -356,7 +356,7 @@ export default function ProgramsPage() {
                 {([
                   { cat: 'Training' as FilterType, icon: Dumbbell, label: t('training'), count: allPrograms.filter(p => p.category === 'Training').length, activeColor: 'bg-[#d4722a]' },
                   { cat: 'Diet' as FilterType, icon: Apple, label: t('nutrition'), count: allPrograms.filter(p => p.category === 'Diet').length, activeColor: 'bg-[#28bf68]' },
-                  { cat: 'Consultation' as FilterType, icon: MessageSquare, label: t('consultation'), count: allPrograms.filter(p => p.category === 'Consultation').length, activeColor: 'bg-[#0c8de6]' },
+                  { cat: 'Consultation' as FilterType, icon: MessageSquare, label: t('consultation'), count: allPrograms.filter(p => p.category === 'Consultation').length, activeColor: 'bg-violet-600' },
                 ]).map(({ cat, icon: Icon, label, count, activeColor }) => (
                   <button
                     key={cat}
@@ -454,7 +454,7 @@ export default function ProgramsPage() {
                     {/* Category badge — color based on creator role */}
                     <span
                       className="absolute top-2 left-2 px-1.5 py-0.5 text-[10px] font-bold rounded text-foreground flex items-center gap-0.5"
-                      style={{ backgroundColor: getAccentColorsByRole(program.trainerRole).primary }}
+                      style={{ backgroundColor: program.category === 'Consultation' ? '#7c3aed' : getAccentColorsByRole(program.trainerRole).primary }}
                     >
                       {program.category === 'Training' ? (
                         <><Dumbbell className="w-2.5 h-2.5" />{t('training')}</>

@@ -170,10 +170,10 @@ function getCategoryMeta(category: ProgramCategory, t: ReturnType<typeof useTran
     return {
       label: t('consultation'),
       Icon: MessageSquare,
-      accent: 'text-user-500',
-      badge: 'bg-user-600',
-      tint: 'from-user-500/20 via-transparent to-primary-500/10',
-      ring: 'border-user-500/30',
+      accent: 'text-violet-400',
+      badge: 'bg-violet-600',
+      tint: 'from-violet-500/20 via-transparent to-violet-400/10',
+      ring: 'border-violet-500/30',
     }
   }
 
