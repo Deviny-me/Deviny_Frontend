@@ -428,7 +428,11 @@ export default function ProgramsPage() {
         ) : (
           <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
             {filteredPrograms.map((program) => {
-              const accent = getAccentColorsByRole(program.trainerRole)
+              const accent = getAccentColorsByRole(
+                program.category === 'Diet' ? 'nutritionist' :
+                program.category === 'Training' ? 'trainer' :
+                program.trainerRole
+              )
               const categoryAccent =
                 program.category === 'Training' ? { ring: 'ring-trainer-500/20', text: 'text-trainer-600 dark:text-trainer-300', bg: 'bg-trainer-500/10' } :
                 program.category === 'Diet' ? { ring: 'ring-nutritionist-500/20', text: 'text-nutritionist-600 dark:text-nutritionist-300', bg: 'bg-nutritionist-500/10' } :

@@ -17,7 +17,7 @@ import {
   LucideIcon
 } from 'lucide-react'
 import { useTranslations } from 'next-intl'
-import { useLanguage, getLanguageLabel, Language } from '@/components/language/LanguageProvider'
+import { useLanguage, getLanguageLabel, getLanguageFlag, Language } from '@/components/language/LanguageProvider'
 import { DeleteAccountModal } from '@/components/shared/DeleteAccountModal'
 import { useAccentColors } from '@/lib/theme/useAccentColors'
 
@@ -49,6 +49,7 @@ export default function SettingsPage() {
     messages: true,
   })
   const [showDeleteModal, setShowDeleteModal] = useState(false)
+  const [showLanguagePicker, setShowLanguagePicker] = useState(false)
 
   const handleLogout = () => {
     logout()
@@ -57,13 +58,6 @@ export default function SettingsPage() {
 
   const handleDeleteSuccess = () => {
     window.location.href = '/auth/login'
-  }
-
-  const cycleLanguage = () => {
-    const langs: Language[] = ['ru', 'en', 'az']
-    const idx = langs.indexOf(language)
-    const next = langs[(idx + 1) % langs.length]
-    setLanguage(next)
   }
 
   const settingsSections: SettingsSection[] = [
@@ -84,7 +78,7 @@ export default function SettingsPage() {
           value: isDarkMode, 
           action: toggleTheme 
         },
-        { icon: Globe, label: t('language'), value: getLanguageLabel(language), action: cycleLanguage },
+        { icon: Globe, label: t('language'), value: getLanguageLabel(language), action: () => setShowLanguagePicker(true) },
       ]
     },
     {
@@ -201,6 +195,38 @@ export default function SettingsPage() {
         onClose={() => setShowDeleteModal(false)}
         onSuccess={handleDeleteSuccess}
       />
+
+      {showLanguagePicker && (
+        <div
+          className="fixed inset-0 z-[200] flex items-end justify-center sm:items-center p-4"
+          style={{ background: 'rgba(0,0,0,0.4)' }}
+          onClick={() => setShowLanguagePicker(false)}
+        >
+          <div
+            className="bg-surface-1 rounded-2xl border border-border-subtle w-full max-w-sm overflow-hidden shadow-xl"
+            onClick={e => e.stopPropagation()}
+          >
+            <div className="px-4 py-3 border-b border-border-subtle">
+              <h3 className="text-sm font-semibold text-foreground">{t('language')}</h3>
+            </div>
+            {(['ru', 'en', 'az'] as Language[]).map(lang => (
+              <button
+                key={lang}
+                onClick={() => { setLanguage(lang); setShowLanguagePicker(false) }}
+                className={`w-full flex items-center gap-3 px-4 py-3.5 transition-colors hover:bg-hover-overlay ${
+                  language === lang ? 'bg-hover-overlay' : ''
+                }`}
+              >
+                <span className="text-xl">{getLanguageFlag(lang)}</span>
+                <span className="flex-1 text-sm font-medium text-foreground text-left">{getLanguageLabel(lang)}</span>
+                {language === lang && (
+                  <div className="h-2 w-2 rounded-full" style={{ background: accent.primary }} />
+                )}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
     </>
   )
 }

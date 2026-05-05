@@ -1425,7 +1425,22 @@
     "justNow": "только что",
     "minutesAgo": "{count} мин назад",
     "hoursAgo": "{count} ч назад",
-    "daysAgo": "{count} д назад"
+    "daysAgo": "{count} д назад",
+    "titleIncomingCall": "Входящий звонок",
+    "titleNewMessage": "Новое сообщение",
+    "titleFriendRequest": "Заявка в друзья",
+    "titleFriendRequestAccepted": "Заявка принята",
+    "titleAchievementUnlocked": "Достижение получено",
+    "titleNewProgram": "Новая программа",
+    "titleNewFollower": "Новый подписчик",
+    "msgStartedAudioCall": "Пользователь начал аудио звонок.",
+    "msgStartedVideoCall": "Пользователь начал видео звонок.",
+    "categoryMessaging": "Сообщения",
+    "categoryAchievement": "Достижение",
+    "categoryTraining": "Тренировка",
+    "categoryNutrition": "Питание",
+    "categorySocial": "Социальное",
+    "categorySystem": "Система"
   },
 
   "achievements": {

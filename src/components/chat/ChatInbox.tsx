@@ -29,6 +29,7 @@ import { chatConnection } from '@/lib/signalr/chatConnection'
 import { MEDIA_BASE_URL } from '@/lib/config'
 import { useAccentColors, getRoleRingClass, getAccentColorsByRole } from '@/lib/theme/useAccentColors'
 import { useLocale, useTranslations } from 'next-intl'
+import { resolveCallLogText as resolveCallLogTextUtil } from '@/lib/utils/resolveCallLogText'
 import type {
   ConversationListItemDto,
   MessageDto,
@@ -301,6 +302,15 @@ export default function ChatInbox() {
     (type: CallType | null | undefined) =>
       type === 'video' ? t('videoCallLower') : t('audioCallLower'),
     [t]
+  )
+
+  // Resolve a locale-neutral call log marker (e.g. "::call:ended::") to a
+  // translated string using the current locale. Also normalises old messages
+  // that were stored as already-translated strings (ru/en/az) so they switch
+  // language alongside the UI.
+  const resolveCallLogText = useCallback(
+    (text: string) => resolveCallLogTextUtil(text, t, callTypeText),
+    [t, callTypeText],
   )
 
   // ─── load conversations ───
@@ -927,7 +937,7 @@ export default function ChatInbox() {
       } catch {
         // ignore timeout signaling failure and still cleanup locally
       }
-      await sendCallLogMessage(call.conversationId, t('callLogMissedIncoming'))
+      await sendCallLogMessage(call.conversationId, '::call:missed_incoming::')
       setCallNotice(t('missedCall'))
       setTimeout(() => setCallNotice(null), 2500)
       setIncomingCall(null)
@@ -1222,7 +1232,7 @@ export default function ChatInbox() {
           } catch {
             // ignore timeout signaling failure and still cleanup locally
           }
-          await sendCallLogMessage(selectedConvId, t('callLogMissedNoAnswer', { callType: callTypeText(type) }))
+          await sendCallLogMessage(selectedConvId, `::call:missed_no_answer:${type ?? 'audio'}::`)
           setCallNotice(t('noAnswerMissedCall'))
           setTimeout(() => setCallNotice(null), 2500)
           clearCallMedia()
@@ -1312,7 +1322,7 @@ export default function ChatInbox() {
       incomingCallTimeoutRef.current = null
     }
     try {
-      await sendCallLogMessage(call.conversationId, t('callLogIncomingDeclined'))
+      await sendCallLogMessage(call.conversationId, '::call:incoming_declined::')
       await chatConnection.endCall(call.conversationId, call.fromUserId, 'rejected')
     } catch (error) {
       console.error('Failed to decline incoming call', error)
@@ -1322,7 +1332,7 @@ export default function ChatInbox() {
   const handleEndCall = async () => {
     try {
       if (activeCallConversationId && activeCallPeerId) {
-        await sendCallLogMessage(activeCallConversationId, t('callLogEnded'))
+        await sendCallLogMessage(activeCallConversationId, '::call:ended::')
         await chatConnection.endCall(activeCallConversationId, activeCallPeerId, 'ended')
       }
     } catch (error) {
@@ -1563,10 +1573,10 @@ export default function ChatInbox() {
     if (callStatus === 'connected' && activeCallConversationId && !callStartLoggedRef.current) {
       callStartLoggedRef.current = true
       const callKind: CallType = activeCallType === 'video' ? 'video' : 'audio'
-      const text = isCallInitiatorRef.current
-        ? t('callLogStarted', { callType: callTypeText(callKind) })
-        : t('callLogJoined', { callType: callTypeText(callKind) })
-      sendCallLogMessage(activeCallConversationId, text)
+      const marker = isCallInitiatorRef.current
+        ? `::call:started:${callKind}::`
+        : `::call:joined:${callKind}::`
+      sendCallLogMessage(activeCallConversationId, marker)
     }
 
     if (callStatus !== 'connected') {
@@ -1594,7 +1604,7 @@ export default function ChatInbox() {
         connectedCallTimerRef.current = null
       }
     }
-  }, [activeCallConversationId, activeCallType, callStatus, callTypeText, sendCallLogMessage, t])
+  }, [activeCallConversationId, activeCallType, callStatus, sendCallLogMessage])
 
   // Callback refs: attach streams the instant the DOM element mounts.
   // This solves the race where ontrack fires before React renders the elements.
@@ -1806,7 +1816,7 @@ export default function ChatInbox() {
                         </span>
                       </div>
                       <p className="truncate text-sm text-muted-foreground">
-                        {conv.lastMessageText ?? t('noMessagesYet')}
+                        {conv.lastMessageText ? resolveCallLogText(conv.lastMessageText) : t('noMessagesYet')}
                       </p>
                       <div className="mt-0.5 flex items-center gap-1.5">
                         {(presenceByUserId[conv.peerUser.id.toLowerCase()]?.isOnline ?? conv.peerUser.isOnline) ? (
@@ -2013,7 +2023,7 @@ export default function ChatInbox() {
                                   )
                                 )}
                                 {msg.text && (
-                                  <p className="text-sm whitespace-pre-wrap break-words">{msg.text}</p>
+                                  <p className="text-sm whitespace-pre-wrap break-words">{resolveCallLogText(msg.text)}</p>
                                 )}
                                 {!msg.id.startsWith('temp-') && (
                                   <button

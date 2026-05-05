@@ -273,6 +273,7 @@ export default function UserProfilePage() {
   const dispatch = usePostDispatch()
   const tc = useTranslations('common')
   const tp = useTranslations('profile')
+  const tLevel = useTranslations('level')
   const tPosts = useTranslations('posts')
 
   const [postIds, setPostIds] = useState<string[]>([])
@@ -448,7 +449,7 @@ export default function UserProfilePage() {
               </h1>
               <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-user-500/10 dark:bg-user-500/15 text-user-600 dark:text-user-300 ring-1 ring-inset ring-user-500/20">
                 <Zap className="w-3 h-3" />
-                {tp('level')} {currentLevel}
+                {tLevel('level', { level: currentLevel })}
               </span>
             </div>
 

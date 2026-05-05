@@ -55,6 +55,42 @@ export function getNotificationCategory(type: string, category?: string | null) 
   }
 }
 
+type TFn = (key: string) => string
+
+export function resolveNotificationCategory(type: string, category: string | null | undefined, t: TFn): string {
+  const raw = getNotificationCategory(type, category)
+  switch (raw) {
+    case 'Messaging': return t('categoryMessaging')
+    case 'Achievement': return t('categoryAchievement')
+    case 'Training': return t('categoryTraining')
+    case 'Nutrition': return t('categoryNutrition')
+    case 'Social': return t('categorySocial')
+    case 'System': return t('categorySystem')
+    default: return raw
+  }
+}
+
+export function resolveNotificationTitle(title: string, t: TFn): string {
+  switch (title) {
+    case 'Incoming call': return t('titleIncomingCall')
+    case 'New message': return t('titleNewMessage')
+    case 'Friend Request': return t('titleFriendRequest')
+    case 'Friend Request Accepted': return t('titleFriendRequestAccepted')
+    case 'Achievement Unlocked': return t('titleAchievementUnlocked')
+    case 'New Program': return t('titleNewProgram')
+    case 'New Follower': return t('titleNewFollower')
+    default: return title
+  }
+}
+
+export function resolveNotificationMessage(message: string, t: TFn): string {
+  switch (message) {
+    case 'User started a audio call.': return t('msgStartedAudioCall')
+    case 'User started a video call.': return t('msgStartedVideoCall')
+    default: return message
+  }
+}
+
 export function getNotificationHref(notification: Notification, basePath: string) {
   const entityType = notification.relatedEntityType?.toLowerCase()
   const entityId = notification.relatedEntityId

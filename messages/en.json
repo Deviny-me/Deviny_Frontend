@@ -1426,7 +1426,22 @@
     "justNow": "just now",
     "minutesAgo": "{count}m ago",
     "hoursAgo": "{count}h ago",
-    "daysAgo": "{count}d ago"
+    "daysAgo": "{count}d ago",
+    "titleIncomingCall": "Incoming call",
+    "titleNewMessage": "New message",
+    "titleFriendRequest": "Friend Request",
+    "titleFriendRequestAccepted": "Friend Request Accepted",
+    "titleAchievementUnlocked": "Achievement Unlocked",
+    "titleNewProgram": "New Program",
+    "titleNewFollower": "New Follower",
+    "msgStartedAudioCall": "User started a audio call.",
+    "msgStartedVideoCall": "User started a video call.",
+    "categoryMessaging": "Messaging",
+    "categoryAchievement": "Achievement",
+    "categoryTraining": "Training",
+    "categoryNutrition": "Nutrition",
+    "categorySocial": "Social",
+    "categorySystem": "System"
   },
 
   "achievements": {

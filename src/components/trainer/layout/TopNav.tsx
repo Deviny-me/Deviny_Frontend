@@ -82,6 +82,13 @@ export function TopNav() {
 
   useEffect(() => {
     if (!showProfileMenu) return
+    const handleKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setShowProfileMenu(false) }
+    document.addEventListener('keydown', handleKey)
+    return () => document.removeEventListener('keydown', handleKey)
+  }, [showProfileMenu])
+
+  useEffect(() => {
+    if (!showProfileMenu) return
 
     const handlePointerDown = (event: MouseEvent) => {
       if (profileMenuRef.current && !profileMenuRef.current.contains(event.target as Node)) {
@@ -92,8 +99,6 @@ export function TopNav() {
     document.addEventListener('mousedown', handlePointerDown)
     return () => document.removeEventListener('mousedown', handlePointerDown)
   }, [showProfileMenu])
-
-  const isActive = (path: string) => pathname === path || (path.split('/').length > 2 && pathname?.startsWith(`${path}/`))
 
   const handleLogout = async () => {
     await logout()
@@ -197,7 +202,7 @@ export function TopNav() {
               {/* Dropdown Menu */}
               {showProfileMenu && (
                 <>
-                  <div className="fixed inset-0 z-40" />
+                  <div className="fixed inset-0 z-40" onClick={() => setShowProfileMenu(false)} />
                   <div className="absolute right-0 top-full mt-2 w-[min(18rem,calc(100vw-1.5rem))] bg-surface-2 border border-border rounded-xl overflow-hidden z-50 animate-slide-down" style={{ boxShadow: 'var(--dropdown-shadow)' }}>
                     <div className="p-4 border-b border-border-subtle">
                       <div className="flex items-center gap-3">

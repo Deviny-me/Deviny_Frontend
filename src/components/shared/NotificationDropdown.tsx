@@ -10,7 +10,7 @@ import { Notification, NotificationRealtimePayload } from '@/types/notification'
 import { useAccentColors } from '@/lib/theme/useAccentColors'
 import { chatConnection } from '@/lib/signalr/chatConnection'
 import { filterArchivedNotifications, isNotificationArchived } from '@/lib/notifications/localArchive'
-import { getNotificationIcon, timeAgo } from '@/lib/notifications/presentation'
+import { getNotificationIcon, resolveNotificationTitle, resolveNotificationMessage, timeAgo } from '@/lib/notifications/presentation'
 
 export function NotificationDropdown() {
   const accent = useAccentColors()
@@ -222,10 +222,10 @@ export function NotificationDropdown() {
                     {/* Content */}
                     <div className="flex-1 min-w-0">
                       <p className="text-xs font-semibold text-foreground leading-tight">
-                        {notification.title}
+                        {resolveNotificationTitle(notification.title, t)}
                       </p>
                       <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">
-                        {notification.message}
+                        {resolveNotificationMessage(notification.message, t)}
                       </p>
                       <p className="text-[10px] text-faint-foreground mt-1">
                         {timeAgo(notification.createdAt, t)}

@@ -5,6 +5,8 @@ import { useRouter, usePathname } from 'next/navigation'
 import { X, MessageCircle, UserPlus, UserCheck, Bell, Phone } from 'lucide-react'
 import { chatConnection } from '@/lib/signalr/chatConnection'
 import { getMediaUrl } from '@/lib/config'
+import { useTranslations } from 'next-intl'
+import { resolveCallLogText } from '@/lib/utils/resolveCallLogText'
 
 interface ToastItem {
   id: string
@@ -64,6 +66,11 @@ export function RealtimeToastContainer() {
   const [toasts, setToasts] = useState<ToastItem[]>([])
   const router = useRouter()
   const pathname = usePathname()
+  const t = useTranslations('chat')
+  const callTypeText = useCallback(
+    (type: 'audio' | 'video') => type === 'video' ? t('videoCallLower') : t('audioCallLower'),
+    [t]
+  )
   const currentUserIdRef = useRef<string | null>(null)
 
   useEffect(() => {
@@ -112,7 +119,8 @@ export function RealtimeToastContainer() {
       if (pathname?.includes('/messages')) return
 
       const text = data.lastMessageText || ''
-      const truncatedText = text.length > 80 ? text.slice(0, 80) + '…' : text
+      const resolvedText = resolveCallLogText(text, t, callTypeText)
+      const truncatedText = resolvedText.length > 80 ? resolvedText.slice(0, 80) + '…' : resolvedText
       addToast({
         type: 'message',
         title: data.senderName || 'New message',
@@ -250,7 +258,7 @@ export function RealtimeToastContainer() {
       chatConnection.off('CallIceCandidate', handleCallIceCandidate)
       chatConnection.off('NotificationReceived', handleNotification)
     }
-  }, [pathname, addToast])
+  }, [pathname, addToast, t, callTypeText])
 
   const handleClick = (toast: ToastItem) => {
     removeToast(toast.id)

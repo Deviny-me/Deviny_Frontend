@@ -1425,7 +1425,22 @@
     "justNow": "indicə",
     "minutesAgo": "{count} dəq əvvəl",
     "hoursAgo": "{count} saat əvvəl",
-    "daysAgo": "{count} gün əvvəl"
+    "daysAgo": "{count} gün əvvəl",
+    "titleIncomingCall": "Gələn zəng",
+    "titleNewMessage": "Yeni mesaj",
+    "titleFriendRequest": "Dostluq sorğusu",
+    "titleFriendRequestAccepted": "Dostluq sorğusu qəbul edildi",
+    "titleAchievementUnlocked": "Nailiyyət əldə edildi",
+    "titleNewProgram": "Yeni proqram",
+    "titleNewFollower": "Yeni izləyici",
+    "msgStartedAudioCall": "İstifadəçi audio zəng başlatdı.",
+    "msgStartedVideoCall": "İstifadəçi video zəng başlatdı.",
+    "categoryMessaging": "Mesajlar",
+    "categoryAchievement": "Nailiyyət",
+    "categoryTraining": "Məşq",
+    "categoryNutrition": "Qidalanma",
+    "categorySocial": "Sosial",
+    "categorySystem": "Sistem"
   },
 
   "achievements": {

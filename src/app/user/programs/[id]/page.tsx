@@ -337,7 +337,12 @@ export default function ProgramDetailPage({
 
   const categoryMeta = getCategoryMeta(program.category, t)
   const CategoryIcon = categoryMeta.Icon
-  const accentColors = getAccentColorsByRole(program.trainerRole)
+  const isNutritionist = program.category === 'Diet' || program.trainerRole?.toLowerCase() === 'nutritionist' || program.trainerRole === '3'
+  const accentColors = getAccentColorsByRole(
+    program.category === 'Diet' ? 'nutritionist' :
+    program.category === 'Training' ? 'trainer' :
+    program.trainerRole
+  )
   const availablePrices = [program.price, program.standardPrice, program.proPrice].filter(
     (price): price is number => price != null && price >= 0
   )
@@ -347,7 +352,6 @@ export default function ProgramDetailPage({
   const averageRating = program.averageRating ?? 0
   const totalReviews = program.totalReviews ?? 0
   const totalPurchases = program.totalPurchases ?? 0
-  const isNutritionist = program.trainerRole?.toLowerCase() === 'nutritionist' || program.trainerRole === '2'
 
   const tierOptions: TierOption[] = [
     program.price >= 0
