@@ -201,19 +201,6 @@ export function StudentsClientsContent({ fetchData }: StudentsClientsContentProp
                 </button>
               </div>
 
-              <div className="space-y-1.5 mb-4">
-                <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                  <Mail className="w-3.5 h-3.5 text-faint-foreground shrink-0" />
-                  <span className="truncate">{student.email}</span>
-                </div>
-                {student.phone && (
-                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                    <Phone className="w-3.5 h-3.5 text-faint-foreground shrink-0" />
-                    <span className="truncate">{student.phone}</span>
-                  </div>
-                )}
-              </div>
-
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => router.push(`${basePath}/messages?userId=${student.id}`)}

@@ -845,6 +845,8 @@
     "selectConversationHint": "Mesajlaşmağa başlamaq üçün çat seçin",
     "backToMessages": "Mesajlara qayıt",
     "chatFallbackName": "Çat",
+    "dateToday": "Bu gün",
+    "dateYesterday": "Dünən",
     "online": "Onlayn",
     "lastSeenRecently": "Son görülmə yaxın vaxtlarda",
     "lastSeenJustNow": "İndicə görülüb",
@@ -1297,6 +1299,7 @@
     "browsePrograms": "Proqramlara bax",
     "training": "Məşq",
     "nutrition": "Qidalanma",
+    "consultation": "Konsultasiya",
     "aboutProgram": "Proqram haqqında",
     "videos": "Videolar",
     "videoNotSupported": "Brauzeriniz video oxutmanı dəstəkləmir",
@@ -1389,6 +1392,15 @@
     "privacy": "Məxfilik",
     "terms": "Şərtlər",
     "copyright": "Deviny Fitness © 2026"
+  },
+
+  "leaderboardSidebar": {
+    "title": "Reytinq",
+    "tab_user": "İstifadəçilər",
+    "tab_trainer": "Trənörlər",
+    "tab_nutritionist": "Nutrisioloqlar",
+    "emptyTitle": "Reytinq hələ yoxdur",
+    "emptyHint": "Aktiv olun — siyahı tezliklə yenilənəcək."
   },
 
   "notifications": {

@@ -78,6 +78,31 @@ function formatTime(dateStr: string): string {
   })
 }
 
+function formatDateSeparator(
+  dateStr: string,
+  t: (key: string, values?: any) => any,
+  locale: string
+): string {
+  const d = new Date(dateStr)
+  if (Number.isNaN(d.getTime())) return ''
+  const today = new Date()
+  const yesterday = new Date()
+  yesterday.setDate(today.getDate() - 1)
+  const sameDay = (a: Date, b: Date) =>
+    a.getFullYear() === b.getFullYear() &&
+    a.getMonth() === b.getMonth() &&
+    a.getDate() === b.getDate()
+
+  if (sameDay(d, today)) return t('dateToday')
+  if (sameDay(d, yesterday)) return t('dateYesterday')
+
+  const diffDays = Math.floor((today.getTime() - d.getTime()) / 86_400_000)
+  if (diffDays > 0 && diffDays < 7) {
+    return d.toLocaleDateString(locale, { weekday: 'long' })
+  }
+  return d.toLocaleDateString(locale, { day: 'numeric', month: 'long', year: 'numeric' })
+}
+
 function formatLastSeen(
   lastSeenAtUtc: string | null | undefined,
   t: (key: string, values?: any) => any,
@@ -631,7 +656,11 @@ export default function ChatInbox() {
     }
 
     if (lastVisibleMessageIdRef.current === null) {
+      // First load of this conversation — jump straight to the bottom (WhatsApp style).
       lastVisibleMessageIdRef.current = latestMessageId
+      requestAnimationFrame(() => {
+        messagesEndRef.current?.scrollIntoView({ block: 'end' })
+      })
       return
     }
 
@@ -1149,6 +1178,7 @@ export default function ChatInbox() {
     setReplyTo(null)
     setPendingFile(null)
     setSending(true)
+    inputRef.current?.focus()
 
     try {
       await chatConnection.sendMessage(
@@ -1169,6 +1199,7 @@ export default function ChatInbox() {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault()
       handleSend()
+      inputRef.current?.focus()
     }
   }
 
@@ -1938,16 +1969,28 @@ export default function ChatInbox() {
                 </div>
               ) : (
                 <div className="space-y-3">
-                  {messages.map(msg => {
+                  {messages.map((msg, idx) => {
                     const isMe =
                       currentUserId !== null &&
                       (msg.senderId.toLowerCase() === currentUserId.toLowerCase() ||
                         msg.id.startsWith('temp-'))
+                    const prev = idx > 0 ? messages[idx - 1] : null
+                    const showDateSeparator =
+                      !prev ||
+                      new Date(prev.createdAt).toDateString() !==
+                        new Date(msg.createdAt).toDateString()
                     return (
-                      <div
-                        key={msg.id}
-                        className={`flex ${isMe ? 'justify-end' : 'justify-start'}`}
-                      >
+                      <div key={msg.id}>
+                        {showDateSeparator && (
+                          <div className="flex justify-center my-3">
+                            <span className="px-3 py-1 rounded-full bg-surface-2 ring-1 ring-inset ring-border-subtle text-[11px] font-medium text-muted-foreground">
+                              {formatDateSeparator(msg.createdAt, t, locale)}
+                            </span>
+                          </div>
+                        )}
+                        <div
+                          className={`flex ${isMe ? 'justify-end' : 'justify-start'}`}
+                        >
                         <div className="flex max-w-[92%] items-end gap-2 sm:max-w-[72%]">
                           {!isMe && (
                             <Avatar
@@ -2044,6 +2087,7 @@ export default function ChatInbox() {
                               </div>
                             )}
                           </div>
+                        </div>
                         </div>
                       </div>
                     )
@@ -2148,7 +2192,6 @@ export default function ChatInbox() {
                     if (selectedConvId) draftsRef.current[selectedConvId] = e.target.value
                   }}
                   onKeyDown={handleKeyDown}
-                  disabled={sending}
                   className="min-w-0 flex-1 h-10 rounded-full bg-surface-2 ring-1 ring-inset ring-border-subtle px-4 text-sm text-foreground placeholder:text-faint-foreground focus:outline-none focus:ring-2 focus:ring-[var(--ring-color)] transition-[box-shadow] duration-200"
                 />
                 <button

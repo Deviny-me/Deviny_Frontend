@@ -341,7 +341,6 @@ export function DashboardContent({ role }: DashboardContentProps) {
                 )}
                 <div className="flex-1 min-w-0">
                   <p className="text-foreground font-medium truncate text-sm">{student.fullName}</p>
-                  <p className="text-muted-foreground text-xs truncate">{student.email}</p>
                 </div>
               </div>
             ))}

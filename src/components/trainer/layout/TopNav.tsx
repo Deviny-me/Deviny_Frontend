@@ -105,6 +105,8 @@ export function TopNav() {
     router.push('/auth/login')
   }
 
+  const isActive = (path: string) => pathname === path || (path.split('/').length > 2 && pathname?.startsWith(`${path}/`))
+
   return (
     <nav className="sticky top-0 glass-strong border-b border-border-subtle z-50">
       <div className="max-w-[1600px] mx-auto px-3 sm:px-4 md:px-6">

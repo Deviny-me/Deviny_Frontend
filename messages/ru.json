@@ -845,6 +845,8 @@
     "selectConversationHint": "Выберите чат, чтобы начать переписку",
     "backToMessages": "Назад к сообщениям",
     "chatFallbackName": "Чат",
+    "dateToday": "Сегодня",
+    "dateYesterday": "Вчера",
     "online": "Онлайн",
     "lastSeenRecently": "Был(а) недавно",
     "lastSeenJustNow": "Был(а) только что",
@@ -1297,6 +1299,7 @@
     "browsePrograms": "Обзор программ",
     "training": "Тренировка",
     "nutrition": "Питание",
+    "consultation": "Консультация",
     "aboutProgram": "О программе",
     "videos": "Видео",
     "videoNotSupported": "Ваш браузер не поддерживает воспроизведение видео",
@@ -1389,6 +1392,15 @@
     "privacy": "Конфиденциальность",
     "terms": "Условия",
     "copyright": "Deviny Fitness © 2026"
+  },
+
+  "leaderboardSidebar": {
+    "title": "Рейтинг",
+    "tab_user": "Юзеры",
+    "tab_trainer": "Тренеры",
+    "tab_nutritionist": "Нутрициологи",
+    "emptyTitle": "Пока нет рейтингов",
+    "emptyHint": "Будьте активнее — список скоро обновится."
   },
 
   "notifications": {

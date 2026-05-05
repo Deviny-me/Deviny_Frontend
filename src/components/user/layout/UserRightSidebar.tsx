@@ -11,6 +11,7 @@ import {
 import { useEffect, useState } from 'react'
 import { PublicProgramDto } from '@/types/program'
 import { useTranslations } from 'next-intl'
+import { LeaderboardSidebar } from '@/components/shared/LeaderboardSidebar'
 
 // Program Detail Modal Component
 function ProgramDetailModal({ 
@@ -181,7 +182,9 @@ export function UserRightSidebar() {
   const [selectedProgram, setSelectedProgram] = useState<PublicProgramDto | null>(null)
 
   return (
-    <div className="w-72 flex-shrink-0 space-y-2 sticky top-[57px] h-[calc(100vh-57px)] overflow-y-auto pb-6">
+    <div className="w-72 flex-shrink-0 space-y-4 sticky top-[57px] h-[calc(100vh-57px)] overflow-y-auto pb-6 scrollbar-hide">
+      <LeaderboardSidebar basePath="/user" />
+
       {/* Program Detail Modal */}
       {selectedProgram && (
         <ProgramDetailModal

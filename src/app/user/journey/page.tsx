@@ -8,6 +8,7 @@ import {
   Loader2,
   Dumbbell,
   Apple,
+  MessageSquare,
   Video,
   Star,
 } from 'lucide-react'
@@ -47,13 +48,17 @@ export default function MyJourneyPage() {
     loadPurchases()
   })
 
+  const isConsultation = (p: PurchasedProgramDto) => p.category === 'Consultation'
+
   const filteredPrograms = programs.filter(p => {
     if (filter === 'all') return true
-    return p.programType === filter
+    if (filter === 'meal') return p.programType === 'meal' && !isConsultation(p)
+    // 'training' includes consultations — they show as Training
+    return p.programType === 'training' || isConsultation(p)
   })
 
-  const trainingCount = programs.filter(p => p.programType === 'training').length
-  const mealCount = programs.filter(p => p.programType === 'meal').length
+  const trainingCount = programs.filter(p => p.programType === 'training' || isConsultation(p)).length
+  const mealCount = programs.filter(p => p.programType === 'meal' && !isConsultation(p)).length
 
   return (
     <>
@@ -151,7 +156,7 @@ export default function MyJourneyPage() {
                     />
                   ) : (
                     <div className="w-full h-full bg-gradient-to-br from-[#0c8de6]/20 to-[#0070c4]/20 flex items-center justify-center">
-                      {program.programType === 'training' 
+                      {program.programType === 'training' || isConsultation(program)
                         ? <Dumbbell className="w-12 h-12 text-gray-600" />
                         : <Apple className="w-12 h-12 text-gray-600" />
                       }
@@ -160,9 +165,9 @@ export default function MyJourneyPage() {
                   {/* Type badge */}
                   <div className="absolute top-2 left-2">
                     <span className={`px-2 py-1 text-xs font-bold rounded text-foreground ${
-                      program.programType === 'training' ? 'bg-orange-500' : 'bg-green-600'
+                      program.programType === 'training' || isConsultation(program) ? 'bg-orange-500' : 'bg-green-600'
                     }`}>
-                      {program.programType === 'training' ? t('training') : t('nutrition')}
+                      {program.programType === 'training' || isConsultation(program) ? t('training') : t('nutrition')}
                     </span>
                   </div>
                   {/* Tier badge */}

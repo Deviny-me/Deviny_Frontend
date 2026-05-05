@@ -42,6 +42,31 @@ function formatLastSeen(
   return t('lastSeenDateTime', { date, time })
 }
 
+function formatDateSeparator(
+  dateStr: string,
+  t: (key: string, values?: any) => any,
+  locale: string
+): string {
+  const d = new Date(dateStr)
+  if (Number.isNaN(d.getTime())) return ''
+  const today = new Date()
+  const yesterday = new Date()
+  yesterday.setDate(today.getDate() - 1)
+  const sameDay = (a: Date, b: Date) =>
+    a.getFullYear() === b.getFullYear() &&
+    a.getMonth() === b.getMonth() &&
+    a.getDate() === b.getDate()
+
+  if (sameDay(d, today)) return t('dateToday')
+  if (sameDay(d, yesterday)) return t('dateYesterday')
+
+  const diffDays = Math.floor((today.getTime() - d.getTime()) / 86_400_000)
+  if (diffDays > 0 && diffDays < 7) {
+    return d.toLocaleDateString(locale, { weekday: 'long' })
+  }
+  return d.toLocaleDateString(locale, { day: 'numeric', month: 'long', year: 'numeric' })
+}
+
 export default function ChatModal({ otherUserId, otherUserName, otherUserAvatarUrl, otherUserRole, onClose }: ChatModalProps) {
   const QUICK_EMOJIS = ['😀', '😂', '😍', '😎', '😭', '😡', '👍', '👏', '🙏', '🔥', '❤️', '🎉']
   const accent = useAccentColors()
@@ -59,6 +84,7 @@ export default function ChatModal({ otherUserId, otherUserName, otherUserAvatarU
   const [presence, setPresence] = useState<UserPresenceDto | null>(null)
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const emojiPickerRef = useRef<HTMLDivElement>(null)
+  const inputRef = useRef<HTMLInputElement>(null)
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const loadingRef = useRef(false);
   const conversationIdRef = useRef<string | null>(null);
@@ -223,7 +249,20 @@ export default function ChatModal({ otherUserId, otherUserName, otherUserAvatarU
   }, [conversationId])
 
   // Scroll to bottom when messages change
+  const hasScrolledRef = useRef(false)
   useEffect(() => {
+    if (messages.length === 0) {
+      hasScrolledRef.current = false
+      return
+    }
+    if (!hasScrolledRef.current) {
+      // First render of messages — jump straight to bottom (no smooth animation).
+      hasScrolledRef.current = true
+      requestAnimationFrame(() => {
+        messagesEndRef.current?.scrollIntoView({ block: 'end' })
+      })
+      return
+    }
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
@@ -274,6 +313,7 @@ export default function ChatModal({ otherUserId, otherUserName, otherUserAvatarU
     try {
       setIsSending(true);
       setNewMessage('');
+      inputRef.current?.focus();
 
       const message = await messagesApi.sendMessage(conversationId, { text });
       // The message will also arrive via SignalR ReceiveMessage; deduplicate above handles it
@@ -286,6 +326,7 @@ export default function ChatModal({ otherUserId, otherUserName, otherUserAvatarU
       setNewMessage(text);
     } finally {
       setIsSending(false);
+      inputRef.current?.focus();
     }
   };
 
@@ -380,10 +421,23 @@ export default function ChatModal({ otherUserId, otherUserName, otherUserAvatarU
               <p className="text-xs text-faint-foreground mt-1">{t('sendMessageToStart')}</p>
             </div>
           ) : (
-            messages.map((message) => {
+            messages.map((message, idx) => {
               const isMe = message.senderId.toLowerCase() === currentUserId;
+              const prev = idx > 0 ? messages[idx - 1] : null
+              const showDateSeparator =
+                !prev ||
+                new Date(prev.createdAt).toDateString() !==
+                  new Date(message.createdAt).toDateString()
               return (
-                <div key={message.id} className={`flex ${isMe ? 'justify-end' : 'justify-start'}`}>
+                <div key={message.id}>
+                  {showDateSeparator && (
+                    <div className="flex justify-center my-3">
+                      <span className="px-3 py-1 rounded-full bg-surface-2 ring-1 ring-inset ring-border-subtle text-[11px] font-medium text-muted-foreground">
+                        {formatDateSeparator(message.createdAt, t, locale)}
+                      </span>
+                    </div>
+                  )}
+                  <div className={`flex ${isMe ? 'justify-end' : 'justify-start'}`}>
                   <div className={`max-w-[70%]`}>
                     {/* Reply preview */}
                     {message.replyTo && (
@@ -408,6 +462,7 @@ export default function ChatModal({ otherUserId, otherUserName, otherUserAvatarU
                       })}
                       {isMe && message.readAt && ` · ${t('read')}`}
                     </p>
+                  </div>
                   </div>
                 </div>
               );
@@ -445,12 +500,12 @@ export default function ChatModal({ otherUserId, otherUserName, otherUserAvatarU
               </div>
             )}
             <input
+              ref={inputRef}
               type="text"
               value={newMessage}
               onChange={(e) => setNewMessage(e.target.value)}
               placeholder={t('typeMessagePlaceholder')}
               className={`flex-1 bg-background text-foreground rounded-lg px-4 py-2 text-sm focus:outline-none ${accent.focusBorder}`}
-              disabled={isSending}
             />
             <button
               type="submit"

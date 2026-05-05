@@ -8,6 +8,7 @@ import { useTranslations } from 'next-intl'
 import { studentsApi, Student } from '@/lib/api/studentsApi'
 import { scheduleApi } from '@/lib/api/scheduleApi'
 import { getMediaUrl } from '@/lib/config'
+import { LeaderboardSidebar } from '@/components/shared/LeaderboardSidebar'
 
 export function RightSidebar() {
   const router = useRouter()
@@ -53,6 +54,8 @@ export function RightSidebar() {
 
   return (
     <div className="w-72 flex-shrink-0 space-y-4 sticky top-[57px] h-[calc(100vh-57px)] overflow-y-auto pb-6 scrollbar-hide">
+      <LeaderboardSidebar basePath="/trainer" />
+
       {/* Recent Students */}
       {students.length > 0 && (
         <div className="bg-surface-2 rounded-xl border border-border-subtle p-4">
@@ -85,7 +88,6 @@ export function RightSidebar() {
                 )}
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium text-foreground truncate">{student.name}</p>
-                  <p className="text-xs text-faint-foreground truncate">{student.email}</p>
                 </div>
               </div>
             ))}

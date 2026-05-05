@@ -140,19 +140,10 @@ export function ExpertProfileContent({ basePath }: ExpertProfileContentProps) {
                       <p className="text-sm text-muted-foreground mt-1">{profile.trainer.secondaryTitle}</p>
                     )}
 
-                    {/* Gender and Phone */}
+                    {/* Gender */}
                     <div className="flex flex-wrap items-center gap-3 mt-2">
                       {profile.trainer.gender && (
                         <p className="text-sm text-muted-foreground">{profile.trainer.gender}</p>
-                      )}
-                      {profile.trainer.phone && (
-                        <a
-                          href={`tel:${profile.trainer.phone}`}
-                          className={`flex items-center gap-1 text-sm text-muted-foreground ${expertAccent.hoverText} transition-colors`}
-                        >
-                          <Phone className="w-3.5 h-3.5" />
-                          <span>{profile.trainer.phone}</span>
-                        </a>
                       )}
                     </div>
 
@@ -217,15 +208,6 @@ export function ExpertProfileContent({ basePath }: ExpertProfileContentProps) {
                           <MessageCircle className="w-4 h-4" />
                           {t('sendMessage')}
                         </button>
-                        {profile.trainer.phone && (
-                          <a
-                            href={`tel:${profile.trainer.phone}`}
-                            className="px-4 py-2 bg-background hover:bg-hover-overlay rounded-lg text-sm text-muted-foreground transition-colors flex items-center gap-2"
-                          >
-                            <Phone className="w-4 h-4" />
-                            {t('call')}
-                          </a>
-                        )}
                       </div>
                     )}
                   </div>

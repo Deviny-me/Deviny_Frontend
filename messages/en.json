@@ -845,6 +845,8 @@
     "selectConversationHint": "Choose a chat to start messaging",
     "backToMessages": "Back to messages",
     "chatFallbackName": "Chat",
+    "dateToday": "Today",
+    "dateYesterday": "Yesterday",
     "online": "Online",
     "lastSeenRecently": "Last seen recently",
     "lastSeenJustNow": "Last seen just now",
@@ -1298,6 +1300,7 @@
     "browsePrograms": "Browse Programs",
     "training": "Training",
     "nutrition": "Nutrition",
+    "consultation": "Consultation",
     "aboutProgram": "About program",
     "videos": "Videos",
     "videoNotSupported": "Your browser does not support video playback",
@@ -1390,6 +1393,15 @@
     "privacy": "Privacy",
     "terms": "Terms",
     "copyright": "Deviny Fitness © 2026"
+  },
+
+  "leaderboardSidebar": {
+    "title": "Leaderboard",
+    "tab_user": "Users",
+    "tab_trainer": "Trainers",
+    "tab_nutritionist": "Nutritionists",
+    "emptyTitle": "No rankings yet",
+    "emptyHint": "Stay active — rankings refresh shortly."
   },
 
   "notifications": {
