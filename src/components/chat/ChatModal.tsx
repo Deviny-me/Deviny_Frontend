@@ -9,6 +9,12 @@ import { MessageDto, UserPresenceDto } from '@/types/message';
 import { MEDIA_BASE_URL } from '@/lib/config';
 import { useAccentColors, getRoleRingClass, getAccentColorsByRole } from '@/lib/theme/useAccentColors'
 import { useLocale, useTranslations } from 'next-intl'
+import {
+  ensureMyKeypairAndPublish,
+  encryptForPeer,
+  decryptIncoming,
+  isEncryptedEnvelope,
+} from '@/lib/crypto/e2ee'
 
 interface ChatModalProps {
   otherUserId: string;
@@ -109,6 +115,29 @@ export default function ChatModal({ otherUserId, otherUserName, otherUserAvatarU
     }
   }, []);
 
+  // E2EE: ensure local keypair exists and publish public key
+  useEffect(() => {
+    if (!currentUserId) return
+    ensureMyKeypairAndPublish(currentUserId, messagesApi.putMyChatKey).catch(err =>
+      console.warn('[ChatModal] Failed to ensure E2EE keypair:', err)
+    )
+  }, [currentUserId]);
+
+  const decryptDto = async (msg: MessageDto): Promise<MessageDto> => {
+    if (!isEncryptedEnvelope(msg.text) && !(msg.replyTo && isEncryptedEnvelope(msg.replyTo.text))) {
+      return msg
+    }
+    const text = isEncryptedEnvelope(msg.text)
+      ? await decryptIncoming(msg.text, currentUserId)
+      : msg.text
+    let replyTo = msg.replyTo
+    if (replyTo && isEncryptedEnvelope(replyTo.text)) {
+      const replyText = await decryptIncoming(replyTo.text, currentUserId)
+      replyTo = { ...replyTo, text: replyText }
+    }
+    return { ...msg, text, replyTo }
+  };
+
   // Load conversation and messages
   useEffect(() => {
     if (loadingRef.current) return;
@@ -124,7 +153,8 @@ export default function ChatModal({ otherUserId, otherUserName, otherUserAvatarU
         setConversationId(convId);
 
         // Load messages
-        const msgs = await messagesApi.getConversationMessages(convId);
+        const rawMsgs = await messagesApi.getConversationMessages(convId);
+        const msgs = await Promise.all(rawMsgs.map(decryptDto));
         setMessages(msgs);
 
         // Mark messages as read
@@ -142,10 +172,11 @@ export default function ChatModal({ otherUserId, otherUserName, otherUserAvatarU
 
   // ─── SignalR: real-time message receiving ───
   useEffect(() => {
-    const handleReceiveMessage = (msg: MessageDto) => {
+    const handleReceiveMessage = async (rawMsg: MessageDto) => {
       const activeConvId = conversationIdRef.current
-      if (!activeConvId || msg.conversationId.toLowerCase() !== activeConvId.toLowerCase()) return
+      if (!activeConvId || rawMsg.conversationId.toLowerCase() !== activeConvId.toLowerCase()) return
 
+      const msg = await decryptDto(rawMsg)
       setMessages(prev => {
         // Deduplicate (message may come from both REST response and SignalR broadcast)
         if (prev.some(m => m.id === msg.id)) return prev
@@ -315,11 +346,20 @@ export default function ChatModal({ otherUserId, otherUserName, otherUserAvatarU
       setNewMessage('');
       inputRef.current?.focus();
 
-      const message = await messagesApi.sendMessage(conversationId, { text });
+      // E2EE: encrypt for peer (and self) before sending; fall back to plaintext
+      // if peer hasn't published a key yet.
+      let outgoingText = text;
+      if (currentUserId) {
+        const cipher = await encryptForPeer(text, currentUserId, otherUserId, messagesApi.getPeerChatKey);
+        if (cipher) outgoingText = cipher;
+      }
+
+      const message = await messagesApi.sendMessage(conversationId, { text: outgoingText });
       // The message will also arrive via SignalR ReceiveMessage; deduplicate above handles it
+      const decrypted = await decryptDto(message);
       setMessages((prev) => {
-        if (prev.some(m => m.id === message.id)) return prev
-        return [...prev, message]
+        if (prev.some(m => m.id === decrypted.id)) return prev
+        return [...prev, decrypted]
       });
     } catch (err) {
       setError(err instanceof Error ? err.message : t('failedToSendMessage'));

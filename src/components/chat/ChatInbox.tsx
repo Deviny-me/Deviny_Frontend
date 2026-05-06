@@ -30,6 +30,12 @@ import { MEDIA_BASE_URL } from '@/lib/config'
 import { useAccentColors, getRoleRingClass, getAccentColorsByRole } from '@/lib/theme/useAccentColors'
 import { useLocale, useTranslations } from 'next-intl'
 import { resolveCallLogText as resolveCallLogTextUtil } from '@/lib/utils/resolveCallLogText'
+import {
+  ensureMyKeypairAndPublish,
+  encryptForPeer,
+  decryptIncoming,
+  isEncryptedEnvelope,
+} from '@/lib/crypto/e2ee'
 import type {
   ConversationListItemDto,
   MessageDto,
@@ -338,16 +344,61 @@ export default function ChatInbox() {
     [t, callTypeText],
   )
 
+  // ─── E2EE: ensure local keypair exists and publish public key ───
+  useEffect(() => {
+    if (!currentUserId) return
+    ensureMyKeypairAndPublish(currentUserId, messagesApi.putMyChatKey).catch(err =>
+      console.warn('[Chat] Failed to ensure E2EE keypair:', err)
+    )
+  }, [currentUserId])
+
+  const fetchPeerKey = useCallback(
+    (userId: string) => messagesApi.getPeerChatKey(userId),
+    [],
+  )
+
+  const decryptMessageDto = useCallback(async (msg: MessageDto): Promise<MessageDto> => {
+    const text = isEncryptedEnvelope(msg.text)
+      ? await decryptIncoming(msg.text, currentUserId)
+      : msg.text
+    let replyTo = msg.replyTo
+    if (replyTo && isEncryptedEnvelope(replyTo.text)) {
+      const replyText = await decryptIncoming(replyTo.text, currentUserId)
+      replyTo = { ...replyTo, text: replyText }
+    }
+    return { ...msg, text, replyTo }
+  }, [currentUserId])
+
+  const decryptMessages = useCallback(
+    (list: MessageDto[]) => Promise.all(list.map(decryptMessageDto)),
+    [decryptMessageDto],
+  )
+
+  const decryptPreview = useCallback(
+    (text: string | null): Promise<string | null> => {
+      if (!text || !isEncryptedEnvelope(text)) return Promise.resolve(text)
+      return decryptIncoming(text, currentUserId).then(t => t || null)
+    },
+    [currentUserId],
+  )
+
   // ─── load conversations ───
 
   const loadConversations = useCallback(async () => {
     try {
       setLoadingConvs(true)
       const data = await messagesApi.getMyConversations(1, 100)
-      setConversations(data.items)
+      // Decrypt last-message previews so the list renders plaintext.
+      const decryptedItems = await Promise.all(
+        data.items.map(async item => ({
+          ...item,
+          lastMessageText: await decryptPreview(item.lastMessageText),
+        })),
+      )
+      setConversations(decryptedItems)
       setPresenceByUserId(prev => {
         const next = { ...prev }
-        for (const conv of data.items) {
+        for (const conv of decryptedItems) {
           const key = conv.peerUser.id.toLowerCase()
           next[key] = {
             isOnline: !!conv.peerUser.isOnline,
@@ -361,14 +412,15 @@ export default function ChatInbox() {
     } finally {
       setLoadingConvs(false)
     }
-  }, [])
+  }, [decryptPreview])
 
   // ─── load messages for selected conversation ───
 
   const loadMessages = useCallback(async (convId: string) => {
     try {
       setLoadingMsgs(true)
-      const data = await messagesApi.getConversationMessages(convId)
+      const raw = await messagesApi.getConversationMessages(convId)
+      const data = await decryptMessages(raw)
       setMessages(data)
 
       // Mark as read
@@ -381,7 +433,7 @@ export default function ChatInbox() {
     } finally {
       setLoadingMsgs(false)
     }
-  }, [currentUserId])
+  }, [currentUserId, decryptMessages])
 
   // ─── initial load ───
   useEffect(() => { loadConversations() }, [loadConversations])
@@ -391,7 +443,8 @@ export default function ChatInbox() {
     const myId = getUserIdFromToken()
 
     // Handle incoming messages — only updates message thread
-    const handleReceiveMessage = (msg: MessageDto) => {
+    const handleReceiveMessage = async (rawMsg: MessageDto) => {
+      const msg = await decryptMessageDto(rawMsg)
       const activeConvId = selectedConvIdRef.current
 
       // If this conv is open → append message
@@ -410,7 +463,7 @@ export default function ChatInbox() {
     }
 
     // Handle conversation list updates — arrives via personal user group
-    const handleConversationUpdated = (data: {
+    const handleConversationUpdated = async (data: {
       conversationId: string
       lastMessageText: string
       lastMessageAt: string
@@ -419,6 +472,9 @@ export default function ChatInbox() {
     }) => {
       const activeConvId = selectedConvIdRef.current
       const myIdLower = myId?.toLowerCase()
+      const previewText = isEncryptedEnvelope(data.lastMessageText)
+        ? await decryptIncoming(data.lastMessageText, myId)
+        : data.lastMessageText
 
       setConversations(prev => {
         const idx = prev.findIndex(c => c.id.toLowerCase() === data.conversationId.toLowerCase())
@@ -432,7 +488,7 @@ export default function ChatInbox() {
         const isOpen = activeConvId?.toLowerCase() === data.conversationId.toLowerCase()
         updated[idx] = {
           ...updated[idx],
-          lastMessageText: data.lastMessageText,
+          lastMessageText: previewText,
           lastMessageAt: data.lastMessageAt,
           unreadCount:
             !isMine && !isOpen
@@ -455,6 +511,21 @@ export default function ChatInbox() {
           data.messageIds.includes(m.id) ? { ...m, readAt: data.readAt } : m
         )
       )
+
+      // If WE are the one who read the messages, clear the per-conversation
+      // unread badge in the list immediately (server-side count will follow
+      // via UnreadCountUpdated, but the list-row badge has its own counter).
+      const myIdLower = myId?.toLowerCase()
+      const readByLower = (data.readBy as string | undefined)?.toLowerCase()
+      if (myIdLower && readByLower && myIdLower === readByLower) {
+        setConversations(prev =>
+          prev.map(c =>
+            c.id.toLowerCase() === (data.conversationId as string).toLowerCase()
+              ? { ...c, unreadCount: 0 }
+              : c
+          )
+        )
+      }
     }
 
     const handleNewConversation = () => {
@@ -519,7 +590,7 @@ export default function ChatInbox() {
       chatConnection.off('PresenceUpdated', handlePresenceUpdated)
       chatConnection.offReconnected(handleReconnected)
     }
-  }, [loadConversations, loadMessages])
+  }, [loadConversations, loadMessages, decryptMessageDto])
 
   useEffect(() => {
     let cancelled = false
@@ -952,11 +1023,19 @@ export default function ChatInbox() {
 
   const sendCallLogMessage = useCallback(async (conversationId: string, text: string) => {
     try {
-      await chatConnection.sendMessage(conversationId, text)
+      let outgoing = text
+      // Look up the peer for this conversation to encrypt the call marker.
+      const conv = conversations.find(c => c.id.toLowerCase() === conversationId.toLowerCase())
+      const peerId = conv?.peerUser.id
+      if (text && currentUserId && peerId) {
+        const cipher = await encryptForPeer(text, currentUserId, peerId, fetchPeerKey)
+        if (cipher) outgoing = cipher
+      }
+      await chatConnection.sendMessage(conversationId, outgoing)
     } catch (err) {
       console.error('Failed to send call log message', err)
     }
-  }, [])
+  }, [conversations, currentUserId, fetchPeerKey])
 
   const armIncomingCallTimeout = useCallback((call: IncomingCallState) => {
     if (incomingCallTimeoutRef.current) clearTimeout(incomingCallTimeoutRef.current)
@@ -1181,8 +1260,15 @@ export default function ChatInbox() {
     inputRef.current?.focus()
 
     try {
+      // E2EE: encrypt the visible text for the peer (and self) before sending.
+      // Falls back to plaintext if the peer has no published key (legacy clients).
+      let outgoingText = text
+      if (text && currentUserId && selectedConv?.peerUser.id) {
+        const cipher = await encryptForPeer(text, currentUserId, selectedConv.peerUser.id, fetchPeerKey)
+        if (cipher) outgoingText = cipher
+      }
       await chatConnection.sendMessage(
-        selectedConvId, text, replyId,
+        selectedConvId, outgoingText, replyId,
         attachment?.url, attachment?.fileName, attachment?.contentType, attachment?.size
       )
     } catch (err) {

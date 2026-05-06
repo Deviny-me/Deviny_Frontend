@@ -68,9 +68,18 @@ export function UnreadMessagesProvider({ children }: { children: ReactNode }) {
       if (mounted) fetchUnreadCount()
     }
 
+    // When messages get marked as read (by us, or peer reading our messages),
+    // the server recomputes the unread total but only some backends emit
+    // UnreadCountUpdated for it. Re-fetch defensively to keep the global
+    // header badge in sync.
+    const handleMessagesRead = () => {
+      if (mounted) fetchUnreadCount()
+    }
+
     // Register handlers BEFORE start — they get stored in the Map
     // and re-applied on new connections / reconnects
     chatConnection.on('UnreadCountUpdated', handleUnreadCountUpdated)
+    chatConnection.on('MessagesRead', handleMessagesRead)
     chatConnection.onReconnected(handleReconnected)
 
     // Fire and forget — if connection already active, start() is a no-op
@@ -79,6 +88,7 @@ export function UnreadMessagesProvider({ children }: { children: ReactNode }) {
     return () => {
       mounted = false
       chatConnection.off('UnreadCountUpdated', handleUnreadCountUpdated)
+      chatConnection.off('MessagesRead', handleMessagesRead)
       chatConnection.offReconnected(handleReconnected)
     }
   }, [fetchUnreadCount])

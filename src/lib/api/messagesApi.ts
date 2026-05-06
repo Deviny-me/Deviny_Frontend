@@ -56,6 +56,17 @@ export const messagesApi = {
   getUserPresence: (userId: string): Promise<UserPresenceDto> =>
     apiRequest<UserPresenceDto>(`/me/chats/presence/${userId}`),
 
+  /** Upload my chat public key (E2EE). Backend stores it as-is. */
+  putMyChatKey: (publicKey: string): Promise<void> =>
+    apiRequest<void>('/me/chat-key', {
+      method: 'PUT',
+      body: JSON.stringify({ publicKey }),
+    }),
+
+  /** Fetch a peer's chat public key for direct E2EE messaging. */
+  getPeerChatKey: (userId: string): Promise<{ publicKey: string | null }> =>
+    apiRequest<{ publicKey: string | null }>(`/me/chats/direct/${userId}/key`),
+
   /** Upload a file for a chat message. */
   uploadChatFile: async (file: File): Promise<ChatFileUploadResult> => {
     const token = typeof window !== 'undefined' ? (localStorage.getItem('accessToken') || sessionStorage.getItem('accessToken')) : null

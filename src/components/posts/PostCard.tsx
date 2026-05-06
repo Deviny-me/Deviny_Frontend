@@ -142,6 +142,14 @@ function PostCardComponent({
     normalizeId(post.author?.id) === normResolved
   ))
 
+  // Hide repost button when current user authored the post (or its original) —
+  // backend rejects self-reposts, so the action would always fail.
+  const isOriginalAuthor = !!normResolved && (
+    normalizeId(post.originalPost?.userId) === normResolved ||
+    normalizeId(post.originalPost?.author?.id) === normResolved
+  )
+  const hideRepostButton = isOwner || isOriginalAuthor
+
   // Determine avatar color based on author's role, not current user's role
   const authorRole = post.author?.role
   const authorAccent = getAccentColorsByRole(authorRole)
@@ -223,6 +231,7 @@ function PostCardComponent({
               postId={post.id}
               onCommentClick={closeComments}
               onRepostSuccess={onRepostSuccess}
+              hideRepost={hideRepostButton}
             />
           </div>
         </div>
@@ -389,6 +398,7 @@ function PostCardComponent({
                 postId={post.id}
                 onCommentClick={toggleComments}
                 onRepostSuccess={onRepostSuccess}
+                hideRepost={hideRepostButton}
               />
             </div>
           </>

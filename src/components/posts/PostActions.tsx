@@ -11,6 +11,8 @@ interface PostActionsProps {
   postId: string
   onCommentClick?: () => void
   onRepostSuccess?: () => void
+  /** Hide the repost button entirely (e.g., when current user is the author — backend forbids self-repost). */
+  hideRepost?: boolean
   className?: string
 }
 
@@ -23,6 +25,7 @@ export function PostActions({
   postId,
   onCommentClick,
   onRepostSuccess,
+  hideRepost = false,
   className,
 }: PostActionsProps) {
   const post = usePost(postId)
@@ -204,28 +207,30 @@ export function PostActions({
         )}
       </button>
 
-      {/* Repost Button */}
-      <button
-        onClick={handleRepostClick}
-        disabled={isRepostLoading || !canToggleRepost}
-        className={cn(
-          'flex items-center gap-1.5 px-3 py-2 rounded-lg transition-all group cursor-pointer',
-          isReposted ? 'text-green-500 bg-green-500/[0.06]' : 'text-faint-foreground hover:text-green-500 hover:bg-green-500/[0.04]',
-          (isRepostLoading || !canToggleRepost) && 'opacity-70 pointer-events-none'
-        )}
-        aria-label={isReposted ? 'Remove repost' : 'Repost'}
-        title={!canToggleRepost ? 'Нельзя репостить репост' : undefined}
-      >
-        <Repeat2
+      {/* Repost Button (hidden for the post author — backend forbids self-repost) */}
+      {!hideRepost && (
+        <button
+          onClick={handleRepostClick}
+          disabled={isRepostLoading || !canToggleRepost}
           className={cn(
-            'w-[18px] h-[18px] transition-transform group-hover:scale-110 group-active:scale-95',
-            isReposted && 'stroke-[2.5]'
+            'flex items-center gap-1.5 px-3 py-2 rounded-lg transition-all group cursor-pointer',
+            isReposted ? 'text-green-500 bg-green-500/[0.06]' : 'text-faint-foreground hover:text-green-500 hover:bg-green-500/[0.04]',
+            (isRepostLoading || !canToggleRepost) && 'opacity-70 pointer-events-none'
           )}
-        />
-        {repostCount > 0 && (
-          <span className="text-[13px] font-medium">{formatCount(repostCount)}</span>
-        )}
-      </button>
+          aria-label={isReposted ? 'Remove repost' : 'Repost'}
+          title={!canToggleRepost ? 'Нельзя репостить репост' : undefined}
+        >
+          <Repeat2
+            className={cn(
+              'w-[18px] h-[18px] transition-transform group-hover:scale-110 group-active:scale-95',
+              isReposted && 'stroke-[2.5]'
+            )}
+          />
+          {repostCount > 0 && (
+            <span className="text-[13px] font-medium">{formatCount(repostCount)}</span>
+          )}
+        </button>
+      )}
     </div>
   )
 }
