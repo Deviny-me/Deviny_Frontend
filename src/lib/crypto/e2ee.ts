@@ -96,7 +96,7 @@ async function importPublicKeyFromJwk(jwk: JsonWebKey): Promise<CryptoKey> {
 async function importPublicKeyFromSpkiB64(b64: string): Promise<CryptoKey> {
   return crypto.subtle.importKey(
     'spki',
-    b64ToBuf(b64).buffer,
+    b64ToBuf(b64).buffer as ArrayBuffer,
     { name: 'RSA-OAEP', hash: 'SHA-256' },
     true,
     ['encrypt'],
