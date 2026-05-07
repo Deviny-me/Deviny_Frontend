@@ -780,6 +780,10 @@
     "uploadingVideo": "Uploading video...",
     "postUploaded": "Post uploaded!",
     "uploadError": "Upload error",
+    "newPostTitle": "New post",
+    "captionPlaceholder": "Add a description...",
+    "publish": "Publish",
+    "uploading": "Uploading...",
     "recentStudents": "Recent students",
     "recentClients": "Recent clients"
   },

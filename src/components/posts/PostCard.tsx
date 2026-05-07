@@ -1,11 +1,12 @@
 'use client'
 
-import { memo, useCallback, useEffect, useMemo, useState } from 'react'
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { useRouter, usePathname } from 'next/navigation'
-import { Video, Repeat2, Trash2, Loader2 } from 'lucide-react'
+import { Video, Repeat2, Trash2, Loader2, MoreHorizontal, Pencil, X } from 'lucide-react'
 import { PostType, MediaType } from '@/types/post'
 import { getMediaUrl } from '@/lib/config'
+import { postsApi } from '@/lib/api/postsApi'
 import { PostActions } from './PostActions'
 import { PostCommentsPanel } from './PostCommentsPanel'
 import { usePost, usePostDispatch } from '@/contexts/PostStoreContext'
@@ -78,6 +79,12 @@ function PostCardComponent({
   const router = useRouter()
   const pathname = usePathname()
   const [commentsOpen, setCommentsOpen] = useState(false)
+  const [menuOpen, setMenuOpen] = useState(false)
+  const [editOpen, setEditOpen] = useState(false)
+  const [editCaption, setEditCaption] = useState('')
+  const [editSaving, setEditSaving] = useState(false)
+  const [editError, setEditError] = useState<string | null>(null)
+  const menuRef = useRef<HTMLDivElement | null>(null)
   const resolvedUserId = useMemo(
     () => currentUserId ?? (isOwnProfile ? undefined : getUserIdFromToken()),
     [currentUserId, isOwnProfile],
@@ -125,6 +132,53 @@ function PostCardComponent({
 
   const closeComments = useCallback(() => setCommentsOpen(false), [])
   const toggleComments = useCallback(() => setCommentsOpen(prev => !prev), [])
+
+  // Close menu on outside click
+  useEffect(() => {
+    if (!menuOpen) return
+    const onDocClick = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setMenuOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', onDocClick)
+    return () => document.removeEventListener('mousedown', onDocClick)
+  }, [menuOpen])
+
+  const openEditModal = useCallback(() => {
+    if (!post) return
+    setEditCaption(post.caption ?? '')
+    setEditError(null)
+    setEditOpen(true)
+    setMenuOpen(false)
+  }, [post])
+
+  const closeEditModal = useCallback(() => {
+    if (editSaving) return
+    setEditOpen(false)
+    setEditError(null)
+  }, [editSaving])
+
+  const handleSaveCaption = useCallback(async () => {
+    if (!post || editSaving) return
+    setEditSaving(true)
+    setEditError(null)
+    try {
+      const updated = await postsApi.updatePost(post.id, {
+        caption: editCaption.trim() ? editCaption : '',
+      })
+      dispatch({
+        type: 'UPDATE_POST',
+        postId: post.id,
+        partial: { caption: updated.caption ?? null },
+      })
+      setEditOpen(false)
+    } catch (err) {
+      setEditError(err instanceof Error ? err.message : 'Failed to update post')
+    } finally {
+      setEditSaving(false)
+    }
+  }, [dispatch, editCaption, editSaving, post])
 
   if (!post) return null
 
@@ -322,20 +376,67 @@ function PostCardComponent({
                   </div>
                 </div>
 
-                {/* Delete button in header */}
-                {showDeleteInHeader && isOwner && onDelete && (
-                  <button
-                    onClick={(e) => { e.stopPropagation(); onDelete(post.id) }}
-                    disabled={deletingPostId === post.id}
-                    className="p-1.5 hover:bg-red-500/10 rounded-lg transition-colors group"
-                    title="Удалить публикацию"
-                  >
-                    {deletingPostId === post.id ? (
-                      <Loader2 className="w-4 h-4 text-muted-foreground animate-spin" />
-                    ) : (
-                      <Trash2 className="w-4 h-4 text-faint-foreground group-hover:text-red-500 transition-colors" />
-                    )}
-                  </button>
+                {/* Owner actions in header */}
+                {showDeleteInHeader && isOwner && (
+                  isRepost ? (
+                    onDelete && (
+                      <button
+                        onClick={(e) => { e.stopPropagation(); onDelete(post.id) }}
+                        disabled={deletingPostId === post.id}
+                        className="p-1.5 hover:bg-red-500/10 rounded-lg transition-colors group"
+                        title="Удалить публикацию"
+                      >
+                        {deletingPostId === post.id ? (
+                          <Loader2 className="w-4 h-4 text-muted-foreground animate-spin" />
+                        ) : (
+                          <Trash2 className="w-4 h-4 text-faint-foreground group-hover:text-red-500 transition-colors" />
+                        )}
+                      </button>
+                    )
+                  ) : (
+                    <div className="relative" ref={menuRef}>
+                      <button
+                        onClick={(e) => { e.stopPropagation(); setMenuOpen(prev => !prev) }}
+                        disabled={deletingPostId === post.id}
+                        className="p-1.5 hover:bg-hover-overlay rounded-lg transition-colors"
+                        title="Действия"
+                        aria-haspopup="menu"
+                        aria-expanded={menuOpen}
+                      >
+                        {deletingPostId === post.id ? (
+                          <Loader2 className="w-4 h-4 text-muted-foreground animate-spin" />
+                        ) : (
+                          <MoreHorizontal className="w-4 h-4 text-faint-foreground" />
+                        )}
+                      </button>
+                      {menuOpen && (
+                        <div
+                          role="menu"
+                          className="absolute right-0 top-full mt-1 z-20 min-w-[180px] bg-surface-2 border border-border-subtle rounded-xl shadow-lg overflow-hidden"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <button
+                            role="menuitem"
+                            onClick={openEditModal}
+                            className="w-full flex items-center gap-2.5 px-3 py-2.5 text-sm text-foreground hover:bg-hover-overlay transition-colors"
+                          >
+                            <Pencil className="w-4 h-4" />
+                            <span>Редактировать</span>
+                          </button>
+                          {onDelete && (
+                            <button
+                              role="menuitem"
+                              onClick={() => { setMenuOpen(false); onDelete(post.id) }}
+                              className="w-full flex items-center gap-2.5 px-3 py-2.5 text-sm text-red-500 hover:bg-red-500/10 transition-colors"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                              <span>Удалить</span>
+                            </button>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  )
                 )}
               </div>
             </div>
@@ -407,6 +508,74 @@ function PostCardComponent({
 
       {/* Comments modal portal */}
       {commentsModal}
+
+      {/* Edit caption modal */}
+      {editOpen && typeof window !== 'undefined' && createPortal(
+        <div
+          className="fixed inset-0 z-[70] flex items-end sm:items-center justify-center bg-black/70 backdrop-blur-sm p-0 sm:p-4"
+          onClick={closeEditModal}
+        >
+          <div
+            className="w-full sm:max-w-md bg-surface-2 rounded-t-3xl sm:rounded-2xl overflow-hidden shadow-2xl border border-border-subtle flex flex-col"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between px-5 pt-5 pb-4 border-b border-border-subtle">
+              <span className="text-[15px] font-semibold text-foreground">Редактировать публикацию</span>
+              <button
+                onClick={closeEditModal}
+                disabled={editSaving}
+                className="flex h-7 w-7 items-center justify-center rounded-full bg-hover-overlay hover:bg-border-subtle transition-colors disabled:opacity-50"
+              >
+                <X className="h-4 w-4 text-faint-foreground" />
+              </button>
+            </div>
+
+            <div className="p-4">
+              <textarea
+                value={editCaption}
+                onChange={(e) => setEditCaption(e.target.value)}
+                placeholder="Добавить подпись..."
+                disabled={editSaving}
+                rows={5}
+                maxLength={2000}
+                className="w-full resize-none rounded-xl bg-surface-1 border border-border-subtle px-3 py-2.5 text-sm text-foreground placeholder:text-faint-foreground focus:outline-none focus:border-border disabled:opacity-60"
+                autoFocus
+              />
+              <div className="flex justify-between items-center mt-1">
+                {editError ? (
+                  <span className="text-xs text-red-500">{editError}</span>
+                ) : <span />}
+                <span className="text-xs text-faint-foreground">{editCaption.length}/2000</span>
+              </div>
+            </div>
+
+            <div className="flex gap-2 p-4 pb-[calc(1rem+env(safe-area-inset-bottom))] sm:pb-4 border-t border-border-subtle">
+              <button
+                onClick={closeEditModal}
+                disabled={editSaving}
+                className="flex-1 px-4 py-2.5 rounded-xl bg-hover-overlay hover:bg-border-subtle text-sm font-medium text-foreground transition-colors disabled:opacity-50"
+              >
+                Отмена
+              </button>
+              <button
+                onClick={handleSaveCaption}
+                disabled={editSaving}
+                className="flex-1 px-4 py-2.5 rounded-xl bg-primary hover:bg-primary/90 text-sm font-semibold text-primary-foreground transition-colors flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed"
+              >
+                {editSaving ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Сохранение...
+                  </>
+                ) : (
+                  'Сохранить'
+                )}
+              </button>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
     </>
   )
 }

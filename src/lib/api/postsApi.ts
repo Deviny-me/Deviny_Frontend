@@ -70,6 +70,33 @@ export const postsApi = {
   },
 
   /**
+   * Update a post's caption.
+   * PATCH /me/posts/{id} with { caption }.
+   */
+  async updatePost(postId: string, request: { caption: string | null }): Promise<PostDto> {
+    const response = await fetchWithAuth(`${API_URL}/me/posts/${postId}`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ caption: request.caption ?? '' }),
+    })
+
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({
+        title: 'Update failed',
+        detail: response.status === 404
+          ? 'Post not found or you don\'t have permission to edit it'
+          : 'Failed to update post',
+        status: response.status,
+      }))
+      throw new Error(error.detail || error.title || 'Failed to update post')
+    }
+
+    return response.json()
+  },
+
+  /**
    * Delete a post by ID.
    * Uses fetchWithAuth for automatic token refresh on 401.
    */

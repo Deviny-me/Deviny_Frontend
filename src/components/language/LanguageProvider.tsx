@@ -34,6 +34,34 @@ function readStoredLanguage(key: string): Language | null {
   }
 }
 
+/**
+ * Read `?lang=xx` from the current URL and strip it.
+ * Used to receive the language preference from the landing page (deviny.me)
+ * when navigating into the app (app.deviny.me).
+ */
+function consumeUrlLanguage(): Language | null {
+  if (typeof window === 'undefined') return null
+
+  try {
+    const url = new URL(window.location.href)
+    const raw = url.searchParams.get('lang')
+    if (!raw) return null
+
+    const normalized = raw.toLowerCase()
+    if (!isLanguage(normalized)) return null
+
+    // Strip the param so it doesn't linger in the address bar / shared links.
+    url.searchParams.delete('lang')
+    const newSearch = url.searchParams.toString()
+    const newUrl = `${url.pathname}${newSearch ? `?${newSearch}` : ''}${url.hash}`
+    window.history.replaceState(window.history.state, '', newUrl)
+
+    return normalized
+  } catch {
+    return null
+  }
+}
+
 function writeStoredLanguage(key: string, language: Language | null) {
   if (typeof window === 'undefined') return
 
@@ -100,6 +128,19 @@ export function LanguageProvider({ children, initialLanguage = 'ru' }: LanguageP
 
   // Apply stored preference after hydration to avoid SSR/client text mismatches.
   useEffect(() => {
+    // 1. Prefer ?lang= param from URL (e.g. coming from the landing page).
+    //    Persist it locally + queue a backend sync for when the user is signed in.
+    const urlLanguage = consumeUrlLanguage()
+    if (urlLanguage) {
+      writeStoredLanguage(LANGUAGE_STORAGE_KEY, urlLanguage)
+      writeStoredLanguage(LANGUAGE_SYNC_PENDING_KEY, urlLanguage)
+      if (urlLanguage !== language) {
+        setLanguageState(urlLanguage)
+      }
+      return
+    }
+
+    // 2. Fall back to previously stored preference.
     const storedLanguage = readStoredLanguage(LANGUAGE_STORAGE_KEY)
     if (storedLanguage && storedLanguage !== language) {
       setLanguageState(storedLanguage)

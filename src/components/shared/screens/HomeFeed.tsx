@@ -71,6 +71,8 @@ export function HomeFeed({ currentUserId, onPostUploaded, accentColor = 'blue' }
   const [viewingPhoto, setViewingPhoto] = useState<{ url: string; caption?: string } | null>(null)
   const [deletingPostId, setDeletingPostId] = useState<string | null>(null)
   const [showMediaModal, setShowMediaModal] = useState(false)
+  const [composeFile, setComposeFile] = useState<{ file: File; type: PostType; previewUrl: string } | null>(null)
+  const [composeCaption, setComposeCaption] = useState('')
   const loadingMoreRef = useRef(false)
   const PAGE_SIZE = 20
 
@@ -144,7 +146,7 @@ export function HomeFeed({ currentUserId, onPostUploaded, accentColor = 'blue' }
     setViewingPhoto({ url, caption })
   }, [])
 
-  const handleFileSelect = async (event: React.ChangeEvent<HTMLInputElement>, type: PostType) => {
+  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>, type: PostType) => {
     const file = event.target.files?.[0]
     if (!file) return
 
@@ -156,14 +158,33 @@ export function HomeFeed({ currentUserId, onPostUploaded, accentColor = 'blue' }
       return
     }
 
-    setIsUploading(true)
+    const previewUrl = URL.createObjectURL(file)
+    setComposeFile({ file, type, previewUrl })
+    setComposeCaption('')
+  }
 
+  const closeCompose = useCallback(() => {
+    setComposeFile(prev => {
+      if (prev) URL.revokeObjectURL(prev.previewUrl)
+      return null
+    })
+    setComposeCaption('')
+  }, [])
+
+  const handlePublish = async () => {
+    if (!composeFile || isUploading) return
+    setIsUploading(true)
     try {
-      const newPost = await postsApi.createMediaPost({ file, type })
+      const newPost = await postsApi.createMediaPost({
+        file: composeFile.file,
+        type: composeFile.type,
+        caption: composeCaption.trim() || undefined,
+      })
       setToast({ message: tf('postUploaded'), type: 'success' })
       const ids = upsertPosts([newPost])
       setFeedPostIds(prev => [...ids, ...prev])
       await onPostUploaded?.()
+      closeCompose()
     } catch (error) {
       const message = error instanceof Error ? error.message : tf('uploadError')
       setToast({ message, type: 'error' })
@@ -171,6 +192,13 @@ export function HomeFeed({ currentUserId, onPostUploaded, accentColor = 'blue' }
       setIsUploading(false)
     }
   }
+
+  useEffect(() => {
+    return () => {
+      if (composeFile) URL.revokeObjectURL(composeFile.previewUrl)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   return (
     <div className="pb-8">
@@ -301,6 +329,87 @@ export function HomeFeed({ currentUserId, onPostUploaded, accentColor = 'blue' }
                 <div className="text-left">
                   <p className="text-[14px] font-semibold text-white">{tf('video')}</p>
                 </div>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {composeFile && (
+        <div
+          className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/70 backdrop-blur-sm p-0 sm:p-4"
+          onClick={() => { if (!isUploading) closeCompose() }}
+        >
+          <div
+            className="w-full sm:max-w-md bg-surface-2 rounded-t-3xl sm:rounded-2xl overflow-hidden shadow-2xl border border-border-subtle flex flex-col max-h-[92vh]"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between px-5 pt-5 pb-4 border-b border-border-subtle">
+              <span className="text-[15px] font-semibold text-foreground">{tf('newPostTitle')}</span>
+              <button
+                onClick={closeCompose}
+                disabled={isUploading}
+                className="flex h-7 w-7 items-center justify-center rounded-full bg-hover-overlay hover:bg-border-subtle transition-colors disabled:opacity-50"
+              >
+                <X className="h-4 w-4 text-faint-foreground" />
+              </button>
+            </div>
+
+            <div className="flex-1 overflow-y-auto">
+              <div className="relative bg-black aspect-square w-full">
+                {composeFile.type === PostType.Photo ? (
+                  <img
+                    src={composeFile.previewUrl}
+                    alt="preview"
+                    className="w-full h-full object-contain"
+                  />
+                ) : (
+                  <video
+                    src={composeFile.previewUrl}
+                    className="w-full h-full object-contain"
+                    controls
+                    playsInline
+                  />
+                )}
+              </div>
+
+              <div className="p-4">
+                <textarea
+                  value={composeCaption}
+                  onChange={(e) => setComposeCaption(e.target.value)}
+                  placeholder={tf('captionPlaceholder')}
+                  disabled={isUploading}
+                  rows={4}
+                  maxLength={2000}
+                  className="w-full resize-none rounded-xl bg-surface-1 border border-border-subtle px-3 py-2.5 text-sm text-foreground placeholder:text-faint-foreground focus:outline-none focus:border-border disabled:opacity-60"
+                />
+                <div className="flex justify-end mt-1">
+                  <span className="text-xs text-faint-foreground">{composeCaption.length}/2000</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex gap-2 p-4 pb-[calc(1rem+env(safe-area-inset-bottom))] sm:pb-4 border-t border-border-subtle">
+              <button
+                onClick={closeCompose}
+                disabled={isUploading}
+                className="flex-1 px-4 py-2.5 rounded-xl bg-hover-overlay hover:bg-border-subtle text-sm font-medium text-foreground transition-colors disabled:opacity-50"
+              >
+                {tc('cancel')}
+              </button>
+              <button
+                onClick={handlePublish}
+                disabled={isUploading}
+                className={`flex-1 px-4 py-2.5 rounded-xl text-sm font-semibold text-white transition-colors flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed ${accent.button}`}
+              >
+                {isUploading ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    {tf('uploading')}
+                  </>
+                ) : (
+                  tf('publish')
+                )}
               </button>
             </div>
           </div>

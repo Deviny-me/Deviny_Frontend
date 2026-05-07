@@ -780,6 +780,10 @@
     "uploadingVideo": "Загрузка видео...",
     "postUploaded": "Публикация загружена!",
     "uploadError": "Ошибка загрузки",
+    "newPostTitle": "Новая публикация",
+    "captionPlaceholder": "Добавьте описание...",
+    "publish": "Опубликовать",
+    "uploading": "Загрузка...",
     "recentStudents": "Недавние ученики",
     "recentClients": "Последние клиенты"
   },

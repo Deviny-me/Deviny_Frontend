@@ -780,6 +780,10 @@
     "uploadingVideo": "Video yüklənir...",
     "postUploaded": "Paylaşım yükləndi!",
     "uploadError": "Yükləmə xətası",
+    "newPostTitle": "Yeni paylaşım",
+    "captionPlaceholder": "Təsvir əlavə et...",
+    "publish": "Paylaş",
+    "uploading": "Yüklənir...",
     "recentStudents": "Son tələbələr",
     "recentClients": "Son müştərilər"
   },
