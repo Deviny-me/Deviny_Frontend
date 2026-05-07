@@ -46,11 +46,12 @@ function bufToB64(buf: ArrayBuffer | Uint8Array): string {
   return btoa(bin)
 }
 
-function b64ToBuf(b64: string): Uint8Array {
+function b64ToBuf(b64: string): Uint8Array<ArrayBuffer> {
   const bin = atob(b64)
-  const out = new Uint8Array(bin.length)
+  const buf = new ArrayBuffer(bin.length)
+  const out = new Uint8Array(buf)
   for (let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i)
-  return out
+  return out as Uint8Array<ArrayBuffer>
 }
 
 function isCryptoAvailable(): boolean {
@@ -315,7 +316,7 @@ export async function decryptIncoming(
     const rawAes = await crypto.subtle.decrypt(
       { name: 'RSA-OAEP' },
       cache.privateKey,
-      b64ToBuf(wrapped).buffer,
+      b64ToBuf(wrapped).buffer as ArrayBuffer,
     )
     const aesKey = await crypto.subtle.importKey(
       'raw',
@@ -327,7 +328,7 @@ export async function decryptIncoming(
     const ptBuf = await crypto.subtle.decrypt(
       { name: 'AES-GCM', iv: b64ToBuf(envelope.iv) },
       aesKey,
-      b64ToBuf(envelope.ct).buffer,
+      b64ToBuf(envelope.ct).buffer as ArrayBuffer,
     )
     return new TextDecoder().decode(ptBuf)
   } catch (err) {
