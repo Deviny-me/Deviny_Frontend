@@ -35,30 +35,40 @@ function readStoredLanguage(key: string): Language | null {
 }
 
 /**
- * Read `?lang=xx` from the current URL and strip it.
+ * Read `?lang=xx` from the current URL without mutating history.
  * Used to receive the language preference from the landing page (deviny.me)
  * when navigating into the app (app.deviny.me).
  */
-function consumeUrlLanguage(): Language | null {
+function readUrlLanguage(): Language | null {
   if (typeof window === 'undefined') return null
 
   try {
     const url = new URL(window.location.href)
     const raw = url.searchParams.get('lang')
     if (!raw) return null
-
     const normalized = raw.toLowerCase()
-    if (!isLanguage(normalized)) return null
+    return isLanguage(normalized) ? normalized : null
+  } catch {
+    return null
+  }
+}
 
-    // Strip the param so it doesn't linger in the address bar / shared links.
+/**
+ * Strip the `?lang=` parameter from the URL once we've consumed it,
+ * so it doesn't linger in the address bar / shared links.
+ */
+function stripUrlLanguage(): void {
+  if (typeof window === 'undefined') return
+
+  try {
+    const url = new URL(window.location.href)
+    if (!url.searchParams.has('lang')) return
     url.searchParams.delete('lang')
     const newSearch = url.searchParams.toString()
     const newUrl = `${url.pathname}${newSearch ? `?${newSearch}` : ''}${url.hash}`
     window.history.replaceState(window.history.state, '', newUrl)
-
-    return normalized
   } catch {
-    return null
+    // ignore
   }
 }
 
@@ -123,27 +133,30 @@ interface LanguageProviderProps {
 }
 
 export function LanguageProvider({ children, initialLanguage = 'ru' }: LanguageProviderProps) {
-  const [language, setLanguageState] = useState<Language>(initialLanguage)
+  // Resolve the starting language synchronously so the very first paint
+  // already uses the right messages — no flash of the default language.
+  // Priority: ?lang= in URL  ▸  localStorage  ▸  initialLanguage prop.
+  const [language, setLanguageState] = useState<Language>(() => {
+    if (typeof window === 'undefined') return initialLanguage
+    const fromUrl = readUrlLanguage()
+    if (fromUrl) return fromUrl
+    const fromStorage = readStoredLanguage(LANGUAGE_STORAGE_KEY)
+    if (fromStorage) return fromStorage
+    return initialLanguage
+  })
   const [isLoading, setIsLoading] = useState(false)
 
-  // Apply stored preference after hydration to avoid SSR/client text mismatches.
+  // Once mounted, persist any URL-sourced language and strip it from the bar.
   useEffect(() => {
-    // 1. Prefer ?lang= param from URL (e.g. coming from the landing page).
-    //    Persist it locally + queue a backend sync for when the user is signed in.
-    const urlLanguage = consumeUrlLanguage()
-    if (urlLanguage) {
-      writeStoredLanguage(LANGUAGE_STORAGE_KEY, urlLanguage)
-      writeStoredLanguage(LANGUAGE_SYNC_PENDING_KEY, urlLanguage)
-      if (urlLanguage !== language) {
-        setLanguageState(urlLanguage)
+    const fromUrl = readUrlLanguage()
+    if (fromUrl) {
+      writeStoredLanguage(LANGUAGE_STORAGE_KEY, fromUrl)
+      // Queue a backend sync — it will run as soon as we have an access token.
+      writeStoredLanguage(LANGUAGE_SYNC_PENDING_KEY, fromUrl)
+      stripUrlLanguage()
+      if (fromUrl !== language) {
+        setLanguageState(fromUrl)
       }
-      return
-    }
-
-    // 2. Fall back to previously stored preference.
-    const storedLanguage = readStoredLanguage(LANGUAGE_STORAGE_KEY)
-    if (storedLanguage && storedLanguage !== language) {
-      setLanguageState(storedLanguage)
     }
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
