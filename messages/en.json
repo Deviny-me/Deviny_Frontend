@@ -1408,6 +1408,16 @@
     "emptyHint": "Stay active — rankings refresh shortly."
   },
 
+  "rating": {
+    "label_activity": "Activity rating",
+    "label_professional": "Professional rating",
+    "label_program": "Program rating",
+    "tooltipActivity": "Score on a 5-star scale (currently {score}). Computed from {count} signals: likes, comments, reposts, completed programs and other activity.",
+    "tooltipProfessional": "Quality of your programs ({score} of 5). Based on {count} ratings from your students.",
+    "tooltipProgram": "Program rating ({score} of 5) based on {count} reviews and completions.",
+    "noRating": "No rating yet"
+  },
+
   "notifications": {
     "title": "Notifications",
     "pageSubtitle": "A real-time inbox for achievements, programs, messages and social activity.",

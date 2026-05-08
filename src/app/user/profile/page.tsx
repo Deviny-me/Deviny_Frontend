@@ -39,6 +39,8 @@ import { useLanguage } from '@/components/language/LanguageProvider'
 import { localizeCityName, localizeCountryName } from '@/lib/data/countries'
 import { ProfileReviewsTab } from '@/components/shared/ProfileReviewsTab'
 import { getMyAchievements } from '@/lib/api/achievementApi'
+import { ratingsApi, RatingDto } from '@/lib/api/ratingsApi'
+import { RatingBadge } from '@/components/shared/RatingBadge'
 import type { MyAchievementsResponse } from '@/types/achievement'
 import { getIcon, getRarityBorder, getRarityGlow, getRarityLabelColor } from '@/components/shared/achievementUtils'
 import { useAchievementsOptional } from '@/contexts/AchievementsContext'
@@ -285,6 +287,7 @@ export default function UserProfilePage() {
   const [postTab, setPostTab] = useState<ProfilePostTab>('all')
   const [achievementsData, setAchievementsData] = useState<MyAchievementsResponse | null>(null)
   const [isLoadingAchievements, setIsLoadingAchievements] = useState(false)
+  const [rating, setRating] = useState<RatingDto | null>(null)
   const [selectedPostId, setSelectedPostId] = useState<string | null>(null)
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
   const [playingVideoId, setPlayingVideoId] = useState<string | null>(null)
@@ -397,6 +400,17 @@ export default function UserProfilePage() {
       .finally(() => setIsLoadingAchievements(false))
   }, [mainTab, achievementsData, isLoadingAchievements])
 
+  // Load activity rating
+  useEffect(() => {
+    if (!user?.id) return
+    let cancelled = false
+    ratingsApi
+      .getUserRating(user.id)
+      .then((r) => { if (!cancelled) setRating(r) })
+      .catch((err) => { console.error('[UserProfile] failed to load rating', err) })
+    return () => { cancelled = true }
+  }, [user?.id])
+
   return (
     <>
       <div className="space-y-3 pb-24">
@@ -451,6 +465,15 @@ export default function UserProfilePage() {
                 <Zap className="w-3 h-3" />
                 {tLevel('level', { level: currentLevel })}
               </span>
+              {rating && rating.ratingCount > 0 && (
+                <RatingBadge
+                  starRating={rating.starRating}
+                  overallScore={rating.overallScore}
+                  ratingCount={rating.ratingCount}
+                  kind="activity"
+                  size="sm"
+                />
+              )}
             </div>
 
             {/* Location */}

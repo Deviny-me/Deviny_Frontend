@@ -1407,6 +1407,16 @@
     "emptyHint": "Aktiv olun — siyahı tezliklə yenilənəcək."
   },
 
+  "rating": {
+    "label_activity": "Aktivlik reytinqi",
+    "label_professional": "Peşəkar reytinq",
+    "label_program": "Proqram reytinqi",
+    "tooltipActivity": "5 ballıq şkala üzrə qiymətləndirmə (hazirda {score}). {count} hadisə əsasında hesablanır: layklər, şərhlər, repostlar, tamamlanmış proqramlar və digər aktivlik.",
+    "tooltipProfessional": "Proqramlarınızın keyfiyyəti ({score} / 5). {count} reytinq əsasında hesablanır.",
+    "tooltipProgram": "Proqram reytinqi ({score} / 5), {count} rəy və tamamlanma əsasında.",
+    "noRating": "Hələ qiymətləndirilməyib"
+  },
+
   "notifications": {
     "title": "Bildirişlər",
     "pageSubtitle": "Nailiyyətlər, proqramlar, mesajlar və sosial aktivlik üçün canlı tarixçə.",

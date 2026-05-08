@@ -22,6 +22,8 @@ import { SearchBar } from '@/components/search/SearchBar'
 import { NotificationDropdown } from '@/components/shared/NotificationDropdown'
 import { useTranslations } from 'next-intl'
 import { useTheme } from '@/components/theme/ThemeProvider'
+import { ratingsApi, RatingDto } from '@/lib/api/ratingsApi'
+import { RatingBadge } from '@/components/shared/RatingBadge'
 
 export function UserTopNav() {
   const router = useRouter()
@@ -33,6 +35,17 @@ export function UserTopNav() {
   const { level } = useLevel()
   const { theme, toggleTheme } = useTheme()
   const t = useTranslations('nav')
+  const [rating, setRating] = useState<RatingDto | null>(null)
+
+  useEffect(() => {
+    if (!showProfileMenu || !user?.id) return
+    let cancelled = false
+    ratingsApi
+      .getUserRating(user.id)
+      .then((r) => { if (!cancelled) setRating(r) })
+      .catch((err) => { console.error('[UserTopNav] failed to load user rating', err) })
+    return () => { cancelled = true }
+  }, [showProfileMenu, user?.id])
 
   const navItems = [
     { icon: Users, label: t('friends'), path: '/user/friends' },
@@ -192,6 +205,17 @@ export function UserTopNav() {
                           {level.levelTitle && (
                             <p className="text-[10px] text-[#0c8de6]/80 font-medium mt-1.5">{level.levelTitle}</p>
                           )}
+                        </div>
+                      )}
+                      {rating && rating.ratingCount > 0 && (
+                        <div className="mt-3 flex items-center justify-center">
+                          <RatingBadge
+                            starRating={rating.starRating}
+                            overallScore={rating.overallScore}
+                            ratingCount={rating.ratingCount}
+                            kind="activity"
+                            size="sm"
+                          />
                         </div>
                       )}
                       <button

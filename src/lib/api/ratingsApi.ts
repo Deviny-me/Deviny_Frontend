@@ -24,57 +24,117 @@ export interface LeaderboardEntryDto {
 
 export type LeaderboardCategory = 'user' | 'trainer' | 'nutritionist'
 
-async function handleResponse<T>(response: Response): Promise<T> {
-  if (!response.ok) {
-    const errorData = await response.json().catch(() => ({}))
-    throw new Error(errorData.error || errorData.message || `Request failed (${response.status})`)
+function toNumber(...candidates: unknown[]): number {
+  for (const c of candidates) {
+    if (typeof c === 'number' && Number.isFinite(c)) return c
+    if (typeof c === 'string' && c.trim() !== '' && Number.isFinite(Number(c))) return Number(c)
   }
-  if (response.status === 204 || response.headers.get('content-length') === '0') {
-    return undefined as T
+  return 0
+}
+
+/** Normalize backend payload into a RatingDto regardless of casing/field naming. */
+function normalizeRating(raw: any): RatingDto {
+  const r = raw || {}
+  return {
+    starRating: toNumber(r.starRating, r.StarRating, r.star_rating, r.stars),
+    overallScore: toNumber(
+      r.overallScore,
+      r.OverallScore,
+      r.overall_score,
+      r.score,
+      r.average,
+      r.averageRating,
+      r.AverageRating,
+      r.value,
+    ),
+    ratingCount: toNumber(
+      r.ratingCount,
+      r.RatingCount,
+      r.rating_count,
+      r.count,
+      r.reviewsCount,
+      r.ReviewsCount,
+    ),
   }
-  return response.json()
+}
+
+function normalizeLeaderboardEntry(raw: any): LeaderboardEntryDto {
+  const r = raw || {}
+  return {
+    userId: r.userId ?? r.UserId ?? r.id ?? r.Id ?? '',
+    fullName: r.fullName ?? r.FullName ?? r.name ?? r.Name ?? '',
+    avatarUrl: r.avatarUrl ?? r.AvatarUrl ?? null,
+    role: r.role ?? r.Role ?? null,
+    starRating: toNumber(r.starRating, r.StarRating, r.star_rating),
+    overallScore: toNumber(r.overallScore, r.OverallScore, r.overall_score, r.score),
+    ratingCount: toNumber(r.ratingCount, r.RatingCount, r.rating_count, r.count),
+    rank: toNumber(r.rank, r.Rank, r.position, r.Position),
+  }
+}
+
+const EMPTY_RATING: RatingDto = { starRating: 0, overallScore: 0, ratingCount: 0 }
+
+async function readJsonOrEmpty(response: Response): Promise<any> {
+  if (response.status === 204 || response.headers.get('content-length') === '0') return null
+  try {
+    return await response.json()
+  } catch {
+    return null
+  }
+}
+
+async function fetchRating(url: string): Promise<RatingDto> {
+  const res = await fetchWithAuth(url)
+  // Treat "not found / not implemented / no content" as an empty rating
+  // instead of throwing — keeps the UI quiet until backend finishes wiring.
+  if (res.status === 404 || res.status === 501 || res.status === 204) return EMPTY_RATING
+  if (!res.ok) {
+    const errorData = await readJsonOrEmpty(res)
+    throw new Error(
+      (errorData && (errorData.error || errorData.message)) || `Request failed (${res.status})`,
+    )
+  }
+  const data = await readJsonOrEmpty(res)
+  if (!data) return EMPTY_RATING
+  return normalizeRating(data)
 }
 
 export const ratingsApi = {
   /** Reputation/activity rating for any user. */
-  getUserRating: async (userId: string): Promise<RatingDto> => {
-    const res = await fetchWithAuth(`${API_URL}/ratings/users/${userId}`)
-    return handleResponse<RatingDto>(res)
-  },
+  getUserRating: (userId: string): Promise<RatingDto> =>
+    fetchRating(`${API_URL}/ratings/users/${userId}`),
 
   /** Professional rating (program quality) for a trainer or nutritionist. */
-  getProfessionalRating: async (ownerId: string): Promise<RatingDto> => {
-    const res = await fetchWithAuth(`${API_URL}/ratings/professionals/${ownerId}`)
-    return handleResponse<RatingDto>(res)
-  },
+  getProfessionalRating: (ownerId: string): Promise<RatingDto> =>
+    fetchRating(`${API_URL}/ratings/professionals/${ownerId}`),
 
   /** Rating for a specific program. */
-  getProgramRating: async (
+  getProgramRating: (
     programType: 'training' | 'meal',
-    programId: string
-  ): Promise<RatingDto> => {
-    const res = await fetchWithAuth(
-      `${API_URL}/ratings/programs/${programType}/${programId}`
-    )
-    return handleResponse<RatingDto>(res)
-  },
+    programId: string,
+  ): Promise<RatingDto> =>
+    fetchRating(`${API_URL}/ratings/programs/${programType}/${programId}`),
 
   /**
-   * Top-N leaderboard for a category.
-   *
-   * NOTE: The backend leaderboard list endpoint is not finalized yet.
-   * The path below is a best-guess so the UI can wire up cleanly when it
-   * lands. Until then this method returns [] on 404/501 so the sidebar
-   * shows a graceful empty state instead of an error.
+   * Top-N leaderboard for a category. Returns [] gracefully on 404/501
+   * so the sidebar can render an empty state instead of an error.
    */
   getLeaderboard: async (
     category: LeaderboardCategory,
-    limit = 10
+    limit = 10,
   ): Promise<LeaderboardEntryDto[]> => {
     const res = await fetchWithAuth(
-      `${API_URL}/ratings/leaderboard?category=${category}&limit=${limit}`
+      `${API_URL}/ratings/leaderboard?category=${category}&limit=${limit}`,
     )
-    if (res.status === 404 || res.status === 501) return []
-    return handleResponse<LeaderboardEntryDto[]>(res)
+    if (res.status === 404 || res.status === 501 || res.status === 204) return []
+    if (!res.ok) {
+      const errorData = await readJsonOrEmpty(res)
+      throw new Error(
+        (errorData && (errorData.error || errorData.message)) || `Request failed (${res.status})`,
+      )
+    }
+    const data = await readJsonOrEmpty(res)
+    if (!Array.isArray(data)) return []
+    return data.map(normalizeLeaderboardEntry)
   },
 }
