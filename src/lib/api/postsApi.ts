@@ -8,7 +8,8 @@ import {
   PostCommentDto,
   CreateCommentRequest,
   CreateRepostRequest,
-  PostStatsDto
+  PostStatsDto,
+  CommentLikeStatsDto
 } from '@/types/post'
 
 /**
@@ -335,6 +336,57 @@ export const postsApi = {
       const error = await response.json().catch(() => ({ detail: 'Failed to delete comment' }))
       throw new Error(error.detail || 'Failed to delete comment')
     }
+  },
+
+  /**
+   * Like a comment.
+   */
+  async likeComment(commentId: string): Promise<CommentLikeStatsDto> {
+    const response = await fetchWithAuth(`${API_URL}/comments/${commentId}/likes`, {
+      method: 'POST',
+    })
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({ detail: 'Failed to like comment' }))
+      throw new Error(error.detail || 'Failed to like comment')
+    }
+    return response.json()
+  },
+
+  /**
+   * Remove a like from a comment.
+   */
+  async unlikeComment(commentId: string): Promise<CommentLikeStatsDto> {
+    const response = await fetchWithAuth(`${API_URL}/comments/${commentId}/likes`, {
+      method: 'DELETE',
+    })
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({ detail: 'Failed to unlike comment' }))
+      throw new Error(error.detail || 'Failed to unlike comment')
+    }
+    return response.json()
+  },
+
+  /**
+   * Get replies (children) of a comment. Replies share the same DTO shape
+   * as top-level comments and may themselves have non-zero replyCount.
+   */
+  async getReplies(
+    commentId: string,
+    page: number = 1,
+    pageSize: number = 20
+  ): Promise<PostCommentsResponse> {
+    const params = new URLSearchParams({
+      page: page.toString(),
+      pageSize: pageSize.toString(),
+    })
+    const response = await fetchWithAuth(
+      `${API_URL}/comments/${commentId}/replies?${params}`,
+      { method: 'GET' },
+    )
+    if (!response.ok) {
+      throw new Error('Failed to fetch replies')
+    }
+    return response.json()
   },
 
   // ============================================

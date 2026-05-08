@@ -93,6 +93,15 @@ export interface PostCommentDto {
   createdAt: string
   parentCommentId?: string | null
   canDelete: boolean
+  likeCount: number
+  isLikedByMe: boolean
+  replyCount: number
+}
+
+/** Like-toggle response for a comment. */
+export interface CommentLikeStatsDto {
+  likeCount: number
+  isLikedByMe: boolean
 }
 
 /**
