@@ -23,6 +23,7 @@ export interface LeaderboardEntryDto {
 }
 
 export type LeaderboardCategory = 'user' | 'trainer' | 'nutritionist'
+export type LeaderboardScope = 'global' | 'local'
 
 function toNumber(...candidates: unknown[]): number {
   for (const c of candidates) {
@@ -118,13 +119,18 @@ export const ratingsApi = {
   /**
    * Top-N leaderboard for a category. Returns [] gracefully on 404/501
    * so the sidebar can render an empty state instead of an error.
+   *
+   * @param scope - 'global' (default) or 'local' (same country as the
+   *   current user). Sent as a query param; backends that don't support
+   *   it yet will simply ignore it and return the global list.
    */
   getLeaderboard: async (
     category: LeaderboardCategory,
     limit = 10,
+    scope: LeaderboardScope = 'global',
   ): Promise<LeaderboardEntryDto[]> => {
     const res = await fetchWithAuth(
-      `${API_URL}/ratings/leaderboard?category=${category}&limit=${limit}`,
+      `${API_URL}/ratings/leaderboard?category=${category}&limit=${limit}&scope=${scope}`,
     )
     if (res.status === 404 || res.status === 501 || res.status === 204) return []
     if (!res.ok) {

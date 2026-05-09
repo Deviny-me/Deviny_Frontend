@@ -23,6 +23,12 @@ interface HomeFeedProps {
   currentUserId?: string
   onPostUploaded?: () => Promise<void> | void
   accentColor?: 'blue' | 'orange' | 'green'
+  /**
+   * The feed by default centers itself with a small left shift on lg+ to
+   * compensate for the absent right sidebar. Set this to true when the page
+   * actually renders a right sidebar so the column lines up correctly.
+   */
+  disableCenterShift?: boolean
 }
 
 const accentStyles = {
@@ -49,7 +55,7 @@ const accentStyles = {
   },
 }
 
-export function HomeFeed({ currentUserId, onPostUploaded, accentColor = 'blue' }: HomeFeedProps) {
+export function HomeFeed({ currentUserId, onPostUploaded, accentColor = 'blue', disableCenterShift = false }: HomeFeedProps) {
   const accent = accentStyles[accentColor]
   const upsertPosts = useUpsertPosts()
   const dispatch = usePostDispatch()
@@ -219,7 +225,7 @@ export function HomeFeed({ currentUserId, onPostUploaded, accentColor = 'blue' }
         disabled={isUploading}
       />
 
-      <div className="w-full max-w-[620px] mx-auto lg:-translate-x-[132px]">
+      <div className={`w-full max-w-[620px] mx-auto ${disableCenterShift ? '' : 'lg:-translate-x-[132px]'}`}>
         {feedLoading ? (
           <div className="flex min-h-[72vh] items-center justify-center">
             <Loader2 className={`w-7 h-7 ${accent.spinner} animate-spin`} />

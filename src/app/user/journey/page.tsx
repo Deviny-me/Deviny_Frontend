@@ -24,14 +24,21 @@ export default function MyJourneyPage() {
   const [programs, setPrograms] = useState<PurchasedProgramDto[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [filter, setFilter] = useState<'all' | 'training' | 'meal'>('all')
+  const [filter, setFilter] = useState<'all' | 'training' | 'meal' | 'consultation'>('all')
 
   const loadPurchases = useCallback(async () => {
     try {
       setIsLoading(true)
       setError(null)
       const data = await purchasesApi.getMyPurchases()
-      setPrograms(data)
+      // Defensive dedup by purchaseId in case backend returns duplicates
+      const seen = new Set<string>()
+      const unique = data.filter(p => {
+        if (seen.has(p.purchaseId)) return false
+        seen.add(p.purchaseId)
+        return true
+      })
+      setPrograms(unique)
     } catch (err) {
       console.error('Failed to fetch purchased programs:', err)
       setError(t('errorLoading'))
@@ -52,13 +59,14 @@ export default function MyJourneyPage() {
 
   const filteredPrograms = programs.filter(p => {
     if (filter === 'all') return true
+    if (filter === 'consultation') return isConsultation(p)
     if (filter === 'meal') return p.programType === 'meal' && !isConsultation(p)
-    // 'training' includes consultations — they show as Training
-    return p.programType === 'training' || isConsultation(p)
+    return p.programType === 'training' && !isConsultation(p)
   })
 
-  const trainingCount = programs.filter(p => p.programType === 'training' || isConsultation(p)).length
+  const trainingCount = programs.filter(p => p.programType === 'training' && !isConsultation(p)).length
   const mealCount = programs.filter(p => p.programType === 'meal' && !isConsultation(p)).length
+  const consultationCount = programs.filter(isConsultation).length
 
   return (
     <>
@@ -107,6 +115,18 @@ export default function MyJourneyPage() {
                 }`}
               >
                 <Apple className="w-4 h-4" /> {t('nutrition')} ({mealCount})
+              </button>
+            )}
+            {consultationCount > 0 && (
+              <button
+                onClick={() => setFilter('consultation')}
+                className={`whitespace-nowrap px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2 ${
+                  filter === 'consultation'
+                    ? 'bg-purple-600 text-foreground'
+                    : 'bg-surface-3 text-muted-foreground hover:text-foreground border border-border'
+                }`}
+              >
+                <MessageSquare className="w-4 h-4" /> {t('consultation')} ({consultationCount})
               </button>
             )}
             </div>
@@ -165,9 +185,13 @@ export default function MyJourneyPage() {
                   {/* Type badge */}
                   <div className="absolute top-2 left-2">
                     <span className={`px-2 py-1 text-xs font-bold rounded text-foreground ${
-                      program.programType === 'training' || isConsultation(program) ? 'bg-orange-500' : 'bg-green-600'
+                      isConsultation(program)
+                        ? 'bg-purple-600'
+                        : program.programType === 'training' ? 'bg-orange-500' : 'bg-green-600'
                     }`}>
-                      {program.programType === 'training' || isConsultation(program) ? t('training') : t('nutrition')}
+                      {isConsultation(program)
+                        ? t('consultation')
+                        : program.programType === 'training' ? t('training') : t('nutrition')}
                     </span>
                   </div>
                   {/* Tier badge */}

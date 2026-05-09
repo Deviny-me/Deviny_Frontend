@@ -1400,10 +1400,14 @@
   },
 
   "leaderboardSidebar": {
-    "title": "Leaderboard",
+    "title": "Hall of Fame",
+    "subtitle": "Top 10 this week",
     "tab_user": "Users",
     "tab_trainer": "Trainers",
     "tab_nutritionist": "Nutritionists",
+    "scope_local": "Local",
+    "scope_global": "Global",
+    "scopeAria": "Leaderboard scope",
     "emptyTitle": "No rankings yet",
     "emptyHint": "Stay active — rankings refresh shortly."
   },

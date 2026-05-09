@@ -1399,10 +1399,14 @@
   },
 
   "leaderboardSidebar": {
-    "title": "Рейтинг",
+    "title": "Зал славы",
+    "subtitle": "Топ‑10 на этой неделе",
     "tab_user": "Юзеры",
     "tab_trainer": "Тренеры",
     "tab_nutritionist": "Нутрициологи",
+    "scope_local": "Локально",
+    "scope_global": "Глобально",
+    "scopeAria": "Область рейтинга",
     "emptyTitle": "Пока нет рейтингов",
     "emptyHint": "Будьте активнее — список скоро обновится."
   },

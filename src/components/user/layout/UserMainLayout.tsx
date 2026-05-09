@@ -9,6 +9,7 @@ interface UserMainLayoutProps {
   children: ReactNode
   showLeftSidebar?: boolean
   showRightSidebar?: boolean
+  rightSidebar?: ReactNode
 }
 
 /**
@@ -17,7 +18,8 @@ interface UserMainLayoutProps {
 export function UserMainLayout({ 
   children, 
   showLeftSidebar = true, 
-  showRightSidebar = true 
+  showRightSidebar = true,
+  rightSidebar,
 }: UserMainLayoutProps) {
   return (
     <SharedMainLayout
@@ -27,7 +29,8 @@ export function UserMainLayout({
       mobileSecondaryLinks={userConfig.topNavItems}
       footer={<UserFooter />}
       showLeftSidebar={showLeftSidebar}
-      showRightSidebar={false}
+      showRightSidebar={showRightSidebar && Boolean(rightSidebar)}
+      rightSidebar={rightSidebar}
       accentColor="blue"
     >
       {children}

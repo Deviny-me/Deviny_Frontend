@@ -12,6 +12,7 @@ import { UserAchievementBridge } from '@/components/user/UserAchievementBridge'
 import { UserMainLayout } from '@/components/user/layout/UserMainLayout'
 import { RealtimeToastContainer } from '@/components/shared/RealtimeToast'
 import { Spinner } from '@/components/ui/Spinner'
+import { LeaderboardSidebar } from '@/components/shared/LeaderboardSidebar'
 
 // Routes where right sidebar should be hidden
 const HIDE_RIGHT_SIDEBAR = [
@@ -19,6 +20,9 @@ const HIDE_RIGHT_SIDEBAR = [
   '/user/leaderboards', '/user/live', '/user/experts', '/user/discovery',
   '/user/achievements', '/user/messages', '/user/notifications',
 ]
+// Routes where the leaderboard ("Hall of Fame") sidebar should be shown.
+// For now we enable it only on the home dashboard; expand once approved.
+const SHOW_LEADERBOARD_ON: string[] = ['/user']
 // Routes where both sidebars should be hidden
 const HIDE_ALL_SIDEBARS: string[] = []
 
@@ -34,6 +38,12 @@ export default function UserDashboardLayout({
 
   const showLeftSidebar = !HIDE_ALL_SIDEBARS.some(r => pathname?.startsWith(r))
   const showRightSidebar = !HIDE_RIGHT_SIDEBAR.some(r => pathname?.startsWith(r)) && showLeftSidebar
+  const showLeaderboard = SHOW_LEADERBOARD_ON.includes(pathname || '') && showRightSidebar
+  const rightSidebarNode = showLeaderboard ? (
+    <div className="w-72 sticky top-[57px] max-h-[calc(100vh-57px)] overflow-y-auto pb-6 scrollbar-hide">
+      <LeaderboardSidebar basePath="/user" />
+    </div>
+  ) : undefined
 
   useEffect(() => {
     if (checkedRef.current) return
@@ -82,7 +92,11 @@ export default function UserDashboardLayout({
               <LevelProvider>
                 <UserAchievementBridge>
                   <RealtimeToastContainer />
-                  <UserMainLayout showLeftSidebar={showLeftSidebar} showRightSidebar={showRightSidebar}>
+                  <UserMainLayout
+                    showLeftSidebar={showLeftSidebar}
+                    showRightSidebar={showLeaderboard}
+                    rightSidebar={rightSidebarNode}
+                  >
                     {children}
                   </UserMainLayout>
                 </UserAchievementBridge>

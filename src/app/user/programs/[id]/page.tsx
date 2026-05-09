@@ -483,13 +483,21 @@ export default function ProgramDetailPage({
               <button
                 type="button"
                 onClick={() => router.push(`/user/profile/${program.trainerId}`)}
-                className="group flex items-center gap-3 rounded-xl bg-surface-2 ring-1 ring-inset ring-border-subtle p-2.5 pr-4 text-left hover:ring-border transition-all active:scale-[0.99]"
+                className={cn(
+                  'group flex items-center gap-3 rounded-xl bg-surface-2 ring-1 ring-inset p-2.5 pr-4 text-left transition-all active:scale-[0.99]',
+                  isNutritionist
+                    ? 'ring-nutritionist-500/30 hover:ring-nutritionist-500/60'
+                    : 'ring-trainer-500/30 hover:ring-trainer-500/60'
+                )}
               >
                 {program.trainerAvatarUrl ? (
                   <img
                     src={getMediaUrl(program.trainerAvatarUrl) || ''}
                     alt={program.trainerName}
-                    className="h-11 w-11 rounded-full object-cover ring-2 ring-background"
+                    className={cn(
+                      'h-11 w-11 rounded-full object-cover ring-2',
+                      isNutritionist ? 'ring-nutritionist-500' : 'ring-trainer-500'
+                    )}
                   />
                 ) : (
                   <div
@@ -501,11 +509,21 @@ export default function ProgramDetailPage({
                 )}
                 <div className="min-w-0">
                   <p className="truncate text-sm font-semibold text-foreground">{program.trainerName}</p>
-                  <p className="text-[11px] text-muted-foreground transition-colors group-hover:text-foreground">
+                  <p
+                    className={cn(
+                      'text-[11px] transition-colors',
+                      isNutritionist ? 'text-nutritionist-500' : 'text-trainer-500'
+                    )}
+                  >
                     {isNutritionist ? t('viewNutritionistProfile') : t('viewTrainerProfile')}
                   </p>
                 </div>
-                <ArrowRight className="ml-auto h-4 w-4 text-muted-foreground transition-transform group-hover:translate-x-0.5" />
+                <ArrowRight
+                  className={cn(
+                    'ml-auto h-4 w-4 transition-transform group-hover:translate-x-0.5',
+                    isNutritionist ? 'text-nutritionist-500' : 'text-trainer-500'
+                  )}
+                />
               </button>
 
               <div className="grid grid-cols-2 gap-2 sm:min-w-[220px]">

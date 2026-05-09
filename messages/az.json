@@ -1399,10 +1399,14 @@
   },
 
   "leaderboardSidebar": {
-    "title": "Reytinq",
+    "title": "Şöhrət zalı",
+    "subtitle": "Bu həftənin top‑10",
     "tab_user": "İstifadəçilər",
     "tab_trainer": "Trənörlər",
     "tab_nutritionist": "Nutrisioloqlar",
+    "scope_local": "Lokal",
+    "scope_global": "Qlobal",
+    "scopeAria": "Reytinq sahəsi",
     "emptyTitle": "Reytinq hələ yoxdur",
     "emptyHint": "Aktiv olun — siyahı tezliklə yenilənəcək."
   },

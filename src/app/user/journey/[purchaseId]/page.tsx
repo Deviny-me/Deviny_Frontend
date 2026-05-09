@@ -356,23 +356,41 @@ export default function ProgramDetailPage({
             <h2 className="text-base sm:text-lg font-bold tracking-tight text-foreground">{t('aboutProgram')}</h2>
             <p className="mt-3 text-sm leading-7 text-foreground/85">{program.description}</p>
             <div
-              className="mt-5 flex cursor-pointer items-center gap-3 rounded-xl bg-surface-2 ring-1 ring-inset ring-border-subtle p-3 hover:ring-border transition-all active:scale-[0.99]"
+              className={cn(
+                'mt-5 flex cursor-pointer items-center gap-3 rounded-xl bg-surface-2 ring-1 ring-inset p-3 transition-all active:scale-[0.99]',
+                program.programType === 'meal'
+                  ? 'ring-nutritionist-500/30 hover:ring-nutritionist-500/60'
+                  : 'ring-trainer-500/30 hover:ring-trainer-500/60'
+              )}
               onClick={() => router.push(`/user/profile/${program.trainerId}`)}
             >
               {program.trainerAvatarUrl ? (
                 <img
                   src={getMediaUrl(program.trainerAvatarUrl) || ''}
                   alt={program.trainerName}
-                  className="h-11 w-11 rounded-full object-cover ring-2 ring-background"
+                  className={cn(
+                    'h-11 w-11 rounded-full object-cover ring-2',
+                    program.programType === 'meal' ? 'ring-nutritionist-500' : 'ring-trainer-500'
+                  )}
                 />
               ) : (
-                <div className="flex h-11 w-11 items-center justify-center rounded-full bg-surface-3 ring-2 ring-background">
-                  <span className="font-bold text-foreground">{program.trainerName.charAt(0)}</span>
+                <div
+                  className="flex h-11 w-11 items-center justify-center rounded-full ring-2 ring-background"
+                  style={{ background: `linear-gradient(135deg, ${accentColors.primary}, ${accentColors.secondary})` }}
+                >
+                  <span className="font-bold text-white">{program.trainerName.charAt(0)}</span>
                 </div>
               )}
               <div className="min-w-0 flex-1">
                 <p className="truncate font-semibold text-sm text-foreground">{program.trainerName}</p>
-                <p className="text-xs text-muted-foreground">{journeyCopy.viewExpertProfile}</p>
+                <p
+                  className={cn(
+                    'text-xs',
+                    program.programType === 'meal' ? 'text-nutritionist-500' : 'text-trainer-500'
+                  )}
+                >
+                  {journeyCopy.viewExpertProfile}
+                </p>
               </div>
             </div>
           </section>
