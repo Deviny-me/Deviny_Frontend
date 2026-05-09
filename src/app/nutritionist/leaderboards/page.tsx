@@ -1,8 +1,7 @@
 'use client'
 
-import { ComingSoonPage } from '@/components/shared/ComingSoonPage'
-import { Trophy } from 'lucide-react'
+import { LeaderboardPage } from '@/components/shared/LeaderboardPage'
 
 export default function NutritionistLeaderboardsPage() {
-  return <ComingSoonPage icon={Trophy} ns="leaderboards" />
+  return <LeaderboardPage basePath="/nutritionist" />
 }
