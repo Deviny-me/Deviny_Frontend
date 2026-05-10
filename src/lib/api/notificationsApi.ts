@@ -1,5 +1,5 @@
 import { API_URL, fetchWithAuth } from '@/lib/config';
-import { NotificationSettings, NotificationsResponse } from '@/types/notification';
+import { NotificationAction, NotificationSettings, NotificationsResponse } from '@/types/notification';
 
 export class NotificationsApiError extends Error {
   status: number;
@@ -76,6 +76,24 @@ export const notificationsApi = {
       throw createError('Failed to delete all notifications', response);
     }
     return response.json();
+  },
+
+  /**
+   * Executes a notification action (e.g. follow-back, open-profile).
+   * The action's `url` may be absolute or a relative API path like `/api/...`.
+   */
+  async executeAction(action: NotificationAction): Promise<Response> {
+    const url = action.url.startsWith('http')
+      ? action.url
+      : action.url.startsWith('/api/')
+        ? `${API_URL}${action.url.slice(4)}`
+        : `${API_URL}${action.url.startsWith('/') ? '' : '/'}${action.url}`;
+
+    const response = await fetchWithAuth(url, { method: action.method });
+    if (!response.ok) {
+      throw createError(`Failed to execute notification action: ${action.key}`, response);
+    }
+    return response;
   },
 
   async getSettings(): Promise<NotificationSettings> {

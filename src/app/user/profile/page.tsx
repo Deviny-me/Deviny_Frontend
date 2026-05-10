@@ -40,6 +40,8 @@ import { localizeCityName, localizeCountryName } from '@/lib/data/countries'
 import { ProfileReviewsTab } from '@/components/shared/ProfileReviewsTab'
 import { getMyAchievements } from '@/lib/api/achievementApi'
 import { ratingsApi, RatingDto } from '@/lib/api/ratingsApi'
+import { purchasesApi } from '@/lib/api/purchasesApi'
+import { useRealtimeScopeRefresh } from '@/lib/signalr/useRealtimeScopeRefresh'
 import { RatingBadge } from '@/components/shared/RatingBadge'
 import type { MyAchievementsResponse } from '@/types/achievement'
 import { getIcon, getRarityBorder, getRarityGlow, getRarityLabelColor } from '@/components/shared/achievementUtils'
@@ -288,6 +290,7 @@ export default function UserProfilePage() {
   const [achievementsData, setAchievementsData] = useState<MyAchievementsResponse | null>(null)
   const [isLoadingAchievements, setIsLoadingAchievements] = useState(false)
   const [rating, setRating] = useState<RatingDto | null>(null)
+  const [purchasedCount, setPurchasedCount] = useState<number>(0)
   const [selectedPostId, setSelectedPostId] = useState<string | null>(null)
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
   const [playingVideoId, setPlayingVideoId] = useState<string | null>(null)
@@ -411,6 +414,30 @@ export default function UserProfilePage() {
     return () => { cancelled = true }
   }, [user?.id])
 
+  // Load purchased programs count (mirrors "Мой путь")
+  const loadPurchases = useCallback(async () => {
+    try {
+      const data = await purchasesApi.getMyPurchases()
+      const seen = new Set<string>()
+      const unique = data.filter(p => {
+        if (seen.has(p.purchaseId)) return false
+        seen.add(p.purchaseId)
+        return true
+      })
+      setPurchasedCount(unique.length)
+    } catch (err) {
+      console.error('[UserProfile] failed to load purchases', err)
+    }
+  }, [])
+
+  useEffect(() => {
+    loadPurchases()
+  }, [loadPurchases])
+
+  useRealtimeScopeRefresh(['purchases', 'programs'], () => {
+    loadPurchases()
+  })
+
   return (
     <>
       <div className="space-y-3 pb-24">
@@ -501,7 +528,7 @@ export default function UserProfilePage() {
             {/* Stats */}
             <div className="grid grid-cols-4 gap-1.5 sm:gap-2">
               {([
-                { href: '/user/journey', value: user?.workoutsCompleted || 0, label: tp('workouts') },
+                { href: '/user/journey', value: purchasedCount, label: tp('workouts') },
                 { href: '/user/friends?tab=followers', value: user?.followersCount || 0, label: tp('followers') },
                 { href: '/user/friends?tab=following', value: user?.followingCount || 0, label: tp('following') },
                 { href: '/user/achievements', value: achievementsCount, label: tp('achievements') },

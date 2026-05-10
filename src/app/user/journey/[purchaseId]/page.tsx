@@ -346,7 +346,7 @@ export default function ProgramDetailPage({
                 </div>
                 <p className="mt-3 text-[11px] font-medium uppercase tracking-wider text-muted-foreground">{t('reviews')}</p>
                 <p className="mt-1 text-sm font-semibold text-foreground tabular-nums">
-                  {program.averageRating > 0 ? program.averageRating.toFixed(1) : '-'} ({program.totalReviews})
+                  {program.averageRating > 0 ? program.averageRating.toFixed(1) : '0'} ({program.totalReviews})
                 </p>
               </div>
             </div>

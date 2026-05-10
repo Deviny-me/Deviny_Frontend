@@ -175,11 +175,12 @@ export class ChatConnection {
   onFriendRequestAccepted(cb: (data: { requestId: number; acceptorId: string; acceptorName: string; acceptorAvatar: string | null }) => void) { this._on('FriendRequestAccepted', cb) }
   onFriendRequestDeclined(cb: (data: { requestId: number; declinerId: string; declinerName: string }) => void) { this._on('FriendRequestDeclined', cb) }
   onFriendRemoved(cb: (data: { removedByUserId: string; removedByName: string }) => void) { this._on('FriendRemoved', cb) }
-  onCallOffer(cb: (data: { conversationId: string; fromUserId: string; fromUserName: string; callType: 'audio' | 'video'; offer: RTCSessionDescriptionInit }) => void) { this._on('CallOffer', cb) }
-  onCallAnswer(cb: (data: { conversationId: string; fromUserId: string; answer: RTCSessionDescriptionInit }) => void) { this._on('CallAnswer', cb) }
+  onCallOffer(cb: (data: { conversationId: string; fromUserId: string; fromUserName: string; callType: 'audio' | 'video'; offer: RTCSessionDescriptionInit; endToEndEncrypted?: boolean; encryptionProtocol?: string; encryption?: unknown }) => void) { this._on('CallOffer', cb) }
+  onCallAnswer(cb: (data: { conversationId: string; fromUserId: string; answer: RTCSessionDescriptionInit; endToEndEncrypted?: boolean; encryptionProtocol?: string; encryption?: unknown }) => void) { this._on('CallAnswer', cb) }
   onCallIceCandidate(cb: (data: { conversationId: string; fromUserId: string; candidate: RTCIceCandidateInit }) => void) { this._on('CallIceCandidate', cb) }
   onCallEnded(cb: (data: { conversationId: string; fromUserId: string; reason: string }) => void) { this._on('CallEnded', cb) }
   onCallUnavailable(cb: (data: { conversationId: string; targetUserId: string; reason: string }) => void) { this._on('CallUnavailable', cb) }
+  onCallE2EEMessage(cb: (data: { conversationId: string; fromUserId: string; encryptionProtocol?: string; encryption: unknown; sentAtUtc?: string }) => void) { this._on('CallE2EEMessage', cb) }
   onEntityChanged(cb: (data: EntityChangedEvent) => void) { this._on('EntityChanged', cb) }
   onPresenceUpdated(cb: (data: { userId: string; isOnline: boolean; lastSeenAtUtc: string | null }) => void) { this._on('PresenceUpdated', cb) }
 
@@ -225,9 +226,37 @@ export class ChatConnection {
     await this.connection!.invoke('SendCallOffer', conversationId, targetUserId, callType, JSON.stringify(offer))
   }
 
+  async sendEncryptedCallOffer(conversationId: string, targetUserId: string, callType: 'audio' | 'video', offer: RTCSessionDescriptionInit, encryptionEnvelope: unknown) {
+    await this.ensureConnected()
+    await this.connection!.invoke(
+      'SendEncryptedCallOffer',
+      conversationId,
+      targetUserId,
+      callType,
+      JSON.stringify(offer),
+      JSON.stringify(encryptionEnvelope),
+    )
+  }
+
   async sendCallAnswer(conversationId: string, targetUserId: string, answer: RTCSessionDescriptionInit) {
     await this.ensureConnected()
     await this.connection!.invoke('SendCallAnswer', conversationId, targetUserId, JSON.stringify(answer))
+  }
+
+  async sendEncryptedCallAnswer(conversationId: string, targetUserId: string, answer: RTCSessionDescriptionInit, encryptionEnvelope: unknown) {
+    await this.ensureConnected()
+    await this.connection!.invoke(
+      'SendEncryptedCallAnswer',
+      conversationId,
+      targetUserId,
+      JSON.stringify(answer),
+      JSON.stringify(encryptionEnvelope),
+    )
+  }
+
+  async sendCallE2EEMessage(conversationId: string, targetUserId: string, encryptionEnvelope: unknown) {
+    await this.ensureConnected()
+    await this.connection!.invoke('SendCallE2EEMessage', conversationId, targetUserId, JSON.stringify(encryptionEnvelope))
   }
 
   async sendCallIceCandidate(conversationId: string, targetUserId: string, candidate: RTCIceCandidateInit) {

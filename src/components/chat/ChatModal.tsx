@@ -15,6 +15,7 @@ import {
   decryptIncoming,
   isEncryptedEnvelope,
 } from '@/lib/crypto/e2ee'
+import { ensureCallE2EERegistered } from '@/lib/crypto/callE2EERegistration'
 
 interface ChatModalProps {
   otherUserId: string;
@@ -120,6 +121,9 @@ export default function ChatModal({ otherUserId, otherUserName, otherUserAvatarU
     if (!currentUserId) return
     ensureMyKeypairAndPublish(currentUserId, messagesApi.putMyChatKey).catch(err =>
       console.warn('[ChatModal] Failed to ensure E2EE keypair:', err)
+    )
+    ensureCallE2EERegistered().catch(err =>
+      console.warn('[ChatModal] Failed to ensure call E2EE bundle:', err)
     )
   }, [currentUserId]);
 

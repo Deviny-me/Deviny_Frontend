@@ -33,6 +33,13 @@ interface Props {
 
 const LIMIT = 100
 
+/** Map a section basePath to the viewer's leaderboard category. */
+const BASE_PATH_TO_CATEGORY: Record<Props['basePath'], LeaderboardCategory> = {
+  '/user': 'user',
+  '/trainer': 'trainer',
+  '/nutritionist': 'nutritionist',
+}
+
 type SortKey = 'rank' | 'score' | 'stars' | 'reviews' | 'name'
 type MinReviews = 'all' | 'rated' | 'min10' | 'min50'
 
@@ -161,7 +168,10 @@ export function LeaderboardPage({ basePath }: Props) {
   const t = useTranslations('leaderboardSidebar')
   const accent = useAccentColors()
 
-  const [activeCategory, setActiveCategory] = useState<LeaderboardCategory>('user')
+  /** The viewer's own role — used to decide whether the "My position" card applies. */
+  const myCategory = BASE_PATH_TO_CATEGORY[basePath]
+
+  const [activeCategory, setActiveCategory] = useState<LeaderboardCategory>(myCategory)
   const [activeScope, setActiveScope] = useState<LeaderboardScope>(DEFAULT_SCOPE)
   const [activePeriod, setActivePeriod] = useState<LeaderboardPeriod>('week')
   const [entries, setEntries] = useState<LeaderboardEntryDto[]>([])
@@ -226,6 +236,12 @@ export function LeaderboardPage({ basePath }: Props) {
   }, [activeCategory, activeScope, activePeriod])
 
   useEffect(() => {
+    // Only fetch "my position" when looking at the viewer's own category
+    // (a regular user has no rank in the Trainers / Nutritionists boards).
+    if (activeCategory !== myCategory) {
+      setMe(null)
+      return
+    }
     let cancelled = false
     ratingsApi
       .getMyLeaderboardPosition(activeCategory, activeScope, activePeriod)
@@ -238,7 +254,7 @@ export function LeaderboardPage({ basePath }: Props) {
     return () => {
       cancelled = true
     }
-  }, [activeCategory, activeScope, activePeriod])
+  }, [activeCategory, activeScope, activePeriod, myCategory])
 
   const goToProfile = (id: string) => router.push(`${basePath}/profile/${id}`)
 
@@ -652,8 +668,8 @@ export function LeaderboardPage({ basePath }: Props) {
         )}
       </div>
 
-      {/* My position card */}
-      {me && (
+      {/* My position card — only on the viewer's own role tab */}
+      {me && activeCategory === myCategory && (
         <div className="bg-surface-2 rounded-xl border border-border-subtle p-4">
           {(() => {
             const myAccent = getAccentColorsByRole(me.role || activeCategory)

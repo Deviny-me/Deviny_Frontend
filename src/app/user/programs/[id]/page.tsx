@@ -454,7 +454,7 @@ export default function ProgramDetailPage({
                 <div className="rounded-xl bg-surface-2 ring-1 ring-inset ring-border-subtle px-3 py-2.5 text-center">
                   <p className="flex items-center justify-center gap-1 text-base sm:text-lg font-bold text-foreground tabular-nums leading-none">
                     <Star className="h-4 w-4 fill-amber-400 text-amber-400" />
-                    {averageRating > 0 ? averageRating.toFixed(1) : 'вЂ”'}
+                    {averageRating > 0 ? averageRating.toFixed(1) : '0'}
                   </p>
                   <p className="mt-1 text-[10px] sm:text-[11px] text-muted-foreground leading-none">{t('reviews')}</p>
                 </div>

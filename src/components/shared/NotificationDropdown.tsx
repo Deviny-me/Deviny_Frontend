@@ -1,15 +1,15 @@
 'use client'
 
 import { useState, useRef, useEffect, useCallback } from 'react'
-import { Bell, CheckCheck, ExternalLink } from 'lucide-react'
+import { Bell, CheckCheck, ExternalLink, Loader2, Trash2 } from 'lucide-react'
 import { usePathname, useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import { useUnreadNotifications } from '@/contexts/UnreadNotificationsContext'
-import { notificationsApi } from '@/lib/api/notificationsApi'
-import { Notification, NotificationRealtimePayload } from '@/types/notification'
+import { isDeleteUnsupportedError, notificationsApi } from '@/lib/api/notificationsApi'
+import { Notification, NotificationAction, NotificationRealtimePayload } from '@/types/notification'
 import { useAccentColors } from '@/lib/theme/useAccentColors'
 import { chatConnection } from '@/lib/signalr/chatConnection'
-import { filterArchivedNotifications, isNotificationArchived } from '@/lib/notifications/localArchive'
+import { archiveNotificationLocally, filterArchivedNotifications, isNotificationArchived } from '@/lib/notifications/localArchive'
 import { getNotificationIcon, resolveNotificationTitle, resolveNotificationMessage, timeAgo } from '@/lib/notifications/presentation'
 
 export function NotificationDropdown() {
@@ -95,7 +95,8 @@ export function NotificationDropdown() {
         relatedEntityId: data.relatedEntityId,
         isRead: data.isRead,
         createdAt: data.createdAt,
-        readAt: null
+        readAt: null,
+        actions: data.actions ?? []
       }
 
       if (isNotificationArchived(notification)) return
@@ -143,6 +144,59 @@ export function NotificationDropdown() {
   const handleLoadMore = () => {
     if (nextCursor && !loading) {
       loadNotifications(nextCursor)
+    }
+  }
+
+  const [actionBusy, setActionBusy] = useState<Set<string>>(new Set())
+  const [completedActions, setCompletedActions] = useState<Set<string>>(new Set())
+  const [deletingIds, setDeletingIds] = useState<Set<string>>(new Set())
+
+  const actionId = (notificationId: string, key: string) => `${notificationId}:${key}`
+
+  const handleAction = async (notification: Notification, action: NotificationAction) => {
+    const id = actionId(notification.id, action.key)
+    if (actionBusy.has(id) || completedActions.has(id)) return
+
+    if (action.key === 'open-profile') {
+      if (!notification.isRead) handleMarkAsRead(notification.id).catch(() => {})
+      setIsOpen(false)
+      const href = notification.relatedEntityId
+        ? `${basePath}/profile/${notification.relatedEntityId}`
+        : null
+      if (href) router.push(href)
+      return
+    }
+
+    setActionBusy(prev => { const next = new Set(prev); next.add(id); return next })
+    try {
+      await notificationsApi.executeAction(action)
+      setCompletedActions(prev => { const next = new Set(prev); next.add(id); return next })
+      if (!notification.isRead) handleMarkAsRead(notification.id).catch(() => {})
+    } catch (err) {
+      console.error('[Notifications] Action failed:', action.key, err)
+    } finally {
+      setActionBusy(prev => { const next = new Set(prev); next.delete(id); return next })
+    }
+  }
+
+  const handleDelete = async (notification: Notification) => {
+    if (deletingIds.has(notification.id)) return
+    setDeletingIds(prev => { const next = new Set(prev); next.add(notification.id); return next })
+    const previous = notifications
+    setNotifications(prev => prev.filter(n => n.id !== notification.id))
+    try {
+      await notificationsApi.deleteNotification(notification.id)
+      refreshCount()
+    } catch (err) {
+      if (isDeleteUnsupportedError(err)) {
+        archiveNotificationLocally(notification.id)
+        refreshCount()
+      } else {
+        console.error('[Notifications] Failed to delete:', err)
+        setNotifications(previous)
+      }
+    } finally {
+      setDeletingIds(prev => { const next = new Set(prev); next.delete(notification.id); return next })
     }
   }
 
@@ -230,12 +284,58 @@ export function NotificationDropdown() {
                       <p className="text-[10px] text-faint-foreground mt-1">
                         {timeAgo(notification.createdAt, t)}
                       </p>
+
+                      {notification.actions && notification.actions.length > 0 && (
+                        <div className="mt-2 flex flex-wrap gap-1.5">
+                          {notification.actions.map(action => {
+                            const id = actionId(notification.id, action.key)
+                            const busy = actionBusy.has(id)
+                            const done = completedActions.has(id)
+                            const isPrimary = action.key === 'follow-back'
+                            const label = done && isPrimary
+                              ? t('actionFollowing')
+                              : action.key === 'follow-back'
+                                ? t('actionFollowBack')
+                                : action.key === 'open-profile'
+                                  ? t('actionOpenProfile')
+                                  : action.label
+                            return (
+                              <button
+                                key={action.key}
+                                onClick={(e) => { e.stopPropagation(); handleAction(notification, action) }}
+                                disabled={busy || done}
+                                className={`inline-flex h-7 items-center gap-1 rounded-md px-2.5 text-[11px] font-semibold transition-colors disabled:opacity-60 ${
+                                  isPrimary
+                                    ? 'text-white shadow-sm'
+                                    : 'bg-surface-1 ring-1 ring-inset ring-border-subtle text-foreground hover:bg-hover-overlay'
+                                }`}
+                                style={isPrimary && !done ? { background: `linear-gradient(135deg, ${accent.primary}, ${accent.secondary})` } : undefined}
+                              >
+                                {busy && <Loader2 className="h-3 w-3 animate-spin" />}
+                                {label}
+                              </button>
+                            )
+                          })}
+                        </div>
+                      )}
                     </div>
 
-                    {/* Unread indicator */}
-                    {!notification.isRead && (
-                      <div className={`mt-2 w-2 h-2 ${accent.badge} rounded-full flex-shrink-0`} />
-                    )}
+                    {/* Right column: unread dot + delete */}
+                    <div className="flex flex-col items-end gap-2">
+                      {!notification.isRead && (
+                        <div className={`mt-2 w-2 h-2 ${accent.badge} rounded-full flex-shrink-0`} />
+                      )}
+                      <button
+                        onClick={(e) => { e.stopPropagation(); handleDelete(notification) }}
+                        disabled={deletingIds.has(notification.id)}
+                        className="inline-flex h-7 w-7 items-center justify-center rounded-md text-faint-foreground transition-colors hover:bg-red-500/10 hover:text-red-400 disabled:opacity-50"
+                        title={t('delete')}
+                      >
+                        {deletingIds.has(notification.id)
+                          ? <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                          : <Trash2 className="h-3.5 w-3.5" />}
+                      </button>
+                    </div>
                   </div>
                 ))}
 

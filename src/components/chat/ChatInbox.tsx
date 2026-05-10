@@ -36,6 +36,25 @@ import {
   decryptIncoming,
   isEncryptedEnvelope,
 } from '@/lib/crypto/e2ee'
+import {
+  CALL_E2EE_PROTOCOL_VERSION,
+  decryptEnvelope,
+  deriveSessionFromIncoming,
+  encryptEnvelope,
+  generateMediaKeyMaterial,
+  getCachedSession,
+  getDeviceId,
+  getIdentityPublicB64,
+  getRegistrationId,
+  initiateSession,
+  isCallE2EESupported,
+  newCallId,
+  decodeBase64,
+} from '@/lib/crypto/callE2EE'
+import { attachFrameCipher, isFrameEncryptionSupported, type FrameCipherHandles } from '@/lib/crypto/callFrameTransform'
+import { callE2EEApi } from '@/lib/api/callE2EEApi'
+import { ensureCallE2EERegistered } from '@/lib/crypto/callE2EERegistration'
+import type { CallE2EEEnvelope, CallE2EEInnerPayload, IncomingCallEncryption } from '@/types/callE2EE'
 import type {
   ConversationListItemDto,
   MessageDto,
@@ -172,6 +191,8 @@ interface IncomingCallState {
   fromUserName: string
   callType: CallType
   offer: RTCSessionDescriptionInit
+  endToEndEncrypted?: boolean
+  encryption?: IncomingCallEncryption
 }
 
 interface StoredIncomingCallState extends IncomingCallState {
@@ -294,6 +315,11 @@ export default function ChatInbox() {
   const pendingIceCandidatesRef = useRef<RTCIceCandidateInit[]>([])
   const subscribedPresenceIdsRef = useRef<Set<string>>(new Set())
   const ringtoneRef = useRef<HTMLAudioElement | null>(null)
+  const frameCipherRef = useRef<FrameCipherHandles | null>(null)
+  const activeCallIdRef = useRef<string | null>(null)
+  const activeCallEncryptedRef = useRef(false)
+  const activeCallPeerDeviceIdRef = useRef<string>('primary')
+  const [activeCallEncrypted, setActiveCallEncrypted] = useState(false)
 
   // Keep refs in sync with state
   useEffect(() => { selectedConvIdRef.current = selectedConvId }, [selectedConvId])
@@ -349,6 +375,10 @@ export default function ChatInbox() {
     if (!currentUserId) return
     ensureMyKeypairAndPublish(currentUserId, messagesApi.putMyChatKey).catch(err =>
       console.warn('[Chat] Failed to ensure E2EE keypair:', err)
+    )
+    // Also publish the call E2EE bundle (Signal-style X3DH) once per device.
+    ensureCallE2EERegistered().catch(err =>
+      console.warn('[Call] Failed to ensure call E2EE bundle:', err)
     )
   }, [currentUserId])
 
@@ -798,6 +828,13 @@ export default function ChatInbox() {
       peerConnectionRef.current.close()
       peerConnectionRef.current = null
     }
+    if (frameCipherRef.current) {
+      try { frameCipherRef.current.disable() } catch { /* ignore */ }
+      frameCipherRef.current = null
+    }
+    activeCallIdRef.current = null
+    activeCallEncryptedRef.current = false
+    setActiveCallEncrypted(false)
     if (localStreamRef.current) {
       localStreamRef.current.getTracks().forEach(track => track.stop())
       localStreamRef.current = null
@@ -1336,9 +1373,84 @@ export default function ChatInbox() {
         const pc = await createPeerConnection(selectedConvId, selectedConv.peerUser.id)
         stream.getTracks().forEach(track => pc.addTrack(track, stream))
 
+        const callId = newCallId()
+        activeCallIdRef.current = callId
+
+        // ── Try E2EE handshake ──
+        let envelope: CallE2EEEnvelope | null = null
+        if (isCallE2EESupported()) {
+          try {
+            await ensureCallE2EERegistered()
+            const peerDeviceId = 'primary'
+            const status = await callE2EEApi.getPeerStatus(selectedConv.peerUser.id, peerDeviceId).catch(() => null)
+            if (status?.isRegistered) {
+              const peerBundle = await callE2EEApi.fetchPeerBundle(selectedConv.peerUser.id, {
+                deviceId: peerDeviceId,
+                consumeOneTimePreKey: true,
+                callId,
+              })
+              const session = await initiateSession(selectedConv.peerUser.id, peerDeviceId, {
+                identityKey: peerBundle.identityKey,
+                signedPreKey: peerBundle.signedPreKey,
+                oneTimePreKey: peerBundle.oneTimePreKey,
+              })
+              const media = generateMediaKeyMaterial()
+              const inner: CallE2EEInnerPayload = {
+                callId,
+                conversationId: selectedConvId,
+                senderUserId: currentUserId ?? '',
+                senderDeviceId: await getDeviceId(),
+                targetUserId: selectedConv.peerUser.id,
+                targetDeviceId: peerDeviceId,
+                mediaKey: media.mediaKeyB64,
+                mediaSalt: media.mediaSaltB64,
+                epoch: 1,
+                createdAtUtc: new Date().toISOString(),
+              }
+              const ourIdentity = await getIdentityPublicB64()
+              envelope = await encryptEnvelope('call-offer', callId, inner, session.sharedKey, {
+                senderDeviceId: inner.senderDeviceId,
+                targetDeviceId: peerDeviceId,
+                x3dh: {
+                  identityKey: ourIdentity ?? '',
+                  ephemeralKey: session.ephemeralPublicB64,
+                  signedPreKeyId: peerBundle.signedPreKey.keyId,
+                  oneTimePreKeyId: session.usedOneTimePreKeyId,
+                  registrationId: await getRegistrationId(),
+                },
+              })
+
+              activeCallPeerDeviceIdRef.current = peerDeviceId
+              activeCallEncryptedRef.current = true
+              setActiveCallEncrypted(true)
+              if (isFrameEncryptionSupported()) {
+                const cipher = attachFrameCipher({
+                  pc,
+                  mediaKey: media.mediaKey,
+                  mediaSalt: media.mediaSalt,
+                  label: 'call-sender',
+                })
+                await cipher.enable()
+                frameCipherRef.current = cipher
+              } else {
+                console.warn('[CallE2EE] WebRTC insertable streams not supported; signaling will be E2EE but media frames will not be encrypted.')
+              }
+            } else {
+              console.info('[CallE2EE] Peer has no E2EE bundle — falling back to plaintext signaling')
+            }
+          } catch (e2eeErr) {
+            console.warn('[CallE2EE] Encryption setup failed, falling back to plaintext', e2eeErr)
+            envelope = null
+          }
+        }
+
         const offer = await pc.createOffer()
         await pc.setLocalDescription(offer)
-        await chatConnection.sendCallOffer(selectedConvId, selectedConv.peerUser.id, type, offer)
+        if (envelope) {
+          await chatConnection.sendEncryptedCallOffer(selectedConvId, selectedConv.peerUser.id, type, offer, envelope)
+        } else {
+          await chatConnection.sendCallOffer(selectedConvId, selectedConv.peerUser.id, type, offer)
+        }
         setCallStatus('connecting')
 
         if (outgoingCallTimeoutRef.current) clearTimeout(outgoingCallTimeoutRef.current)
@@ -1402,6 +1514,65 @@ export default function ChatInbox() {
       const pc = await createPeerConnection(call.conversationId, call.fromUserId)
       stream.getTracks().forEach(track => pc.addTrack(track, stream))
 
+      // ── Decrypt incoming E2EE envelope, derive media key, attach frame cipher ──
+      let answerEnvelope: CallE2EEEnvelope | null = null
+      if (call.endToEndEncrypted && call.encryption && isCallE2EESupported()) {
+        try {
+          const env = call.encryption as Partial<CallE2EEEnvelope> & { x3dh?: CallE2EEEnvelope['x3dh'] }
+          if (!env.iv || !env.ciphertext) throw new Error('Missing iv/ciphertext')
+          const peerDeviceId = env.senderDeviceId ?? 'primary'
+          let sharedKey = await getCachedSession(call.fromUserId, peerDeviceId)
+          if (!sharedKey) {
+            if (!env.x3dh) throw new Error('No cached session and no X3DH header')
+            sharedKey = await deriveSessionFromIncoming(call.fromUserId, peerDeviceId, {
+              senderIdentityB64: env.x3dh.identityKey,
+              ephemeralB64: env.x3dh.ephemeralKey,
+              signedPreKeyId: env.x3dh.signedPreKeyId,
+              oneTimePreKeyId: env.x3dh.oneTimePreKeyId,
+            })
+          }
+          const inner = await decryptEnvelope(env as CallE2EEEnvelope, sharedKey)
+          const callId = inner.callId
+          activeCallIdRef.current = callId
+          activeCallPeerDeviceIdRef.current = peerDeviceId
+          activeCallEncryptedRef.current = true
+          setActiveCallEncrypted(true)
+
+          if (isFrameEncryptionSupported()) {
+            const cipher = attachFrameCipher({
+              pc,
+              mediaKey: decodeBase64(inner.mediaKey),
+              mediaSalt: decodeBase64(inner.mediaSalt),
+              label: 'call-receiver',
+            })
+            await cipher.enable()
+            frameCipherRef.current = cipher
+          }
+
+          // Build symmetric answer envelope so the caller knows we accepted E2EE.
+          const ourDeviceId = await getDeviceId()
+          const ack: CallE2EEInnerPayload = {
+            ...inner,
+            senderUserId: currentUserId ?? inner.targetUserId,
+            senderDeviceId: ourDeviceId,
+            targetUserId: call.fromUserId,
+            targetDeviceId: peerDeviceId,
+            createdAtUtc: new Date().toISOString(),
+          }
+          answerEnvelope = await encryptEnvelope('call-answer', callId, ack, sharedKey, {
+            senderDeviceId: ourDeviceId,
+            targetDeviceId: peerDeviceId,
+          })
+        } catch (cryptoErr) {
+          console.error('[CallE2EE] Failed to decrypt incoming call envelope', cryptoErr)
+          setCallNotice(t('callConnectionFailed'))
+          setTimeout(() => setCallNotice(null), 3000)
+          await chatConnection.endCall(call.conversationId, call.fromUserId, 'crypto_failed')
+          clearCallMedia()
+          return
+        }
+      }
+
       await pc.setRemoteDescription(new RTCSessionDescription(call.offer))
       // Flush any ICE candidates that arrived before remote description was set
       const pending = pendingIceCandidatesRef.current
@@ -1415,7 +1586,11 @@ export default function ChatInbox() {
       }
       const answer = await pc.createAnswer()
       await pc.setLocalDescription(answer)
-      await chatConnection.sendCallAnswer(call.conversationId, call.fromUserId, answer)
+      if (answerEnvelope) {
+        await chatConnection.sendEncryptedCallAnswer(call.conversationId, call.fromUserId, answer, answerEnvelope)
+      } else {
+        await chatConnection.sendCallAnswer(call.conversationId, call.fromUserId, answer)
+      }
     } catch (error) {
       console.error('Failed to accept call', error)
       if (call) {
@@ -1563,7 +1738,7 @@ export default function ChatInbox() {
   }, [callStatus, clearCallMedia, t])
 
   useEffect(() => {
-    const handleCallOffer = async (data: { conversationId: string; fromUserId: string; fromUserName: string; callType: CallType; offer: RTCSessionDescriptionInit }) => {
+    const handleCallOffer = async (data: { conversationId: string; fromUserId: string; fromUserName: string; callType: CallType; offer: RTCSessionDescriptionInit; endToEndEncrypted?: boolean; encryptionProtocol?: string; encryption?: unknown }) => {
       if (sameId(currentUserId, data.fromUserId)) return
       if (!isRtcDescription(data.offer) || (data.callType !== 'audio' && data.callType !== 'video')) {
         console.error('[WebRTC] Invalid incoming call offer payload', data)
@@ -1577,11 +1752,27 @@ export default function ChatInbox() {
       }
 
       pendingIceCandidatesRef.current = []
-      setIncomingCall(data)
+      setIncomingCall({
+        conversationId: data.conversationId,
+        fromUserId: data.fromUserId,
+        fromUserName: data.fromUserName,
+        callType: data.callType,
+        offer: data.offer,
+        endToEndEncrypted: data.endToEndEncrypted === true,
+        encryption: (data.encryption ?? undefined) as IncomingCallEncryption | undefined,
+      })
       setCallStatus('ringing')
       setCallNotice(t('incomingCallFromUser', { name: data.fromUserName }))
       setTimeout(() => setCallNotice(null), 3000)
-      armIncomingCallTimeout(data)
+      armIncomingCallTimeout({
+        conversationId: data.conversationId,
+        fromUserId: data.fromUserId,
+        fromUserName: data.fromUserName,
+        callType: data.callType,
+        offer: data.offer,
+        endToEndEncrypted: data.endToEndEncrypted === true,
+        encryption: (data.encryption ?? undefined) as IncomingCallEncryption | undefined,
+      })
     }
 
     const handleCallAnswer = async (data: { conversationId: string; fromUserId: string; answer: RTCSessionDescriptionInit }) => {
@@ -1671,11 +1862,35 @@ export default function ChatInbox() {
       clearCallMedia()
     }
 
+    const handleCallE2EEMessage = async (data: { conversationId: string; fromUserId: string; encryption: unknown }) => {
+      if (!activeCallConversationIdRef.current || !sameId(data.conversationId, activeCallConversationIdRef.current)) return
+      if (activeCallPeerIdRef.current && !sameId(data.fromUserId, activeCallPeerIdRef.current)) return
+
+      try {
+        const env = data.encryption as Partial<CallE2EEEnvelope>
+        if (!env.iv || !env.ciphertext) return
+        const peerDeviceId = env.senderDeviceId ?? activeCallPeerDeviceIdRef.current ?? 'primary'
+        const sharedKey = await getCachedSession(data.fromUserId, peerDeviceId)
+        if (!sharedKey) {
+          console.warn('[CallE2EE] Received control message without a cached session')
+          return
+        }
+        const inner = await decryptEnvelope(env as CallE2EEEnvelope, sharedKey)
+        if (env.type === 'media-rekey' && frameCipherRef.current) {
+          await frameCipherRef.current.rotate(decodeBase64(inner.mediaKey), decodeBase64(inner.mediaSalt))
+          console.info('[CallE2EE] media key rotated, epoch', inner.epoch)
+        }
+      } catch (err) {
+        console.warn('[CallE2EE] Failed to handle control message', err)
+      }
+    }
+
     chatConnection.onCallOffer(handleCallOffer)
     chatConnection.onCallAnswer(handleCallAnswer)
     chatConnection.onCallIceCandidate(handleCallIce)
     chatConnection.onCallEnded(handleCallEnded)
     chatConnection.onCallUnavailable(handleCallUnavailable)
+    chatConnection.onCallE2EEMessage(handleCallE2EEMessage)
 
     return () => {
       chatConnection.off('CallOffer', handleCallOffer)
@@ -1683,6 +1898,7 @@ export default function ChatInbox() {
       chatConnection.off('CallIceCandidate', handleCallIce)
       chatConnection.off('CallEnded', handleCallEnded)
       chatConnection.off('CallUnavailable', handleCallUnavailable)
+      chatConnection.off('CallE2EEMessage', handleCallE2EEMessage)
     }
   }, [armIncomingCallTimeout, clearCallMedia, currentUserId, t])
 

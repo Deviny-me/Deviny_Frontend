@@ -340,7 +340,7 @@ export function ExpertsContent({ basePath }: ExpertsContentProps) {
                           <span className="inline-flex items-center gap-1">
                             <Star className="w-3.5 h-3.5 text-amber-400 fill-amber-400" />
                             <span className="font-medium text-foreground tabular-nums">
-                              {trainer.ratingValue > 0 ? trainer.ratingValue.toFixed(1) : '–'}
+                              {trainer.ratingValue > 0 ? trainer.ratingValue.toFixed(1) : '0'}
                             </span>
                             <span className="text-faint-foreground tabular-nums">({trainer.reviewsCount})</span>
                           </span>

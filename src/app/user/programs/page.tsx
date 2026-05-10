@@ -530,7 +530,7 @@ export default function ProgramsPage() {
                         <span className="inline-flex items-center gap-1 text-muted-foreground">
                           <Star className="w-3.5 h-3.5 text-amber-400 fill-amber-400" />
                           <span className="font-medium text-foreground tabular-nums">
-                            {(program.averageRating ?? 0) > 0 ? (program.averageRating ?? 0).toFixed(1) : '–'}
+                            {(program.averageRating ?? 0) > 0 ? (program.averageRating ?? 0).toFixed(1) : '0'}
                           </span>
                           <span className="text-faint-foreground tabular-nums">({program.totalReviews ?? 0})</span>
                         </span>

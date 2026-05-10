@@ -1,3 +1,12 @@
+export type NotificationActionMethod = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
+
+export interface NotificationAction {
+  key: string;
+  label: string;
+  method: NotificationActionMethod;
+  url: string;
+}
+
 export interface Notification {
   id: string;
   type: string;
@@ -9,6 +18,7 @@ export interface Notification {
   isRead: boolean;
   createdAt: string;
   readAt: string | null;
+  actions?: NotificationAction[];
 }
 
 export interface NotificationsResponse {

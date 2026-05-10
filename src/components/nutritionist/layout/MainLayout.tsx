@@ -9,6 +9,7 @@ interface MainLayoutProps {
   children: ReactNode
   showLeftSidebar?: boolean
   showRightSidebar?: boolean
+  rightSidebar?: ReactNode
 }
 
 /**
@@ -17,7 +18,8 @@ interface MainLayoutProps {
 export function MainLayout({ 
   children, 
   showLeftSidebar = true, 
-  showRightSidebar = true 
+  showRightSidebar = true,
+  rightSidebar,
 }: MainLayoutProps) {
   return (
     <SharedMainLayout
@@ -27,7 +29,8 @@ export function MainLayout({
       mobileSecondaryLinks={nutritionistConfig.topNavItems}
       footer={<NutritionistFooter />}
       showLeftSidebar={showLeftSidebar}
-      showRightSidebar={false}
+      showRightSidebar={showRightSidebar && Boolean(rightSidebar)}
+      rightSidebar={rightSidebar}
       accentColor="green"
     >
       {children}

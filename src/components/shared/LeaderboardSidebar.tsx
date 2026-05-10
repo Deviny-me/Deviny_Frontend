@@ -99,10 +99,16 @@ function Avatar({
   )
 }
 
+const CATEGORY_BY_BASE: Record<Props['basePath'], LeaderboardCategory> = {
+  '/user': 'user',
+  '/trainer': 'trainer',
+  '/nutritionist': 'nutritionist',
+}
+
 export function LeaderboardSidebar({ basePath }: Props) {
   const router = useRouter()
   const t = useTranslations('leaderboardSidebar')
-  const [activeCategory, setActiveCategory] = useState<LeaderboardCategory>('user')
+  const [activeCategory, setActiveCategory] = useState<LeaderboardCategory>(CATEGORY_BY_BASE[basePath])
   const [entries, setEntries] = useState<LeaderboardEntryDto[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)

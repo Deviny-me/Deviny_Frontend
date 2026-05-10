@@ -19,7 +19,11 @@ import {
   Phone,
   Calendar,
   FileText,
+  ShieldAlert,
+  Trophy,
 } from 'lucide-react'
+import { Tabs } from '@/components/ui/Tabs'
+import type { AccentRole } from '@/components/ui/Tabs'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { postsApi } from '@/lib/api/postsApi'
@@ -39,6 +43,7 @@ import { useUpsertPosts, usePost, usePostDispatch } from '@/contexts/PostStoreCo
 import { useTranslations } from 'next-intl'
 import { useLanguage } from '@/components/language/LanguageProvider'
 import { useRealtimeScopeRefresh } from '@/lib/signalr/useRealtimeScopeRefresh'
+import { ProfileReviewsTab } from '@/components/shared/ProfileReviewsTab'
 
 // ─── Expert profile type (returned when user is Trainer/Nutritionist) ───
 interface ExpertProfileData {
@@ -339,6 +344,8 @@ export function PublicProfileContent({
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
   const [playingVideoId, setPlayingVideoId] = useState<string | null>(null)
   const [viewingPhoto, setViewingPhoto] = useState<{ url: string; caption?: string } | null>(null)
+  /** Top-level profile tab. "about" only used when the viewed user is an expert. */
+  const [mainTab, setMainTab] = useState<'posts' | 'reviews' | 'about' | 'injuries' | 'achievements'>('posts')
   const observerRef = useRef<HTMLDivElement>(null)
   const abortRef = useRef<AbortController | null>(null)
   const isRefreshingPosts = isLoading && page === 1 && postIds.length > 0
@@ -418,6 +425,19 @@ export function PublicProfileContent({
   const profileAccent = getAccentColorsByRole(profileData?.role)
   const localizedCountry = localizeCountryName(profileData?.country, language)
   const localizedCity = localizeCityName(profileData?.city, profileData?.country, language)
+
+  /** Accent role for the Tabs component (matches the viewed user's role). */
+  const accentRole: AccentRole = (() => {
+    const r = String(profileData?.role ?? '').toLowerCase()
+    if (r === 'trainer' || r === '1') return 'trainer'
+    if (r === 'nutritionist' || r === '3') return 'nutritionist'
+    return 'user'
+  })()
+  const isExpert = Boolean(profileData?.expertProfile)
+  // Reset to a safe tab when switching between expert/non-expert profiles
+  useEffect(() => {
+    if (!isExpert && mainTab === 'about') setMainTab('posts')
+  }, [isExpert, mainTab])
 
   // Redirect to own profile if viewing self
   useEffect(() => {
@@ -768,10 +788,10 @@ export function PublicProfileContent({
               </div>
             )}
 
-            {/* Stats — single grid for all sizes, exactly like own profile */}
+            {/* Stats — same shape as own user profile: Workouts / Followers / Following / Achievements */}
             <div className="grid grid-cols-4 gap-1.5 sm:gap-2">
               {([
-                { value: profileData?.postsCount ?? totalPosts, label: tPosts('postsTab') },
+                { value: 0, label: tp('workouts') },
                 { value: profileData?.followersCount || 0, label: tp('followers') },
                 { value: profileData?.followingCount || 0, label: tp('following') },
                 { value: profileData?.achievementsCount || 0, label: tp('achievements') },
@@ -792,104 +812,150 @@ export function PublicProfileContent({
           </div>
         </div>
 
-        {/* About Section (Expert only) */}
-        {profileData?.expertProfile && (
-          <div className="rounded-2xl bg-surface-1 ring-1 ring-inset ring-border-subtle p-4 sm:p-5">
-            {profileData.expertProfile.primaryTitle && (
-              <p className="text-sm font-semibold mb-3" style={{ color: profileAccent.primary }}>{profileData.expertProfile.primaryTitle}</p>
-            )}
-            <h2 className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground mb-2">{tExp('about')}</h2>
-            {profileData.expertProfile.aboutText ? (
-              <p className="text-sm text-foreground/90 leading-relaxed whitespace-pre-line">{profileData.expertProfile.aboutText}</p>
-            ) : (
-              <p className="text-sm text-faint-foreground italic">{tExp('noDescription')}</p>
-            )}
-          </div>
+        {/* ─── Main Tabs (mirrors own-profile layout) ─── */}
+        <Tabs
+          items={[
+            { value: 'posts', label: tp('posts') },
+            { value: 'reviews', label: tp('reviews') },
+            ...(isExpert ? [{ value: 'about', label: tExp('about') }] as const : []),
+            { value: 'injuries', label: tp('injuries') },
+            { value: 'achievements', label: tp('achievements') },
+          ]}
+          value={mainTab}
+          onChange={(v) => setMainTab(v as typeof mainTab)}
+          variant="underline"
+          accent={accentRole}
+        />
+
+        {/* ─── Tab content ─── */}
+        {mainTab === 'reviews' && (
+          <ProfileReviewsTab
+            expertId={targetUserId ?? ''}
+            accentText={profileAccent.text}
+            accentGradient={`from-[${profileAccent.primary}]/10 to-[${profileAccent.secondary}]/10`}
+          />
         )}
 
-        {/* Specializations Section (Expert only) */}
-        {profileData?.expertProfile && (
-          <div className="rounded-2xl bg-surface-1 ring-1 ring-inset ring-border-subtle p-4 sm:p-5">
-            <h2 className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground mb-3">{tExp('specializations')}</h2>
-            {profileData.expertProfile.specializations.length > 0 ? (
-              <div className="flex flex-wrap gap-2">
-                {profileData.expertProfile.specializations.map((spec) => (
-                  <span
-                    key={spec.id}
-                    className="px-3 py-1.5 rounded-full bg-surface-2 ring-1 ring-inset ring-border-subtle text-xs font-medium text-foreground"
-                  >
-                    {spec.name}
-                  </span>
-                ))}
-              </div>
-            ) : (
-              <p className="text-sm text-faint-foreground italic">{tExp('noSpecializations')}</p>
-            )}
-          </div>
-        )}
+        {mainTab === 'about' && isExpert && profileData?.expertProfile && (
+          <div className="space-y-3">
+            {/* About */}
+            <div className="rounded-2xl bg-surface-1 ring-1 ring-inset ring-border-subtle p-4 sm:p-5">
+              {profileData.expertProfile.primaryTitle && (
+                <p className="text-sm font-semibold mb-3" style={{ color: profileAccent.primary }}>{profileData.expertProfile.primaryTitle}</p>
+              )}
+              <h2 className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground mb-2">{tExp('about')}</h2>
+              {profileData.expertProfile.aboutText ? (
+                <p className="text-sm text-foreground/90 leading-relaxed whitespace-pre-line">{profileData.expertProfile.aboutText}</p>
+              ) : (
+                <p className="text-sm text-faint-foreground italic">{tExp('noDescription')}</p>
+              )}
+            </div>
 
-        {/* Certificates Section (Expert only) */}
-        {profileData?.expertProfile && (
-          <div className="rounded-2xl bg-surface-1 ring-1 ring-inset ring-border-subtle p-4 sm:p-5">
-            <h2 className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground mb-3">{tExp('certificates')}</h2>
-            {profileData.expertProfile.certificates.length > 0 ? (
-              <div className="space-y-2">
-                {profileData.expertProfile.certificates.map((cert) => (
-                  <div key={cert.id} className="flex items-start gap-3 p-3 rounded-xl bg-surface-2 ring-1 ring-inset ring-border-subtle hover:ring-border transition-all">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-xl shrink-0" style={{ background: `linear-gradient(135deg, ${profileAccent.primary}, ${profileAccent.secondary})` }}>
-                      <Award className="w-5 h-5 text-white" />
+            {/* Specializations */}
+            <div className="rounded-2xl bg-surface-1 ring-1 ring-inset ring-border-subtle p-4 sm:p-5">
+              <h2 className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground mb-3">{tExp('specializations')}</h2>
+              {profileData.expertProfile.specializations.length > 0 ? (
+                <div className="flex flex-wrap gap-2">
+                  {profileData.expertProfile.specializations.map((spec) => (
+                    <span
+                      key={spec.id}
+                      className="px-3 py-1.5 rounded-full bg-surface-2 ring-1 ring-inset ring-border-subtle text-xs font-medium text-foreground"
+                    >
+                      {spec.name}
+                    </span>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-sm text-faint-foreground italic">{tExp('noSpecializations')}</p>
+              )}
+            </div>
+
+            {/* Certificates */}
+            <div className="rounded-2xl bg-surface-1 ring-1 ring-inset ring-border-subtle p-4 sm:p-5">
+              <h2 className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground mb-3">{tExp('certificates')}</h2>
+              {profileData.expertProfile.certificates.length > 0 ? (
+                <div className="space-y-2">
+                  {profileData.expertProfile.certificates.map((cert) => (
+                    <div key={cert.id} className="flex items-start gap-3 p-3 rounded-xl bg-surface-2 ring-1 ring-inset ring-border-subtle hover:ring-border transition-all">
+                      <div className="flex h-10 w-10 items-center justify-center rounded-xl shrink-0" style={{ background: `linear-gradient(135deg, ${profileAccent.primary}, ${profileAccent.secondary})` }}>
+                        <Award className="w-5 h-5 text-white" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <h3 className="text-sm font-semibold text-foreground truncate">{cert.title}</h3>
+                        {cert.issuer && (
+                          <p className="text-xs text-muted-foreground mt-0.5 truncate">{cert.issuer} • {cert.year}</p>
+                        )}
+                        {cert.fileUrl && cert.fileName && (
+                          <button
+                            onClick={() => setSelectedCertificate({ fileUrl: cert.fileUrl!, title: cert.title })}
+                            className="text-xs font-medium hover:underline mt-1.5 inline-block"
+                            style={{ color: profileAccent.primary }}
+                          >
+                            {tExp('viewCertificate')}
+                          </button>
+                        )}
+                      </div>
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <h3 className="text-sm font-semibold text-foreground truncate">{cert.title}</h3>
-                      {cert.issuer && (
-                        <p className="text-xs text-muted-foreground mt-0.5 truncate">{cert.issuer} • {cert.year}</p>
-                      )}
-                      {cert.fileUrl && cert.fileName && (
-                        <button
-                          onClick={() => setSelectedCertificate({ fileUrl: cert.fileUrl!, title: cert.title })}
-                          className="text-xs font-medium hover:underline mt-1.5 inline-block"
-                          style={{ color: profileAccent.primary }}
-                        >
-                          {tExp('viewCertificate')}
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <p className="text-sm text-faint-foreground italic">{tExp('noCertificates')}</p>
-            )}
-          </div>
-        )}
-
-        {/* Trainer-only: client medical info */}
-        {basePath === '/trainer' && studentMedicalInfo && (
-          <div className="rounded-2xl bg-surface-1 ring-1 ring-inset ring-border-subtle p-4 sm:p-5">
-            <h2 className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground mb-3">{tp('medicalInfo')}</h2>
-            <div className="space-y-2">
-              <div className="text-sm text-muted-foreground">
-                <span className="font-medium text-foreground">{tp('hasExistingInjuries')}:</span>{' '}
-                {studentMedicalInfo.hasInjuries ? tp('yes') : tp('no')}
-              </div>
-              {studentMedicalInfo.hasInjuries && studentMedicalInfo.injuryDocUrl ? (
-                <a
-                  href={getMediaUrl(studentMedicalInfo.injuryDocUrl) || '#'}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className={`inline-flex items-center gap-1.5 text-sm font-medium ${profileAccent.text} hover:underline`}
-                >
-                  <FileText className="w-4 h-4" />
-                  {tp('viewMedicalCertificate')}
-                </a>
-              ) : studentMedicalInfo.hasInjuries ? (
-                <p className="text-sm text-faint-foreground italic">{tp('noMedicalCertificate')}</p>
-              ) : null}
+                  ))}
+                </div>
+              ) : (
+                <p className="text-sm text-faint-foreground italic">{tExp('noCertificates')}</p>
+              )}
             </div>
           </div>
         )}
 
+        {mainTab === 'injuries' && (
+          basePath === '/trainer' && studentMedicalInfo ? (
+            <div className="rounded-2xl bg-surface-1 ring-1 ring-inset ring-border-subtle p-4 sm:p-5">
+              <h2 className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground mb-3">{tp('medicalInfo')}</h2>
+              <div className="space-y-2">
+                <div className="text-sm text-muted-foreground">
+                  <span className="font-medium text-foreground">{tp('hasExistingInjuries')}:</span>{' '}
+                  {studentMedicalInfo.hasInjuries ? tp('yes') : tp('no')}
+                </div>
+                {studentMedicalInfo.hasInjuries && studentMedicalInfo.injuryDocUrl ? (
+                  <a
+                    href={getMediaUrl(studentMedicalInfo.injuryDocUrl) || '#'}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={`inline-flex items-center gap-1.5 text-sm font-medium ${profileAccent.text} hover:underline`}
+                  >
+                    <FileText className="w-4 h-4" />
+                    {tp('viewMedicalCertificate')}
+                  </a>
+                ) : studentMedicalInfo.hasInjuries ? (
+                  <p className="text-sm text-faint-foreground italic">{tp('noMedicalCertificate')}</p>
+                ) : null}
+              </div>
+            </div>
+          ) : (
+            <div className="rounded-xl bg-surface-1 ring-1 ring-inset ring-border-subtle py-16 text-center">
+              <div className="inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-surface-2 ring-1 ring-border-subtle mb-4">
+                <ShieldAlert className="w-7 h-7 text-muted-foreground" />
+              </div>
+              <p className="font-medium text-foreground">{tp('noInjuries')}</p>
+              <p className="text-sm text-muted-foreground mt-1">{tp('injuriesDescription')}</p>
+            </div>
+          )
+        )}
+
+        {mainTab === 'achievements' && (
+          <div className="rounded-xl bg-surface-1 ring-1 ring-inset ring-border-subtle py-16 text-center">
+            <div className="inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-surface-2 ring-1 ring-border-subtle mb-4">
+              <Trophy className="w-7 h-7 text-muted-foreground" />
+            </div>
+            <p className="font-medium text-foreground">
+              {(profileData?.achievementsCount ?? 0) > 0
+                ? tp('achievements') + ': ' + (profileData?.achievementsCount ?? 0)
+                : tp('noAchievements')}
+            </p>
+            <p className="text-sm text-muted-foreground mt-1">{tp('achievementsWillAppear')}</p>
+          </div>
+        )}
+
         {/* Posts Section */}
+        {mainTab === 'posts' && (
         <div className="overflow-hidden rounded-2xl bg-surface-1 ring-1 ring-inset ring-border-subtle">
           <div className="flex flex-col gap-3 border-b border-border-subtle px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex items-center gap-2">
@@ -975,6 +1041,7 @@ export function PublicProfileContent({
             )}
           </div>
         </div>
+        )}
       </div>
 
       {selectedPostId && (

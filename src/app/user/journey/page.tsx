@@ -220,7 +220,7 @@ export default function MyJourneyPage() {
                   <div className="flex items-center gap-1.5">
                     <Star className="w-3.5 h-3.5 text-yellow-500 fill-yellow-500" />
                     <span className="text-sm text-foreground font-medium">
-                      {program.averageRating > 0 ? program.averageRating.toFixed(1) : '—'}
+                      {program.averageRating > 0 ? program.averageRating.toFixed(1) : '0'}
                     </span>
                     {program.totalReviews > 0 && (
                       <span className="text-xs text-faint-foreground">({program.totalReviews})</span>

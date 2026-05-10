@@ -8,5 +8,5 @@ export function NutritionistHomeFeed() {
   const { refreshLevel } = useLevel()
   const { user } = useAuth()
 
-  return <HomeFeed currentUserId={user?.id} accentColor="green" onPostUploaded={refreshLevel} />
+  return <HomeFeed currentUserId={user?.id} accentColor="green" onPostUploaded={refreshLevel} disableCenterShift />
 }

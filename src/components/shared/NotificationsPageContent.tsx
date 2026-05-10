@@ -31,7 +31,7 @@ import {
 } from '@/lib/notifications/presentation'
 import { chatConnection, EntityChangedEvent } from '@/lib/signalr/chatConnection'
 import { useAccentColors } from '@/lib/theme/useAccentColors'
-import type { Notification, NotificationRealtimePayload } from '@/types/notification'
+import type { Notification, NotificationAction, NotificationRealtimePayload } from '@/types/notification'
 
 type NotificationFilter = 'all' | 'unread' | 'read'
 
@@ -60,6 +60,8 @@ export function NotificationsPageContent({ basePath }: NotificationsPageContentP
   const [loading, setLoading] = useState(true)
   const [loadingMore, setLoadingMore] = useState(false)
   const [mutatingIds, setMutatingIds] = useState<Set<string>>(new Set())
+  const [actionBusy, setActionBusy] = useState<Set<string>>(new Set())
+  const [completedActions, setCompletedActions] = useState<Set<string>>(new Set())
   const [clearConfirm, setClearConfirm] = useState(false)
   const [clearing, setClearing] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -106,6 +108,7 @@ export function NotificationsPageContent({ basePath }: NotificationsPageContentP
         isRead: data.isRead,
         createdAt: data.createdAt,
         readAt: data.readAt ?? null,
+        actions: data.actions ?? [],
       }
 
       if (isNotificationArchived(item)) return
@@ -302,6 +305,53 @@ export function NotificationsPageContent({ basePath }: NotificationsPageContentP
     if (href) router.push(href)
   }
 
+  const actionId = (notificationId: string, key: string) => `${notificationId}:${key}`
+
+  const handleAction = async (notification: Notification, action: NotificationAction) => {
+    const id = actionId(notification.id, action.key)
+    if (actionBusy.has(id) || completedActions.has(id)) return
+
+    // open-profile is a navigation action — do not POST, just route client-side.
+    if (action.key === 'open-profile') {
+      if (!notification.isRead) {
+        // fire-and-forget mark-as-read; navigation should not block on it
+        handleMarkAsRead(notification).catch(() => {})
+      }
+      const href = notification.relatedEntityId
+        ? `${basePath}/profile/${notification.relatedEntityId}`
+        : getNotificationHref(notification, basePath)
+      if (href) router.push(href)
+      return
+    }
+
+    setActionBusy(prev => {
+      const next = new Set(prev)
+      next.add(id)
+      return next
+    })
+
+    try {
+      await notificationsApi.executeAction(action)
+      setCompletedActions(prev => {
+        const next = new Set(prev)
+        next.add(id)
+        return next
+      })
+      if (!notification.isRead) {
+        handleMarkAsRead(notification).catch(() => {})
+      }
+    } catch (err) {
+      console.error('[NotificationsPage] Action failed:', action.key, err)
+      setError(t('actionError'))
+    } finally {
+      setActionBusy(prev => {
+        const next = new Set(prev)
+        next.delete(id)
+        return next
+      })
+    }
+  }
+
   return (
     <div className="space-y-5 pb-6">
       {/* Header */}
@@ -466,6 +516,40 @@ export function NotificationsPageContent({ basePath }: NotificationsPageContentP
                     <p className="mt-0.5 text-sm leading-6 text-muted-foreground">
                       {resolveNotificationMessage(notification.message, t)}
                     </p>
+
+                    {notification.actions && notification.actions.length > 0 && (
+                      <div className="mt-3 flex flex-wrap gap-2">
+                        {notification.actions.map(action => {
+                          const id = actionId(notification.id, action.key)
+                          const busy = actionBusy.has(id)
+                          const done = completedActions.has(id)
+                          const isPrimary = action.key === 'follow-back'
+                          const label = done && isPrimary
+                            ? t('actionFollowing')
+                            : action.key === 'follow-back'
+                              ? t('actionFollowBack')
+                              : action.key === 'open-profile'
+                                ? t('actionOpenProfile')
+                                : action.label
+                          return (
+                            <button
+                              key={action.key}
+                              onClick={(e) => { e.stopPropagation(); handleAction(notification, action) }}
+                              disabled={busy || done}
+                              className={`inline-flex h-8 items-center gap-1.5 rounded-lg px-3 text-xs font-semibold transition-colors disabled:opacity-60 ${
+                                isPrimary
+                                  ? 'text-white shadow-sm'
+                                  : 'bg-surface-2 ring-1 ring-inset ring-border-subtle text-foreground hover:bg-hover-overlay'
+                              }`}
+                              style={isPrimary && !done ? { background: `linear-gradient(135deg, ${accent.primary}, ${accent.secondary})` } : undefined}
+                            >
+                              {busy && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
+                              {label}
+                            </button>
+                          )
+                        })}
+                      </div>
+                    )}
                   </div>
 
                   <div className="flex flex-none items-center sm:items-start gap-1">

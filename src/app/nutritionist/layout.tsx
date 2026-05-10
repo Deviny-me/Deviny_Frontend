@@ -12,6 +12,7 @@ import { ThemeProvider } from '@/components/theme/ThemeProvider'
 import { AchievementBridge } from '@/components/shared/AchievementBridge'
 import { RealtimeToastContainer } from '@/components/shared/RealtimeToast'
 import { Spinner } from '@/components/ui/Spinner'
+import { LeaderboardSidebar } from '@/components/shared/LeaderboardSidebar'
 
 // Routes where right sidebar should be hidden
 const HIDE_RIGHT_SIDEBAR = [
@@ -20,6 +21,9 @@ const HIDE_RIGHT_SIDEBAR = [
   '/nutritionist/discovery', '/nutritionist/challenges', '/nutritionist/achievements',
   '/nutritionist/dashboard', '/nutritionist/notifications',
 ]
+// Routes where the leaderboard sidebar should be shown.
+// Only on the nutritionist home feed for now — mirrors the user layout.
+const SHOW_LEADERBOARD_ON: string[] = ['/nutritionist']
 // Routes where both sidebars should be hidden
 const HIDE_ALL_SIDEBARS: string[] = []
 
@@ -35,6 +39,12 @@ export default function NutritionistDashboardLayout({
 
   const showLeftSidebar = !HIDE_ALL_SIDEBARS.some(r => pathname?.startsWith(r))
   const showRightSidebar = !HIDE_RIGHT_SIDEBAR.some(r => pathname?.startsWith(r)) && showLeftSidebar
+  const showLeaderboard = SHOW_LEADERBOARD_ON.includes(pathname || '') && showRightSidebar
+  const rightSidebarNode = showLeaderboard ? (
+    <div className="w-72 sticky top-[57px] max-h-[calc(100vh-57px)] overflow-y-auto pb-6 scrollbar-hide">
+      <LeaderboardSidebar basePath="/nutritionist" />
+    </div>
+  ) : undefined
 
   useEffect(() => {
     if (checkedRef.current) return
@@ -85,7 +95,7 @@ export default function NutritionistDashboardLayout({
               <LevelProvider>
                 <AchievementBridge>
                   <RealtimeToastContainer />
-                  <MainLayout showLeftSidebar={showLeftSidebar} showRightSidebar={showRightSidebar}>
+                  <MainLayout showLeftSidebar={showLeftSidebar} showRightSidebar={showLeaderboard} rightSidebar={rightSidebarNode}>
                     {children}
                   </MainLayout>
                 </AchievementBridge>
