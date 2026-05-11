@@ -16,6 +16,7 @@ import {
   Settings,
   Apple,
   Bell,
+  Dumbbell,
 } from 'lucide-react'
 import { LayoutConfig } from './types'
 
@@ -92,6 +93,7 @@ export const userConfig: LayoutConfig = {
     {
       title: 'training',
       links: [
+        { icon: Dumbbell, label: 'workouts', path: '/user/workouts' },
         { icon: Layers, label: 'programs', path: '/user/programs' },
         { icon: BookOpen, label: 'myJourney', path: '/user/journey' },
         { icon: Radio, label: 'liveWorkouts', path: '/user/live' },

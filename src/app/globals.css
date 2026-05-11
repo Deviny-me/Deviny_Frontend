@@ -74,6 +74,9 @@
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     text-rendering: optimizeLegibility;
+    /* Always reserve scrollbar gutter — prevents layout shift when scrollbar
+       appears/disappears (content height changes, modal scroll-lock, etc.) */
+    scrollbar-gutter: stable;
   }
 
   body {

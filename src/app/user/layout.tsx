@@ -19,6 +19,7 @@ const HIDE_RIGHT_SIDEBAR = [
   '/user/challenges', '/user/settings', '/user/schedule',
   '/user/leaderboards', '/user/live', '/user/experts', '/user/discovery',
   '/user/achievements', '/user/messages', '/user/notifications',
+  '/user/workouts',
 ]
 // Routes where the leaderboard ("Hall of Fame") sidebar should be shown.
 // For now we enable it only on the home dashboard; expand once approved.
