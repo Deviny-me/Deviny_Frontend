@@ -1,12 +1,13 @@
 'use client'
 
-import { Trophy, Lock, Award, Loader2 } from 'lucide-react'
+import { Trophy, Lock, Award, Loader2, Star, Zap } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { useEffect } from 'react'
 import type { AchievementDto } from '@/types/achievement'
-import { getIcon, getRarityLabelColor } from '@/components/shared/achievementUtils'
+import { getIcon, getGradient, getRarityLabelColor } from '@/components/shared/achievementUtils'
 import { useAccentColors } from '@/lib/theme/useAccentColors'
 import { useAchievements } from '@/contexts/AchievementsContext'
+import { cn } from '@/lib/utils/cn'
 
 export default function AchievementsContent() {
   const { data, loading, error, unlocked, locked, unlockedCount, totalCount, markSeen } = useAchievements()
@@ -96,7 +97,6 @@ export default function AchievementsContent() {
         emptyTitle={t('noAchievements')}
         emptyText={t('completeToUnlock')}
         items={unlocked}
-        accent={accent}
       />
 
       {/* Locked */}
@@ -108,7 +108,6 @@ export default function AchievementsContent() {
         emptyTitle={t('allUnlocked')}
         emptyText=""
         items={locked}
-        accent={accent}
       />
     </div>
   )
@@ -122,10 +121,9 @@ interface SectionProps {
   emptyTitle: string
   emptyText: string
   items: AchievementDto[]
-  accent: ReturnType<typeof useAccentColors>
 }
 
-function Section({ title, count, icon, emptyIcon, emptyTitle, emptyText, items, accent }: SectionProps) {
+function Section({ title, count, icon, emptyIcon, emptyTitle, emptyText, items }: SectionProps) {
   if (count === 0) {
     return (
       <div>
@@ -158,38 +156,72 @@ function Section({ title, count, icon, emptyIcon, emptyTitle, emptyText, items, 
       </h3>
       <div className="grid grid-cols-2 gap-2.5 sm:gap-3 md:grid-cols-3 xl:grid-cols-4">
         {items.map(a => (
-          <AchievementCard key={a.id} achievement={a} accent={accent} />
+          <AchievementCard key={a.id} achievement={a} />
         ))}
       </div>
     </div>
   )
 }
 
-function AchievementCard({
-  achievement,
-  accent,
-}: {
-  achievement: AchievementDto
-  accent: ReturnType<typeof useAccentColors>
-}) {
+const rarityRingClass: Record<string, string> = {
+  Common: 'ring-border-subtle',
+  Rare: 'ring-blue-500/35',
+  Epic: 'ring-purple-500/40',
+  Legendary: 'ring-yellow-500/50',
+}
+
+const rarityShadow: Record<string, string> = {
+  Common: '',
+  Rare: 'shadow-[0_0_18px_0px_rgba(59,130,246,0.18)]',
+  Epic: 'shadow-[0_0_20px_0px_rgba(168,85,247,0.2)]',
+  Legendary: 'shadow-[0_0_28px_0px_rgba(234,179,8,0.25)]',
+}
+
+export function AchievementCard({ achievement }: { achievement: AchievementDto }) {
   const Icon = getIcon(achievement.iconKey)
   const rarityColor = getRarityLabelColor(achievement.rarity)
+  const gradient = getGradient(achievement.colorKey)
   const isUnlocked = achievement.isUnlocked
+  const rarity = achievement.rarity
+  const isLegendary = rarity === 'Legendary'
+  const isEpic = rarity === 'Epic'
 
   return (
     <div
-      className={`group relative flex flex-col items-center rounded-2xl bg-surface-1 ring-1 ring-inset p-4 text-center transition-[box-shadow,transform] duration-200 hover:-translate-y-0.5 ${
-        isUnlocked ? 'ring-border-subtle hover:ring-border-strong' : 'ring-border-subtle/60'
-      }`}
+      className={cn(
+        'group relative flex flex-col items-center rounded-2xl bg-surface-1 ring-1 ring-inset p-4 text-center',
+        'transition-[box-shadow,transform] duration-200 hover:-translate-y-0.5',
+        isUnlocked ? (rarityRingClass[rarity] ?? 'ring-border-subtle') : 'ring-border-subtle/50',
+        isUnlocked && (rarityShadow[rarity] ?? ''),
+      )}
     >
+      {/* Legendary shimmer overlay */}
+      {isUnlocked && isLegendary && (
+        <div className="pointer-events-none absolute inset-0 rounded-2xl overflow-hidden">
+          <div className="absolute -inset-[200%] animate-[shimmer_3s_linear_infinite] bg-gradient-to-r from-transparent via-yellow-300/10 to-transparent [transform:skewX(-20deg)]" />
+        </div>
+      )}
+
       {/* Icon tile */}
       <div className="relative mb-3">
         {isUnlocked ? (
           <div
-            className="inline-flex h-14 w-14 items-center justify-center rounded-2xl text-white shadow-md"
-            style={{ background: `linear-gradient(135deg, ${accent.primary}, ${accent.secondary})` }}
+            className={cn(
+              'relative inline-flex h-14 w-14 items-center justify-center rounded-2xl text-white shadow-md bg-gradient-to-br',
+              gradient,
+            )}
           >
-            <Icon className="h-6 w-6" />
+            <Icon className="h-6 w-6 drop-shadow-sm" />
+            {isLegendary && (
+              <div className="absolute -top-1.5 -right-1.5 inline-flex h-5 w-5 items-center justify-center rounded-full bg-yellow-400 shadow-sm ring-2 ring-background">
+                <Star className="h-2.5 w-2.5 text-yellow-900 fill-yellow-900" />
+              </div>
+            )}
+            {isEpic && (
+              <div className="absolute -top-1.5 -right-1.5 inline-flex h-5 w-5 items-center justify-center rounded-full bg-purple-500 shadow-sm ring-2 ring-background">
+                <Zap className="h-2.5 w-2.5 text-white" />
+              </div>
+            )}
           </div>
         ) : (
           <div className="relative inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-surface-2 ring-1 ring-inset ring-border-subtle">
@@ -202,30 +234,33 @@ function AchievementCard({
       </div>
 
       <h4
-        className={`mb-1 line-clamp-2 text-sm font-semibold ${
-          isUnlocked ? 'text-foreground' : 'text-muted-foreground'
-        }`}
+        className={cn(
+          'mb-1 line-clamp-2 text-sm font-semibold',
+          isUnlocked ? 'text-foreground' : 'text-muted-foreground',
+        )}
       >
         {achievement.title}
       </h4>
       <p
-        className={`mb-3 line-clamp-2 text-[11px] leading-snug ${
-          isUnlocked ? 'text-muted-foreground' : 'text-faint-foreground'
-        }`}
+        className={cn(
+          'mb-3 line-clamp-2 text-[11px] leading-snug',
+          isUnlocked ? 'text-muted-foreground' : 'text-faint-foreground',
+        )}
       >
         {achievement.description}
       </p>
 
       <div className="mt-auto flex flex-wrap items-center justify-center gap-1.5">
         <span
-          className={`inline-flex items-center rounded-full bg-surface-2 ring-1 ring-inset ring-border-subtle px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${rarityColor}`}
+          className={cn(
+            'inline-flex items-center rounded-full bg-surface-2 ring-1 ring-inset ring-border-subtle px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide',
+            rarityColor,
+          )}
         >
-          {achievement.rarity}
+          {rarity}
         </span>
         {achievement.xpReward > 0 && (
-          <span
-            className={`inline-flex items-center rounded-full bg-surface-2 ring-1 ring-inset ring-border-subtle px-2 py-0.5 text-[10px] font-semibold ${accent.text}`}
-          >
+          <span className="inline-flex items-center rounded-full bg-surface-2 ring-1 ring-inset ring-border-subtle px-2 py-0.5 text-[10px] font-semibold text-amber-400">
             +{achievement.xpReward} XP
           </span>
         )}

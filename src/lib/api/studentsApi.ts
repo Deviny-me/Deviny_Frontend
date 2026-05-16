@@ -1,4 +1,7 @@
 import { API_URL, fetchWithAuth } from '@/lib/config'
+import type { StudentDetailDto, SubmitReviewRequest, StudentReview } from '@/types/studentReview'
+
+export type { StudentDetailDto, SubmitReviewRequest, StudentReview } from '@/types/studentReview'
 
 export interface Student {
   id: string
@@ -37,6 +40,22 @@ export const studentsApi = {
 
     if (!response.ok) throw new Error('Failed to fetch student medical info')
 
+    return response.json()
+  },
+
+  async getStudentDetail(studentId: string): Promise<StudentDetailDto> {
+    const response = await fetchWithAuth(`${API_URL}/trainer/me/students/${studentId}`)
+    if (!response.ok) throw new Error('Failed to fetch student detail')
+    return response.json()
+  },
+
+  async submitReview(studentId: string, data: SubmitReviewRequest): Promise<StudentReview> {
+    const response = await fetchWithAuth(`${API_URL}/trainer/me/students/${studentId}/reviews`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    })
+    if (!response.ok) throw new Error('Failed to submit review')
     return response.json()
   },
 }

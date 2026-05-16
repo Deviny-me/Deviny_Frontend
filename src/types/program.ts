@@ -195,6 +195,20 @@ export interface ExpertReviewDto extends ReviewDto {
   programType: string;
 }
 
+export interface TrainerReviewDto {
+  id: string;
+  rating: number;
+  comment: string | null;
+  createdAt: string;
+  updatedAt: string;
+  programId: string;
+  programTitle: string;
+  programType: 'training' | 'meal';
+  trainerName: string;
+  trainerAvatarUrl: string | null;
+  trainerId: string;
+}
+
 export interface CreateReviewRequest {
   programId: string;
   programType: ProgramType;

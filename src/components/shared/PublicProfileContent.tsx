@@ -44,6 +44,7 @@ import { useTranslations } from 'next-intl'
 import { useLanguage } from '@/components/language/LanguageProvider'
 import { useRealtimeScopeRefresh } from '@/lib/signalr/useRealtimeScopeRefresh'
 import { ProfileReviewsTab } from '@/components/shared/ProfileReviewsTab'
+import { UserReceivedReviewsTab } from '@/components/shared/UserReceivedReviewsTab'
 
 // ─── Expert profile type (returned when user is Trainer/Nutritionist) ───
 interface ExpertProfileData {
@@ -828,12 +829,16 @@ export function PublicProfileContent({
         />
 
         {/* ─── Tab content ─── */}
-        {mainTab === 'reviews' && (
+        {mainTab === 'reviews' && isExpert && (
           <ProfileReviewsTab
             expertId={targetUserId ?? ''}
             accentText={profileAccent.text}
-            accentGradient={`from-[${profileAccent.primary}]/10 to-[${profileAccent.secondary}]/10`}
+            accentPrimary={profileAccent.primary}
+            accentSecondary={profileAccent.secondary}
           />
+        )}
+        {mainTab === 'reviews' && !isExpert && (
+          <UserReceivedReviewsTab userId={targetUserId ?? ''} />
         )}
 
         {mainTab === 'about' && isExpert && profileData?.expertProfile && (

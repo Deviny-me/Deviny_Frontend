@@ -12,6 +12,7 @@ import {
   Activity,
   MessageCircle,
   UserRound,
+  Star,
   Loader2,
 } from 'lucide-react'
 import { getMediaUrl } from '@/lib/config'
@@ -166,7 +167,7 @@ export function StudentsClientsContent({ fetchData }: StudentsClientsContentProp
             >
               <div className="flex items-center gap-3 mb-4">
                 <button
-                  onClick={() => router.push(`${basePath}/profile/${student.id}`)}
+                  onClick={() => router.push(`${pathname}/${student.id}`)}
                   className="shrink-0"
                   aria-label={t('viewProfile')}
                 >
@@ -191,7 +192,7 @@ export function StudentsClientsContent({ fetchData }: StudentsClientsContentProp
                   )}
                 </button>
                 <button
-                  onClick={() => router.push(`${basePath}/profile/${student.id}`)}
+                  onClick={() => router.push(`${pathname}/${student.id}`)}
                   className="min-w-0 flex-1 text-left"
                 >
                   <h3 className="truncate text-sm font-semibold text-foreground hover:underline">
@@ -213,6 +214,14 @@ export function StudentsClientsContent({ fetchData }: StudentsClientsContentProp
                 >
                   <MessageCircle className="w-4 h-4" />
                   {t('write')}
+                </button>
+                <button
+                  onClick={() => router.push(`${pathname}/${student.id}`)}
+                  className="inline-flex items-center justify-center h-10 w-10 rounded-xl bg-surface-2 ring-1 ring-inset ring-border-subtle text-muted-foreground hover:text-foreground hover:bg-surface-3 transition-colors"
+                  title="Оценить"
+                  aria-label="Оценить студента"
+                >
+                  <Star className="w-4 h-4" />
                 </button>
                 <button
                   onClick={() => router.push(`${basePath}/profile/${student.id}`)}

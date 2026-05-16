@@ -1,18 +1,7 @@
 ﻿'use client'
 
-import { ComingSoonPage } from '@/components/shared/ComingSoonPage'
-import { Trophy, Users, Zap } from 'lucide-react'
+import ChallengesContent from '@/components/shared/ChallengesContent'
 
 export default function ChallengesPage() {
-  return (
-    <ComingSoonPage
-      icon={Trophy}
-      ns="challenges"
-      features={[
-        { icon: Trophy, titleKey: 'weeklyChallenge', descKey: 'weeklyChallengeDesc' },
-        { icon: Users, titleKey: 'teamCompetitions', descKey: 'teamCompetitionsDesc' },
-        { icon: Zap, titleKey: 'streakChallenges', descKey: 'streakChallengesDesc' },
-      ]}
-    />
-  )
+  return <ChallengesContent />
 }

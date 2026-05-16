@@ -38,6 +38,7 @@ import { useTranslations } from 'next-intl'
 import { useLanguage } from '@/components/language/LanguageProvider'
 import { localizeCityName, localizeCountryName } from '@/lib/data/countries'
 import { ProfileReviewsTab } from '@/components/shared/ProfileReviewsTab'
+import { UserReceivedReviewsTab } from '@/components/shared/UserReceivedReviewsTab'
 import { getMyAchievements } from '@/lib/api/achievementApi'
 import { ratingsApi, RatingDto } from '@/lib/api/ratingsApi'
 import { purchasesApi } from '@/lib/api/purchasesApi'
@@ -45,6 +46,7 @@ import { useRealtimeScopeRefresh } from '@/lib/signalr/useRealtimeScopeRefresh'
 import { RatingBadge } from '@/components/shared/RatingBadge'
 import type { MyAchievementsResponse } from '@/types/achievement'
 import { getIcon, getRarityBorder, getRarityGlow, getRarityLabelColor } from '@/components/shared/achievementUtils'
+import { AchievementCard } from '@/components/shared/AchievementsContent'
 import { useAchievementsOptional } from '@/contexts/AchievementsContext'
 import { Tabs } from '@/components/ui/Tabs'
 
@@ -687,11 +689,7 @@ export default function UserProfilePage() {
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.18, ease: 'easeOut' }}
               >
-                <ProfileReviewsTab
-                  expertId={user?.id ?? ''}
-                  accentText="text-user-600 dark:text-user-300"
-                  accentGradient="from-user-500/10 to-user-600/10"
-                />
+                <UserReceivedReviewsTab userId={user?.id ?? ''} />
               </motion.div>
             )}
 
@@ -727,32 +725,10 @@ export default function UserProfilePage() {
                   </div>
                 ) : achievementsData ? (
                   achievementsData.all.filter(a => a.isUnlocked).length > 0 ? (
-                    <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
-                      {achievementsData.all.filter(a => a.isUnlocked).map((achievement) => {
-                        const Icon = getIcon(achievement.iconKey)
-                        return (
-                          <div
-                            key={achievement.id}
-                            className={cn(
-                              'flex items-center gap-3 p-3.5 rounded-xl',
-                              'bg-surface-1 ring-1 ring-inset ring-border-subtle',
-                              getRarityBorder(achievement.rarity),
-                            )}
-                          >
-                            <div className={cn('flex-shrink-0 grid place-items-center h-10 w-10 rounded-xl bg-user-500/10', getRarityGlow(achievement.rarity))}>
-                              <Icon className="w-5 h-5 text-user-500" />
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <p className={cn('font-semibold text-sm truncate', getRarityLabelColor(achievement.rarity))}>
-                                {achievement.title}
-                              </p>
-                              <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2 leading-snug">
-                                {achievement.description}
-                              </p>
-                            </div>
-                          </div>
-                        )
-                      })}
+                    <div className="grid grid-cols-2 gap-2 sm:gap-2.5">
+                      {achievementsData.all.filter(a => a.isUnlocked).map((achievement) => (
+                        <AchievementCard key={achievement.id} achievement={achievement} />
+                      ))}
                     </div>
                   ) : (
                     <div className="rounded-xl bg-surface-1 ring-1 ring-inset ring-border-subtle py-16 text-center">

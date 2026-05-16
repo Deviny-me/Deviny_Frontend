@@ -1,33 +1,59 @@
 'use client'
 
 import {
+  Activity,
   Apple,
   Award,
+  BookOpen,
+  Briefcase,
+  Camera,
+  CheckCircle2,
+  Crown,
   Dumbbell,
   Flame,
+  GraduationCap,
   Heart,
   Lock,
+  Medal,
   MessageCircle,
   PenLine,
+  Rocket,
+  Shield,
+  Sparkles,
   Star,
   Target,
+  Timer,
   Trophy,
+  Users,
   Zap,
   type LucideIcon,
 } from 'lucide-react'
 
 const iconMap: Record<string, LucideIcon> = {
+  activity: Activity,
   apple: Apple,
   award: Award,
+  'book-open': BookOpen,
+  briefcase: Briefcase,
+  camera: Camera,
+  'check-circle': CheckCircle2,
+  crown: Crown,
   dumbbell: Dumbbell,
   flame: Flame,
+  'graduation-cap': GraduationCap,
   heart: Heart,
   lock: Lock,
+  medal: Medal,
   'message-circle': MessageCircle,
   'pen-line': PenLine,
+  rocket: Rocket,
+  shield: Shield,
+  sparkles: Sparkles,
   star: Star,
   target: Target,
+  timer: Timer,
   trophy: Trophy,
+  users: Users,
   zap: Zap,
 }
 
@@ -71,6 +97,17 @@ export function getIcon(iconKey: string): LucideIcon {
 
 export function getGradient(colorKey: string): string {
   return colorMap[colorKey] || colorMap.orange
+}
+
+export function getToneGradient(tone: string): string {
+  const toneMap: Record<string, string> = {
+    gold: 'from-yellow-400 to-amber-500',
+    silver: 'from-slate-400 to-slate-500',
+    bronze: 'from-amber-600 to-amber-700',
+    platinum: 'from-sky-300 to-cyan-400',
+    diamond: 'from-blue-400 to-indigo-500',
+  }
+  return toneMap[tone] || 'from-emerald-500 to-emerald-700'
 }
 
 export function getRarityBorder(rarity: string): string {

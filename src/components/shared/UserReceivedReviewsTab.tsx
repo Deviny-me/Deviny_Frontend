@@ -1,43 +1,36 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
-import { useTranslations } from 'next-intl'
+import { useState, useEffect } from 'react'
 import { Loader2, MessageSquare, Dumbbell, Utensils } from 'lucide-react'
 import Link from 'next/link'
 import { reviewsApi } from '@/lib/api/reviewsApi'
-import { ExpertReviewDto } from '@/types/program'
+import type { TrainerReviewDto } from '@/types/program'
 import { getMediaUrl } from '@/lib/config'
 import { useAuth } from '@/features/auth/AuthContext'
 
-interface ProfileReviewsTabProps {
-  expertId: string
-  accentText: string
-  accentPrimary: string
-  accentSecondary: string
-}
-
-export function ProfileReviewsTab({ expertId, accentText, accentPrimary, accentSecondary }: ProfileReviewsTabProps) {
-  const t = useTranslations('profile')
+export function UserReceivedReviewsTab({ userId }: { userId: string }) {
   const { user } = useAuth()
   const basePath = user?.role === 'trainer' ? '/trainer' : user?.role === 'nutritionist' ? '/nutritionist' : '/user'
-  const [reviews, setReviews] = useState<ExpertReviewDto[]>([])
+
+  const [reviews, setReviews] = useState<TrainerReviewDto[]>([])
   const [loading, setLoading] = useState(true)
 
-  const loadReviews = useCallback(async () => {
-    try {
-      setLoading(true)
-      const data = await reviewsApi.getExpertReviews(expertId)
-      setReviews(data)
-    } catch {
-      // silently fail
-    } finally {
-      setLoading(false)
-    }
-  }, [expertId])
-
   useEffect(() => {
-    loadReviews()
-  }, [loadReviews])
+    if (!userId) return
+    let cancelled = false
+    ;(async () => {
+      try {
+        setLoading(true)
+        const data = await reviewsApi.getTrainerReviews(userId)
+        if (!cancelled) setReviews(data)
+      } catch {
+        // silently fail — endpoint may not exist yet
+      } finally {
+        if (!cancelled) setLoading(false)
+      }
+    })()
+    return () => { cancelled = true }
+  }, [userId])
 
   if (loading) {
     return (
@@ -51,8 +44,8 @@ export function ProfileReviewsTab({ expertId, accentText, accentPrimary, accentS
     return (
       <div className="text-center py-12">
         <MessageSquare className="w-12 h-12 text-gray-600 mx-auto mb-4" />
-        <p className="text-muted-foreground">{t('noReviewsYet')}</p>
-        <p className="text-sm text-faint-foreground mt-1">{t('reviewsWillAppear')}</p>
+        <p className="text-muted-foreground">Нет отзывов от тренеров</p>
+        <p className="text-sm text-faint-foreground mt-1">Отзывы появятся после прохождения программ</p>
       </div>
     )
   }
@@ -63,8 +56,8 @@ export function ProfileReviewsTab({ expertId, accentText, accentPrimary, accentS
       <div className="bg-surface-2 rounded-xl border border-border-subtle p-4 flex items-center gap-4">
         <MessageSquare className="w-8 h-8 flex-shrink-0 text-muted-foreground" />
         <div>
-          <p className="text-foreground font-semibold">{reviews.length} {t('reviewsTotal')}</p>
-          <p className="text-sm text-muted-foreground">{t('acrossAllPrograms')}</p>
+          <p className="text-foreground font-semibold">{reviews.length} отзывов</p>
+          <p className="text-sm text-muted-foreground">от тренеров и нутрициологов</p>
         </div>
       </div>
 
@@ -75,11 +68,15 @@ export function ProfileReviewsTab({ expertId, accentText, accentPrimary, accentS
           return (
           <div key={review.id} className="bg-surface-2 rounded-xl border border-border-subtle p-4">
             <div className="flex items-start gap-3">
-              {/* Avatar */}
-              {review.userAvatarUrl ? (
+              {/* Trainer avatar */}
+              {review.trainerAvatarUrl ? (
                 <img
-                  src={review.userAvatarUrl.startsWith('http') ? review.userAvatarUrl : getMediaUrl(review.userAvatarUrl) || ''}
-                  alt={review.userName}
+                  src={
+                    review.trainerAvatarUrl.startsWith('http')
+                      ? review.trainerAvatarUrl
+                      : getMediaUrl(review.trainerAvatarUrl) || ''
+                  }
+                  alt={review.trainerName}
                   className="w-10 h-10 rounded-full object-cover flex-shrink-0"
                 />
               ) : (
@@ -88,21 +85,21 @@ export function ProfileReviewsTab({ expertId, accentText, accentPrimary, accentS
                   style={{ background: `${accent}22` }}
                 >
                   <span className="text-sm font-semibold" style={{ color: accent }}>
-                    {review.userName.charAt(0).toUpperCase()}
+                    {review.trainerName.charAt(0).toUpperCase()}
                   </span>
                 </div>
               )}
 
               <div className="flex-1 min-w-0">
-                {/* Author name — links to their public profile */}
+                {/* Trainer name — links to their public profile */}
                 <Link
-                  href={`${basePath}/profile/${review.userId}`}
+                  href={`${basePath}/profile/${review.trainerId}`}
                   className="font-medium text-foreground hover:underline"
                 >
-                  {review.userName}
+                  {review.trainerName}
                 </Link>
 
-                {/* Program badge — links to the program detail page */}
+                {/* Program — links to the program detail page */}
                 <div className="flex items-center gap-1.5 mt-1.5">
                   {review.programType === 'training' ? (
                     <Dumbbell className="w-3.5 h-3.5 flex-shrink-0" style={{ color: accent }} />
@@ -126,7 +123,9 @@ export function ProfileReviewsTab({ expertId, accentText, accentPrimary, accentS
                 {/* Date */}
                 <p className="text-xs text-faint-foreground mt-2">
                   {new Date(review.createdAt).toLocaleDateString(undefined, {
-                    year: 'numeric', month: 'short', day: 'numeric'
+                    year: 'numeric',
+                    month: 'short',
+                    day: 'numeric',
                   })}
                 </p>
               </div>
