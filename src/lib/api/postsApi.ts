@@ -340,30 +340,50 @@ export const postsApi = {
 
   /**
    * Like a comment.
+   * Returns the server likeCount when provided, or null for empty responses.
+   * 409 (already liked) is treated as success.
    */
-  async likeComment(commentId: string): Promise<CommentLikeStatsDto> {
-    const response = await fetchWithAuth(`${API_URL}/comments/${commentId}/likes`, {
+  async likeComment(commentId: string): Promise<CommentLikeStatsDto | null> {
+    const response = await fetchWithAuth(`${API_URL}/comments/${commentId}/like`, {
       method: 'POST',
     })
-    if (!response.ok) {
-      const error = await response.json().catch(() => ({ detail: 'Failed to like comment' }))
-      throw new Error(error.detail || 'Failed to like comment')
+    const text = await response.text().catch(() => '')
+    // 409 = already liked — not an error for our purposes
+    if (!response.ok && response.status !== 409) {
+      let detail = 'Failed to like comment'
+      try { detail = JSON.parse(text)?.detail || detail } catch { /* ignore */ }
+      throw new Error(detail)
     }
-    return response.json()
+    if (!text) return null
+    try {
+      return JSON.parse(text) as CommentLikeStatsDto
+    } catch {
+      return null
+    }
   },
 
   /**
    * Remove a like from a comment.
+   * Returns the server likeCount when provided, or null for empty responses.
+   * 404 (not liked) is treated as success.
    */
-  async unlikeComment(commentId: string): Promise<CommentLikeStatsDto> {
-    const response = await fetchWithAuth(`${API_URL}/comments/${commentId}/likes`, {
+  async unlikeComment(commentId: string): Promise<CommentLikeStatsDto | null> {
+    const response = await fetchWithAuth(`${API_URL}/comments/${commentId}/like`, {
       method: 'DELETE',
     })
-    if (!response.ok) {
-      const error = await response.json().catch(() => ({ detail: 'Failed to unlike comment' }))
-      throw new Error(error.detail || 'Failed to unlike comment')
+    const text = await response.text().catch(() => '')
+    // 404 = wasn't liked — not an error for our purposes
+    if (!response.ok && response.status !== 404) {
+      let detail = 'Failed to unlike comment'
+      try { detail = JSON.parse(text)?.detail || detail } catch { /* ignore */ }
+      throw new Error(detail)
     }
-    return response.json()
+    if (!text) return null
+    try {
+      return JSON.parse(text) as CommentLikeStatsDto
+    } catch {
+      return null
+    }
   },
 
   /**

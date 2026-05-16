@@ -62,8 +62,10 @@ function CommentItem({
   const accent = useAccentColors()
 
   // Local copy so we can update like/reply counts without parent re-render.
+  // Intentionally NOT synced back from the prop — the parent re-rendering with a
+  // new object reference (same data) must never overwrite locally-managed state
+  // such as isLikedByMe after an optimistic update.
   const [comment, setComment] = useState<PostCommentDto>(initialComment)
-  useEffect(() => setComment(initialComment), [initialComment])
 
   const [replies, setReplies] = useState<PostCommentDto[]>([])
   const [repliesLoaded, setRepliesLoaded] = useState(false)
@@ -122,10 +124,15 @@ function CommentItem({
       const stats = prevLiked
         ? await postsApi.unlikeComment(comment.id)
         : await postsApi.likeComment(comment.id)
-      setComment((c) => ({ ...c, ...stats }))
+      // Only sync likeCount from the server — never isLikedByMe.
+      // The server may return a stale isLikedByMe value; the optimistic value
+      // we already set is always correct for the action the user just performed.
+      if (stats !== null && stats.likeCount !== undefined) {
+        setComment((c) => ({ ...c, likeCount: stats.likeCount }))
+      }
     } catch (err) {
       console.error('Failed to toggle comment like', err)
-      // Rollback
+      // Rollback only on genuine API errors
       setComment((c) => ({ ...c, isLikedByMe: prevLiked, likeCount: prevCount }))
     } finally {
       setIsLikeBusy(false)
@@ -237,6 +244,7 @@ function CommentItem({
             </span>
 
             <button
+              type="button"
               onClick={handleToggleLike}
               disabled={isLikeBusy}
               className={cn(
@@ -259,6 +267,7 @@ function CommentItem({
             </button>
 
             <button
+              type="button"
               onClick={openReply}
               className="inline-flex items-center gap-1 text-[11px] text-faint-foreground hover:text-foreground transition-colors"
               aria-label="Ответить"
@@ -269,6 +278,7 @@ function CommentItem({
 
             {comment.canDelete && (
               <button
+                type="button"
                 onClick={handleDeleteSelf}
                 disabled={isDeleting}
                 className="text-[11px] text-faint-foreground hover:text-red-400 transition-colors opacity-0 group-hover:opacity-100"
